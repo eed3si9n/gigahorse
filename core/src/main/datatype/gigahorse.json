@@ -47,7 +47,9 @@
           "type": "boolean",
           "doc": [
             "Sets whether `HttpClient` should use the default http.proxy* system properties",
-            "to obtain proxy information. This differs from `useProxySelector(boolean)`",
+            "to obtain proxy information. (Default: `true`)",
+            "",
+            "This differs from `useProxySelector(boolean)`",
             "in that HttpClient will use its own logic to handle the system properties,",
             "potentially supporting other protocols that the the JDK ProxySelector doesn't.",
             "",
@@ -72,11 +74,179 @@
           "name": "compressionEnforced",
           "type": "boolean",
           "doc": [
-            "Is HTTP compression enforced."
+            "Is HTTP compression enforced. (Default: `false`)"
           ],
           "default": "false",
           "since": "0.1.0"
         }
+      ]
+    },
+    {
+      "name": "Request",
+      "namespace": "gigahorse",
+      "type": "record",
+      "target": "Scala",
+      "fields": [
+        {
+          "name": "url",
+          "type": "String",
+          "doc": [
+            "The base URL for this request"
+          ]
+        },
+        {
+          "name": "method",
+          "type": "String",
+          "doc": [
+            "The method for this request."
+          ],
+          "default": "\"GET\"",
+          "since": "0.1.0"
+        },
+        {
+          "name": "body",
+          "type": "Body",
+          "doc": [
+            "The body of this request"
+          ],
+          "default": "EmptyBody()",
+          "since": "0.1.0"
+        },
+        {
+          "name": "headers",
+          "type": "Map[String, List[String]]",
+          "doc": [
+            "The headers for this request"
+          ],
+          "default": "Map()",
+          "since": "0.1.0"
+        },
+        {
+          "name": "queryString",
+          "type": "Map[String, List[String]]",
+          "doc": [
+            "The query string for this request"
+          ],
+          "default": "Map()",
+          "since": "0.1.0"
+        },
+        {
+          "name": "signatureOpt",
+          "type": "SignatureCalculator?",
+          "default": "None",
+          "since": "0.1.0"
+        },
+        {
+          "name": "authOpt",
+          "type": "Authentication?",
+          "default": "None",
+          "since": "0.1.0"
+        },
+        {
+          "name": "followRedirectsOpt",
+          "type": "boolean?",
+          "doc": [
+            "Whether this request should follow redirects. (Default: `None`)"
+          ],
+          "default": "None",
+          "since": "0.1.0"
+        },
+        {
+          "name": "requestTimeoutOpt",
+          "type": "scala.concurrent.duration.Duration?",
+          "doc": [
+            "The timeout for the request. (Default: `None`)"
+          ],
+          "default": "None",
+          "since": "0.1.0"
+        },
+        {
+          "name": "virtualHostOpt",
+          "type": "String?",
+          "doc": [
+            "The virtual host this request will use"
+          ],
+          "default": "None",
+          "since": "0.1.0"
+        }
+      ]
+    },
+    {
+      "name": "Body",
+      "namespace": "gigahorse",
+      "type": "interface",
+      "target": "Scala",
+      "types": [
+        {
+          "name": "InMemoryBody",
+          "namespace": "gigahorse",
+          "type": "record",
+          "target": "Scala",
+          "fields": [
+            {
+              "name": "bytes",
+              "type": "Array[Byte]"
+            }
+          ]
+        },
+        {
+          "name": "FileBody",
+          "namespace": "gigahorse",
+          "type": "record",
+          "target": "Scala",
+          "fields": [
+            {
+              "name": "file",
+              "type": "java.io.File"
+            }
+          ]
+        },
+        {
+          "name": "EmptyBody",
+          "namespace": "gigahorse",
+          "type": "record",
+          "target": "Scala"
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "namespace": "gigahorse",
+      "type": "record",
+      "target": "Scala",
+      "fields": [
+        {
+          "name": "username",
+          "type": "String",
+          "doc": [
+            "The user name."
+          ]
+        },
+        {
+          "name": "password",
+          "type": "String",
+          "doc": [
+            "The password."
+          ]
+        },
+        {
+          "name": "scheme",
+          "type": "AuthScheme",
+          "doc": [
+            "The scheme for this authentication."
+          ],
+          "default": "AuthScheme.Basic",
+          "since": "0.1.0"
+        }
+      ]
+    },
+    {
+      "name": "AuthScheme",
+      "namespace": "gigahorse",
+      "type": "enum",
+      "target": "Scala",
+      "symbols": [
+        "None", "Basic", "Digest", "NTLM", "SPNEGO", "Kerberos"
       ]
     }
   ]
