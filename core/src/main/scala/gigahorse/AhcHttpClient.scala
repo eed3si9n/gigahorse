@@ -12,7 +12,16 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
   override def toString: String =
     s"""AchHttpClient($config)"""
 
-  private[gigahorse] def executeRequest(request: AhcRequest): Future[Response] =
+  def this(config: Config) =
+    this(AhcConfig.buildConfig(config))
+
+  def execute(request: Request): Future[Response] =
+    request match {
+      case req: AhcRequest => executeRequest(req)
+      case _               => Future.failed(new IllegalArgumentException(s"Expected AhcRequest, but got $request"))
+    }
+
+  def executeRequest(request: AhcRequest): Future[Response] =
     {
       import com.ning.http.client.AsyncCompletionHandler
       val result = Promise[AhcResponse]()

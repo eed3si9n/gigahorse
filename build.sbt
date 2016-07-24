@@ -12,7 +12,8 @@ lazy val root = (project in file(".")).
   )
 
 lazy val core = (project in file("core")).
+  enablePlugins(DatatypePlugin).
   settings(
     name := "gigahorse-core",
-    libraryDependencies += ahc
+    libraryDependencies ++= Seq(ahc, scalatest)
   )

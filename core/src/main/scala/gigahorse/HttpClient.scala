@@ -1,6 +1,8 @@
 package gigahorse
 
-abstract class HttpClient {
+import scala.concurrent.Future
+
+abstract class HttpClient extends AutoCloseable {
   def underlying[A]: A
 
   /**
@@ -13,4 +15,7 @@ abstract class HttpClient {
 
   /** Closes this client, and releases underlying resources. */
   def close(): Unit
+
+  /** Executes the request. */
+  def execute(request: Request): Future[Response]
 }

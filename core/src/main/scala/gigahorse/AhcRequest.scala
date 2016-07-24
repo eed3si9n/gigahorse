@@ -11,7 +11,7 @@ class AhcRequest(val client: AhcHttpClient,
   /**
    * Creates and returns an AHC request, running all operations on it.
    */
-  private[gigahorse] def buildRequest(): XRequest = {
+  def buildRequest(): XRequest = {
     val builder = new RequestBuilder(method)
     builder.setUrl(url)
     builder.build()

@@ -1,0 +1,83 @@
+{
+  "types": [
+    {
+      "name": "Config",
+      "namespace": "gigahorse",
+      "type": "record",
+      "target": "Scala",
+      "fields": [
+        {
+          "name": "connectTimeout",
+          "type": "scala.concurrent.duration.Duration",
+          "doc": [
+            "The maximum time an `HttpClient` can wait when connecting to a remote host. (Default: 120s)"
+          ],
+          "default": "scala.concurrent.duration.Duration(\"120s\")",
+          "since": "0.1.0"
+        },
+        {
+          "name": "readTimeout",
+          "type": "scala.concurrent.duration.Duration",
+          "doc": [
+            "The maximum time an `HttpClient` can stay idle. (Default: 120s)"
+          ],
+          "default": "scala.concurrent.duration.Duration(\"120s\")",
+          "since": "0.1.0"
+        },
+        {
+          "name": "requestTimeout",
+          "type": "scala.concurrent.duration.Duration",
+          "doc": [
+            "The maximum time an `HttpClient` waits until the response is completed. (Default: 120s)"
+          ],
+          "default": "scala.concurrent.duration.Duration(\"120s\")",
+          "since": "0.1.0"
+        },
+        {
+          "name": "followRedirects",
+          "type": "boolean",
+          "doc": [
+            "Is HTTP redirect enabled. (Default: `true`)"
+          ],
+          "default": "true",
+          "since": "0.1.0"
+        },
+        {
+          "name": "useProxyProperties",
+          "type": "boolean",
+          "doc": [
+            "Sets whether `HttpClient` should use the default http.proxy* system properties",
+            "to obtain proxy information. This differs from `useProxySelector(boolean)`",
+            "in that HttpClient will use its own logic to handle the system properties,",
+            "potentially supporting other protocols that the the JDK ProxySelector doesn't.",
+            "",
+            "If useProxyProperties is set to `true` but `useProxySelector`",
+            "was also set to true, the latter is preferred.",
+            "",
+            "See http://download.oracle.com/javase/1.4.2/docs/guide/net/properties.html"
+          ],
+          "default": "true",
+          "since": "0.1.0"
+        },
+        {
+          "name": "userAgent",
+          "type": "String?",
+          "doc": [
+            "The USER_AGENT header value"
+          ],
+          "default": "None",
+          "since": "0.1.0"
+        },
+        {
+          "name": "compressionEnforced",
+          "type": "boolean",
+          "doc": [
+            "Is HTTP compression enforced."
+          ],
+          "default": "false",
+          "since": "0.1.0"
+        }
+      ]
+    }
+  ]
+}
