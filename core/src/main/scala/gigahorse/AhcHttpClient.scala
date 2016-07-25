@@ -4,7 +4,7 @@ import scala.collection.JavaConverters._
 import java.io.UnsupportedEncodingException
 import java.nio.charset.{ Charset, StandardCharsets }
 import scala.concurrent.{ Future, Promise }
-import com.ning.http.client.{ Response => XResponse, Request => XRequest, _ }
+import com.ning.http.client.{ Response => XResponse, Request => XRequest, ProxyServer => XProxyServer, Realm => XRealm, _ }
 import com.ning.http.util.AsyncHttpProviderUtils
 import com.ning.http.client.Realm.{ RealmBuilder, AuthScheme => XAuthScheme }
 import org.jboss.netty.handler.codec.http.{ HttpHeaders, QueryStringDecoder }
@@ -70,9 +70,7 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
     virtualHostOpt.foreach(builder.setVirtualHost)
     followRedirectsOpt.foreach(builder.setFollowRedirects)
 
-    /*
-    proxyServer.foreach(p => builder.setProxyServer(createProxy(p)))
-    */
+    proxyServerOpt.foreach(p => builder.setProxyServer(buildProxy(p)))
 
     requestTimeoutOpt foreach { x =>
       builder.setRequestTimeout(AhcConfig.toMillis(x))
@@ -153,19 +151,65 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
     }
   }
 
-  def buildRealm(auth: Authentication): Realm =
-    (new RealmBuilder).
-    setScheme(auth.scheme match {
-      case AuthScheme.Digest   => XAuthScheme.DIGEST
-      case AuthScheme.Basic    => XAuthScheme.BASIC
-      case AuthScheme.NTLM     => XAuthScheme.NTLM
-      case AuthScheme.SPNEGO   => XAuthScheme.SPNEGO
-      case AuthScheme.Kerberos => XAuthScheme.KERBEROS
-      case AuthScheme.None     => XAuthScheme.NONE
-      case _ => throw new RuntimeException("Unknown scheme " + auth.scheme)
-    }).
-    setPrincipal(auth.username).
-    setPassword(auth.password).
-    setUsePreemptiveAuth(true).
-    build()
+  def buildRealm(auth: Realm): XRealm =
+    {
+      import com.ning.http.client.uri.Uri
+      val builder = new RealmBuilder
+      builder.setScheme(auth.scheme match {
+        case AuthScheme.Digest   => XAuthScheme.DIGEST
+        case AuthScheme.Basic    => XAuthScheme.BASIC
+        case AuthScheme.NTLM     => XAuthScheme.NTLM
+        case AuthScheme.SPNEGO   => XAuthScheme.SPNEGO
+        case AuthScheme.Kerberos => XAuthScheme.KERBEROS
+        case AuthScheme.None     => XAuthScheme.NONE
+        case _ => throw new RuntimeException("Unknown scheme " + auth.scheme)
+      })
+      builder.setPrincipal(auth.username)
+      builder.setPassword(auth.password)
+      builder.setUsePreemptiveAuth(auth.usePreemptiveAuth)
+      auth.realmNameOpt foreach { builder.setRealmName }
+      auth.nonceOpt foreach { builder.setNonce }
+      auth.algorithmOpt foreach { builder.setAlgorithm }
+      auth.responseOpt foreach { builder.setResponse }
+      auth.opaqueOpt foreach { builder.setOpaque }
+      auth.qopOpt foreach { builder.setQop }
+      auth.ncOpt foreach { builder.setNc }
+      auth.uriOpt foreach { x => builder.setUri(Uri.create(x.toString)) }
+      auth.methodNameOpt foreach { builder.setMethodName }
+      auth.charsetOpt foreach { x => builder.setCharset(x) }
+      auth.ntlmDomainOpt foreach { builder.setNtlmDomain }
+      auth.ntlmHostOpt foreach { builder.setNtlmHost }
+      builder.setUseAbsoluteURI(auth.useAbsoluteURI)
+      builder.setOmitQuery(auth.omitQuery)
+      builder.build()
+    }
+
+  def buildProxy(proxy: ProxyServer): XProxyServer =
+    {
+      import com.ning.http.client.ProxyServer.Protocol
+      val protocol = (for {
+        auth <- proxy.authOpt
+        uri <- auth.uriOpt
+        s <- Option(uri.getScheme)
+      } yield s).getOrElse("http").toLowerCase match {
+        case "http"     => Protocol.HTTP
+        case "https"    => Protocol.HTTPS
+        case "kerberos" => Protocol.KERBEROS
+        case "ntlm"     => Protocol.NTLM
+        case "spnego"   => Protocol.SPNEGO
+        case s          => throw new RuntimeException("Unrecognized protocol " + s)
+      }
+      val p = new XProxyServer(protocol, proxy.host, proxy.port,
+        proxy.authOpt.map(_.username).orNull,
+        proxy.authOpt.map(_.password).orNull)
+      proxy.nonProxyHosts foreach { h =>
+        p.addNonProxyHost(h)
+      }
+      proxy.authOpt foreach { auth =>
+        auth.ntlmDomainOpt foreach {p.setNtlmDomain}
+        auth.ntlmHostOpt foreach { p.setNtlmHost }
+        auth.charsetOpt foreach { p.setCharset }
+      }
+      p
+    }
 }

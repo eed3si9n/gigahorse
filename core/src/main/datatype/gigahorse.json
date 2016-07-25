@@ -138,7 +138,7 @@
         },
         {
           "name": "authOpt",
-          "type": "Authentication?",
+          "type": "Realm?",
           "default": "None",
           "since": "0.1.0"
         },
@@ -164,7 +164,16 @@
           "name": "virtualHostOpt",
           "type": "String?",
           "doc": [
-            "The virtual host this request will use"
+            "The virtual host this request will use. (Default: `None`)"
+          ],
+          "default": "None",
+          "since": "0.1.0"
+        },
+        {
+          "name": "proxyServerOpt",
+          "type": "ProxyServer?",
+          "doc": [
+            "The proxy server this request will use. (Default: `None`)"
           ],
           "default": "None",
           "since": "0.1.0"
@@ -210,7 +219,7 @@
       ]
     },
     {
-      "name": "Authentication",
+      "name": "Realm",
       "namespace": "gigahorse",
       "type": "record",
       "target": "Scala",
@@ -237,6 +246,99 @@
           ],
           "default": "AuthScheme.Basic",
           "since": "0.1.0"
+        },
+        {
+          "name": "usePreemptiveAuth",
+          "type": "boolean",
+          "doc": [
+            "Whether preemptive authentication is enabled. (Default: true)"
+          ],
+          "default": "true",
+          "since": "0.1.0"
+        },
+        {
+          "name": "realmNameOpt",
+          "type": "String?",
+          "default": "None",
+          "since": "0.1.0"
+        },
+        {
+          "name": "nonceOpt",
+          "type": "String?",
+          "default": "None",
+          "since": "0.1.0"
+        },
+        {
+          "name": "algorithmOpt",
+          "type": "String?",
+          "default": "None",
+          "since": "0.1.0"
+        },
+        {
+          "name": "responseOpt",
+          "type": "String?",
+          "default": "None",
+          "since": "0.1.0"
+        },
+        {
+          "name": "opaqueOpt",
+          "type": "String?",
+          "default": "None",
+          "since": "0.1.0"
+        },
+        {
+          "name": "qopOpt",
+          "type": "String?",
+          "default": "None",
+          "since": "0.1.0"
+        },
+        {
+          "name": "ncOpt",
+          "type": "String?",
+          "default": "None",
+          "since": "0.1.0"
+        },
+        {
+          "name": "uriOpt",
+          "type": "java.net.URI?",
+          "default": "None",
+          "since": "0.1.0"
+        },
+        {
+          "name": "methodNameOpt",
+          "type": "String?",
+          "default": "None",
+          "since": "0.1.0"
+        },
+        {
+          "name": "charsetOpt",
+          "type": "java.nio.charset.Charset?",
+          "default": "None",
+          "since": "0.1.0"
+        },
+        {
+          "name": "ntlmDomainOpt",
+          "type": "String?",
+          "default": "None",
+          "since": "0.1.0"
+        },
+        {
+          "name": "ntlmHostOpt",
+          "type": "String?",
+          "default": "None",
+          "since": "0.1.0"
+        },
+        {
+          "name": "useAbsoluteURI",
+          "type": "boolean",
+          "default": "false",
+          "since": "0.1.0"
+        },
+        {
+          "name": "omitQuery",
+          "type": "boolean",
+          "default": "false",
+          "since": "0.1.0"
         }
       ]
     },
@@ -247,6 +349,59 @@
       "target": "Scala",
       "symbols": [
         "None", "Basic", "Digest", "NTLM", "SPNEGO", "Kerberos"
+      ]
+    },
+    {
+      "name": "ProxyServer",
+      "namespace": "gigahorse",
+      "type": "interface",
+      "target": "Scala",
+      "fields": [
+        {
+          "name": "host",
+          "type": "String",
+          "doc": [
+            "The hostname of the proxy server."
+          ]
+        },
+        {
+          "name": "port",
+          "type": "int",
+          "doc": [
+            "The port of the proxy server."
+          ]
+        },
+        {
+          "name": "securedPort",
+          "type": "int?",
+          "doc": [
+            "The secured port of the proxy server."
+          ]
+        },
+        {
+          "name": "authOpt",
+          "type": "Realm?",
+          "doc": [
+            " The realm of the proxy server.",
+            " `None` will fallback to \"http\"."
+          ],
+          "default": "None",
+          "since": "0.1.0"
+        },
+        {
+          "name": "nonProxyHosts",
+          "type": "List[String]",
+          "default": "List()",
+          "since": "0.1.0"
+        }
+      ],
+      "types": [
+        {
+          "name": "DefaultProxyServer",
+          "namespace": "gigahorse",
+          "type": "record",
+          "target": "Scala"
+        }
       ]
     }
   ]
