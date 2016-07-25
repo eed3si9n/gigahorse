@@ -403,6 +403,15 @@
           "target": "Scala"
         }
       ]
+    },
+    {
+      "name": "State",
+      "namespace": "gigahorse",
+      "type": "enum",
+      "target": "Scala",
+      "symbols": [
+        "Continue", "Abort", "Upgrade"
+      ]
     }
   ]
 }

@@ -1,10 +1,11 @@
 package gigahorse
 
 import scala.collection.JavaConverters._
-import java.io.UnsupportedEncodingException
+import java.io.{ File, UnsupportedEncodingException }
 import java.nio.charset.{ Charset, StandardCharsets }
 import scala.concurrent.{ Future, Promise }
 import com.ning.http.client.{ Response => XResponse, Request => XRequest, ProxyServer => XProxyServer, Realm => XRealm, _ }
+import com.ning.http.client.AsyncHandler.{ STATE => XState }
 import com.ning.http.util.AsyncHttpProviderUtils
 import com.ning.http.client.Realm.{ RealmBuilder, AuthScheme => XAuthScheme }
 import org.jboss.netty.handler.codec.http.{ HttpHeaders, QueryStringDecoder }
@@ -20,18 +21,46 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
   def this(config: Config) =
     this(AhcConfig.buildConfig(config))
 
-  def run(request: Request): Future[Response] =
+  def run(request: Request): Future[Response] = process(request, runHandler)
+  private[gigahorse] val runHandler: CompletionHandler[Response] = new CompletionHandler[Response] {
+    override def onCompleted(response: Response) = response
+  }
+
+  def download(request: Request, file: File): Future[File] =
+    process(request, new CompletionHandler[File] {
+      import java.io.FileOutputStream
+      val out = new FileOutputStream(file)
+      override def onBodyPartReceived(content: HttpResponseBodyPart): State = {
+        content.writeTo(out)
+        State.Continue
+      }
+      override def onCompleted(response: Response) = file
+    })
+
+  def process[A](request: Request, handler: CompletionHandler[A]): Future[A] =
     {
       import com.ning.http.client.AsyncCompletionHandler
-      val result = Promise[AhcResponse]()
+      val result = Promise[A]()
       val xrequest = buildRequest(request)
-      asyncHttpClient.executeRequest(xrequest, new AsyncCompletionHandler[XResponse]() {
-        override def onCompleted(response: XResponse) = {
-          result.success(new AhcResponse(response))
+      asyncHttpClient.executeRequest(xrequest, new AsyncHandler[XResponse]() {
+        def onCompleted(response: XResponse): XResponse = {
+          result.success(handler.onCompleted(new AhcResponse(response)))
           response
         }
-        override def onThrowable(t: Throwable) = {
+        override def onCompleted(): XResponse = {
+          onCompleted(handler.builder.build())
+        }
+        override def onThrowable(t: Throwable): Unit = {
           result.failure(t)
+        }
+        override def onBodyPartReceived(bodyPart: HttpResponseBodyPart): XState = {
+          fromState(handler.onBodyPartReceived(bodyPart))
+        }
+        override def onStatusReceived(status: HttpResponseStatus): XState = {
+          fromState(handler.onStatusReceived(status))
+        }
+        override def onHeadersReceived(headers: HttpResponseHeaders): XState = {
+          fromState(handler.onHeadersReceived(headers))
         }
       })
       result.future
@@ -222,6 +251,20 @@ object AhcHttpClient {
         case (_, Some(_)) => r
         case (Some(x), _) => r.withHeaders(r.headers.updated(HttpHeaders.Names.CONTENT_TYPE, x :: Nil))
       }
+    }
+
+  def toState(x: XState): State =
+    x match {
+      case XState.CONTINUE => State.Continue
+      case XState.ABORT    => State.Abort
+      case XState.UPGRADE  => State.Upgrade
+    }
+
+  def fromState(state: State): XState =
+    state match {
+      case State.Continue => XState.CONTINUE
+      case State.Abort    => XState.ABORT
+      case State.Upgrade  => XState.UPGRADE
     }
 
   def contentType(request: Request): Option[String] =
