@@ -190,6 +190,43 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
     }
     builderWithBody.build()
   }
+}
+
+object AhcHttpClient {
+  val utf8 = Charset.forName("UTF-8")
+  private[gigahorse] def setBodyString(request: Request, body: String, charset: Charset): Request =
+    request.withBody(InMemoryBody(body.getBytes(charset)))
+
+  private[gigahorse] def setBody[A: HttpWrite](request: Request, body: A): Request =
+    {
+      val w = implicitly[HttpWrite[A]]
+      val r = request.withBody(InMemoryBody(w.toByteArray(body)))
+      (w.contentType, contentType(r)) match {
+        case (None, _)    => r
+        case (_, Some(_)) => r
+        case (Some(x), _) => r.withHeaders(r.headers.updated(HttpHeaders.Names.CONTENT_TYPE, x :: Nil))
+      }
+    }
+
+  def toState(x: XState): State =
+    x match {
+      case XState.CONTINUE => State.Continue
+      case XState.ABORT    => State.Abort
+      case XState.UPGRADE  => State.Upgrade
+    }
+
+  def fromState(state: State): XState =
+    state match {
+      case State.Continue => XState.CONTINUE
+      case State.Abort    => XState.ABORT
+      case State.Upgrade  => XState.UPGRADE
+    }
+
+  def contentType(request: Request): Option[String] =
+    request.headers.find(p => p._1 == HttpHeaders.Names.CONTENT_TYPE).map {
+      case (header, values) =>
+        values.head
+    }
 
   def buildRealm(auth: Realm): XRealm =
     {
@@ -251,42 +288,5 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
         auth.charsetOpt foreach { p.setCharset }
       }
       p
-    }
-}
-
-object AhcHttpClient {
-  val utf8 = Charset.forName("UTF-8")
-  private[gigahorse] def setBodyString(request: Request, body: String, charset: Charset): Request =
-    request.withBody(InMemoryBody(body.getBytes(charset)))
-
-  private[gigahorse] def setBody[A: HttpWrite](request: Request, body: A): Request =
-    {
-      val w = implicitly[HttpWrite[A]]
-      val r = request.withBody(InMemoryBody(w.toByteArray(body)))
-      (w.contentType, contentType(r)) match {
-        case (None, _)    => r
-        case (_, Some(_)) => r
-        case (Some(x), _) => r.withHeaders(r.headers.updated(HttpHeaders.Names.CONTENT_TYPE, x :: Nil))
-      }
-    }
-
-  def toState(x: XState): State =
-    x match {
-      case XState.CONTINUE => State.Continue
-      case XState.ABORT    => State.Abort
-      case XState.UPGRADE  => State.Upgrade
-    }
-
-  def fromState(state: State): XState =
-    state match {
-      case State.Continue => XState.CONTINUE
-      case State.Abort    => XState.ABORT
-      case State.Upgrade  => XState.UPGRADE
-    }
-
-  def contentType(request: Request): Option[String] =
-    request.headers.find(p => p._1 == HttpHeaders.Names.CONTENT_TYPE).map {
-      case (header, values) =>
-        values.head
     }
 }

@@ -21,16 +21,36 @@ import com.ning.http.client._
 import scala.concurrent.duration._
 
 object AhcConfig {
+  import AhcHttpClient.buildRealm
+
   /** Build `AsyncHttpClientConfig` */
   def buildConfig(config: Config): AsyncHttpClientConfig =
     {
       val builder = new AsyncHttpClientConfig.Builder()
+      // timeouts
       builder.setConnectTimeout(toMillis(config.connectTimeout))
-      builder.setReadTimeout(toMillis(config.readTimeout))
       builder.setRequestTimeout(toMillis(config.requestTimeout))
-      builder.setFollowRedirect(config.followRedirects)
-      builder.setUseProxyProperties(config.useProxyProperties)
+      builder.setReadTimeout(toMillis(config.readTimeout))
+      // builder.setWebSocketTimeout(toMillis(config.webSocketIdleTimeout))
+
+      // http
+      builder.setFollowRedirect(config.followRedirect)
+      builder.setMaxRedirects(config.maxRedirects)
       builder.setCompressionEnforced(config.compressionEnforced)
+      config.userAgentOpt foreach { builder.setUserAgent }
+      config.authOpt foreach { x => builder.setRealm(buildRealm(x)) }
+      builder.setMaxRequestRetry(config.maxRequestRetry)
+      builder.setDisableUrlEncodingForBoundedRequests(config.disableUrlEncoding)
+      builder.setUseProxyProperties(config.useProxyProperties)
+
+      // keep-alive
+      // Using config.keepAlive, which is the new name in AHC 2.0
+      builder.setAllowPoolingConnections(config.keepAlive)
+      builder.setAllowPoolingSslConnections(config.keepAlive)
+      builder.setPooledConnectionIdleTimeout(toMillis(config.pooledConnectionIdleTimeout))
+      builder.setConnectionTTL(toMillis(config.connectionTtl))
+      builder.setMaxConnectionsPerHost(config.maxConnectionsPerHost)
+      builder.setMaxConnections(config.maxConnections)
       builder.build()
     }
 

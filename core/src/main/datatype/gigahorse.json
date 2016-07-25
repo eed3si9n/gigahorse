@@ -16,15 +16,6 @@
           "since": "0.1.0"
         },
         {
-          "name": "readTimeout",
-          "type": "scala.concurrent.duration.Duration",
-          "doc": [
-            "The maximum time an `HttpClient` can stay idle. (Default: 120s)"
-          ],
-          "default": "scala.concurrent.duration.Duration(\"120s\")",
-          "since": "0.1.0"
-        },
-        {
           "name": "requestTimeout",
           "type": "scala.concurrent.duration.Duration",
           "doc": [
@@ -34,12 +25,75 @@
           "since": "0.1.0"
         },
         {
-          "name": "followRedirects",
+          "name": "readTimeout",
+          "type": "scala.concurrent.duration.Duration",
+          "doc": [
+            "The maximum time an `HttpClient` can stay idle. (Default: 120s)"
+          ],
+          "default": "scala.concurrent.duration.Duration(\"120s\")",
+          "since": "0.1.0"
+        },
+        {
+          "name": "followRedirect",
           "type": "boolean",
           "doc": [
             "Is HTTP redirect enabled. (Default: `true`)"
           ],
           "default": "true",
+          "since": "0.1.0"
+        },
+        {
+          "name": "maxRedirects",
+          "type": "int",
+          "doc": [
+            "The maximum number of redirects. (Default: 5)"
+          ],
+          "default": "5",
+          "since": "0.1.0"
+        },
+        {
+          "name": "compressionEnforced",
+          "type": "boolean",
+          "doc": [
+            "Is HTTP compression enforced. (Default: `false`)"
+          ],
+          "default": "false",
+          "since": "0.1.0"
+        },
+        {
+          "name": "userAgentOpt",
+          "type": "String?",
+          "doc": [
+            "The USER_AGENT header value"
+          ],
+          "default": "None",
+          "since": "0.1.0"
+        },
+        {
+          "name": "authOpt",
+          "type": "Realm?",
+          "doc": [
+            "Set the authentication that will be used for all requests."
+          ],
+          "default": "None",
+          "since": "0.1.0"
+        },
+        {
+          "name": "maxRequestRetry",
+          "type": "int",
+          "doc": [
+            "The maximum number of times to retry a request if it fails. (Default: 5)"
+          ],
+          "default": "5",
+          "since": "0.1.0"
+        },
+        {
+          "name": "disableUrlEncoding",
+          "type": "boolean",
+          "doc": [
+            "Whether raw URL should be used. (Default: false)"
+          ],
+          "default": "false",
           "since": "0.1.0"
         },
         {
@@ -62,21 +116,48 @@
           "since": "0.1.0"
         },
         {
-          "name": "userAgent",
-          "type": "String?",
+          "name": "keepAlive",
+          "type": "boolean",
           "doc": [
-            "The USER_AGENT header value"
+            "Whether connection pooling should be used. (Default: `true`)"
           ],
-          "default": "None",
+          "default": "true",
           "since": "0.1.0"
         },
         {
-          "name": "compressionEnforced",
-          "type": "boolean",
+          "name": "pooledConnectionIdleTimeout",
+          "type": "scala.concurrent.duration.Duration",
           "doc": [
-            "Is HTTP compression enforced. (Default: `false`)"
+            "The time after which a connection that has been idle in the pool should be closed."
           ],
-          "default": "false",
+          "default": "scala.concurrent.duration.Duration(\"60s\")",
+          "since": "0.1.0"
+        },
+        {
+          "name": "connectionTtl",
+          "type": "scala.concurrent.duration.Duration",
+          "doc": [
+            "The maximum time that a connection should live for in the pool."
+          ],
+          "default": "scala.concurrent.duration.Duration.Inf",
+          "since": "0.1.0"
+        },
+        {
+          "name": "maxConnections",
+          "type": "int",
+          "doc": [
+            "The maximum total number of connections. -1 means no maximum."
+          ],
+          "default": "-1",
+          "since": "0.1.0"
+        },
+        {
+          "name": "maxConnectionsPerHost",
+          "type": "int",
+          "doc": [
+            "The maximum number of connections to make per host. -1 means no maximum."
+          ],
+          "default": "-1",
           "since": "0.1.0"
         }
       ]
