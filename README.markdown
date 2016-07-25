@@ -5,6 +5,7 @@ Gigahorse is an HTTP client for Scala with Async Http Client undernieth.
 
 The code is adopted from Play WS API, except it doesn't depend on anything other than Scala and AHC.
 
+![Giga Horse](gigahorse.jpg)
 
 usage
 -----
