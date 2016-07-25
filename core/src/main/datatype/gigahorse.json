@@ -79,6 +79,15 @@
           "since": "0.1.0"
         },
         {
+          "name": "ssl",
+          "type": "com.typesafe.sslconfig.ssl.SSLConfig",
+          "doc": [
+            "The SSL configuration."
+          ],
+          "default": "com.typesafe.sslconfig.ssl.SSLConfig()",
+          "since": "0.1.0"
+        },
+        {
           "name": "maxRequestRetry",
           "type": "int",
           "doc": [
