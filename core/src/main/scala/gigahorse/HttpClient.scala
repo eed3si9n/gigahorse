@@ -9,5 +9,5 @@ abstract class HttpClient extends AutoCloseable {
   def close(): Unit
 
   /** Executes the request. */
-  def execute(request: Request): Future[Response]
+  def run(request: Request): Future[Response]
 }

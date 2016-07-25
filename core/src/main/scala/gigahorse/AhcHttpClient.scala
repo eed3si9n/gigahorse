@@ -10,6 +10,7 @@ import com.ning.http.client.Realm.{ RealmBuilder, AuthScheme => XAuthScheme }
 import org.jboss.netty.handler.codec.http.{ HttpHeaders, QueryStringDecoder }
 
 class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
+  import AhcHttpClient._
   private val asyncHttpClient = new AsyncHttpClient(config)
   def underlying[A]: A = asyncHttpClient.asInstanceOf[A]
   def close(): Unit = asyncHttpClient.close()
@@ -19,7 +20,7 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
   def this(config: Config) =
     this(AhcConfig.buildConfig(config))
 
-  def execute(request: Request): Future[Response] =
+  def run(request: Request): Future[Response] =
     {
       import com.ning.http.client.AsyncCompletionHandler
       val result = Promise[AhcResponse]()
@@ -144,13 +145,6 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
     builderWithBody.build()
   }
 
-  def contentType(request: Request): Option[String] = {
-    request.headers.find(p => p._1 == HttpHeaders.Names.CONTENT_TYPE).map {
-      case (header, values) =>
-        values.head
-    }
-  }
-
   def buildRealm(auth: Realm): XRealm =
     {
       import com.ning.http.client.uri.Uri
@@ -211,5 +205,28 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
         auth.charsetOpt foreach { p.setCharset }
       }
       p
+    }
+}
+
+object AhcHttpClient {
+  val utf8 = Charset.forName("UTF-8")
+  private[gigahorse] def setBodyString(request: Request, body: String, charset: Charset): Request =
+    request.withBody(InMemoryBody(body.getBytes(charset)))
+
+  private[gigahorse] def setBody[A: HttpWrite](request: Request, body: A): Request =
+    {
+      val w = implicitly[HttpWrite[A]]
+      val r = request.withBody(InMemoryBody(w.toByteArray(body)))
+      (w.contentType, contentType(r)) match {
+        case (None, _)    => r
+        case (_, Some(_)) => r
+        case (Some(x), _) => r.withHeaders(r.headers.updated(HttpHeaders.Names.CONTENT_TYPE, x :: Nil))
+      }
+    }
+
+  def contentType(request: Request): Option[String] =
+    request.headers.find(p => p._1 == HttpHeaders.Names.CONTENT_TYPE).map {
+      case (header, values) =>
+        values.head
     }
 }
