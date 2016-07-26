@@ -12,7 +12,7 @@
           "doc": [
             "The maximum time an `HttpClient` can wait when connecting to a remote host. (Default: 120s)"
           ],
-          "default": "scala.concurrent.duration.Duration(\"120s\")",
+          "default": "ConfigDefaults.defaultConnectTimeout",
           "since": "0.1.0"
         },
         {
@@ -21,7 +21,7 @@
           "doc": [
             "The maximum time an `HttpClient` waits until the response is completed. (Default: 120s)"
           ],
-          "default": "scala.concurrent.duration.Duration(\"120s\")",
+          "default": "ConfigDefaults.defaultRequestTimeout",
           "since": "0.1.0"
         },
         {
@@ -30,7 +30,7 @@
           "doc": [
             "The maximum time an `HttpClient` can stay idle. (Default: 120s)"
           ],
-          "default": "scala.concurrent.duration.Duration(\"120s\")",
+          "default": "ConfigDefaults.defaultReadTimeout",
           "since": "0.1.0"
         },
         {
@@ -39,7 +39,7 @@
           "doc": [
             "Is HTTP redirect enabled. (Default: `true`)"
           ],
-          "default": "true",
+          "default": "ConfigDefaults.defaultFollowRedirect",
           "since": "0.1.0"
         },
         {
@@ -48,7 +48,7 @@
           "doc": [
             "The maximum number of redirects. (Default: 5)"
           ],
-          "default": "5",
+          "default": "ConfigDefaults.defaultMaxRedirects",
           "since": "0.1.0"
         },
         {
@@ -57,7 +57,7 @@
           "doc": [
             "Is HTTP compression enforced. (Default: `false`)"
           ],
-          "default": "false",
+          "default": "ConfigDefaults.defaultCompressionEnforced",
           "since": "0.1.0"
         },
         {
@@ -66,7 +66,7 @@
           "doc": [
             "The USER_AGENT header value"
           ],
-          "default": "None",
+          "default": "ConfigDefaults.defaultUserAgentOpt",
           "since": "0.1.0"
         },
         {
@@ -75,7 +75,7 @@
           "doc": [
             "Set the authentication that will be used for all requests."
           ],
-          "default": "None",
+          "default": "ConfigDefaults.defaultAuthOpt",
           "since": "0.1.0"
         },
         {
@@ -84,7 +84,7 @@
           "doc": [
             "The SSL configuration."
           ],
-          "default": "com.typesafe.sslconfig.ssl.SSLConfig()",
+          "default": "ConfigDefaults.defaultSslConfig",
           "since": "0.1.0"
         },
         {
@@ -93,7 +93,7 @@
           "doc": [
             "The maximum number of times to retry a request if it fails. (Default: 5)"
           ],
-          "default": "5",
+          "default": "ConfigDefaults.defaultMaxRequestRetry",
           "since": "0.1.0"
         },
         {
@@ -102,7 +102,7 @@
           "doc": [
             "Whether raw URL should be used. (Default: false)"
           ],
-          "default": "false",
+          "default": "ConfigDefaults.defaultDisableUrlEncoding",
           "since": "0.1.0"
         },
         {
@@ -121,7 +121,7 @@
             "",
             "See http://download.oracle.com/javase/1.4.2/docs/guide/net/properties.html"
           ],
-          "default": "true",
+          "default": "ConfigDefaults.defaultUseProxyProperties",
           "since": "0.1.0"
         },
         {
@@ -130,7 +130,7 @@
           "doc": [
             "Whether connection pooling should be used. (Default: `true`)"
           ],
-          "default": "true",
+          "default": "ConfigDefaults.defaultKeepAlive",
           "since": "0.1.0"
         },
         {
@@ -139,7 +139,7 @@
           "doc": [
             "The time after which a connection that has been idle in the pool should be closed."
           ],
-          "default": "scala.concurrent.duration.Duration(\"60s\")",
+          "default": "ConfigDefaults.defaultPooledConnectionIdleTimeout",
           "since": "0.1.0"
         },
         {
@@ -148,7 +148,7 @@
           "doc": [
             "The maximum time that a connection should live for in the pool."
           ],
-          "default": "scala.concurrent.duration.Duration.Inf",
+          "default": "ConfigDefaults.defaultConnectionTtl",
           "since": "0.1.0"
         },
         {
@@ -157,7 +157,7 @@
           "doc": [
             "The maximum total number of connections. -1 means no maximum."
           ],
-          "default": "-1",
+          "default": "ConfigDefaults.defaultMaxConnections",
           "since": "0.1.0"
         },
         {
@@ -166,7 +166,7 @@
           "doc": [
             "The maximum number of connections to make per host. -1 means no maximum."
           ],
-          "default": "-1",
+          "default": "ConfigDefaults.defaultMaxConnectionsPerHost",
           "since": "0.1.0"
         }
       ]

@@ -23,9 +23,7 @@ abstract class Gigahorse {
    * @param url The base URL to make HTTP requests to.
    * @return Request
    */
-  def url(url: String): Request =
-    Request(url)
-      /*, Map(), Map(), None, None, None, None, None, None, None */
+  def url(url: String): Request = Request(url)
 
   def withHttp[A](config: Config)(f: HttpClient => A): A =
     {
@@ -40,7 +38,14 @@ abstract class Gigahorse {
   def withHttp[A](f: HttpClient => A): A =
     withHttp(config)(f)
 
-  def config: Config = Config()
+  /** Returns default configuration using `application.conf` if present. */
+  def config: Config =
+    {
+      import com.typesafe.config.ConfigFactory
+      val c = ConfigFactory.load
+      if (c.hasPath(ConfigParser.rootPath)) ConfigParser.parse(c)
+      else Config()
+    }
 
   /** Returns HttpClient. You must call `close` when you're done. */
   def http(config: Config): HttpClient = new AhcHttpClient(config)
