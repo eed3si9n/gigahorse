@@ -25,7 +25,35 @@ final class Request(
   val virtualHostOpt: Option[String],
   /** The proxy server this request will use. (Default: `None`) */
   val proxyServerOpt: Option[ProxyServer]) extends Serializable {
-  
+  import java.io.File
+  import java.nio.charset.Charset
+  import AhcHttpClient.{ utf8, setBodyString, setBody }
+  /** Uses GET method. */
+  def get: Request = this.withMethod("GET")
+  /** Uses PATCH method with the given body. */
+  def patch[A: HttpWrite](body: A): Request = setBody(this.withMethod("PATCH"), body)
+  /** Uses PATCH method with the given body. */
+  def patch(body: String, charset: Charset): Request = setBodyString(this.withMethod("PATCH"), body, charset)
+  /** Uses PATCH method with the given file. */
+  def patch(file: File): Request = this.withMethod("PATCH").withBody(FileBody(file))
+  /** Uses POST method with the given body. */
+  def post[A: HttpWrite](body: A): Request = setBody(this.withMethod("POST"), body)
+  /** Uses POST method with the given body. */
+  def post(body: String, charset: Charset): Request = setBodyString(this.withMethod("POST"), body, charset)
+  /** Uses POST method with the given file. */
+  def post(file: File): Request = this.withMethod("POST").withBody(FileBody(file))
+  /** Uses PUT method with the given body. */
+  def put[A: HttpWrite](body: A): Request = setBody(this.withMethod("PUT"), body)
+  /** Uses PUT method with the given body. */
+  def put(body: String, charset: Charset): Request = setBodyString(this.withMethod("PUT"), body, charset)
+  /** Uses PUT method with the given file. */
+  def put(file: File): Request = this.withMethod("PUT").withBody(FileBody(file))
+  /** Uses DELETE method. */
+  def delete: Request = this.withMethod("DELETE")
+  /** Uses HEAD method. */
+  def head: Request = this.withMethod("HEAD")
+  /** Uses OPTIONS method. */
+  def options: Request = this.withMethod("OPTIONS")
   def this(url: String) = this(url, "GET", EmptyBody(), Map(), Map(), None, None, None, None, None, None)
   
   override def equals(o: Any): Boolean = o match {
