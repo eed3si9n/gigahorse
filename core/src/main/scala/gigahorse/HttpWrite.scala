@@ -26,8 +26,13 @@ abstract class HttpWrite[A] {
 object HttpWrite {
   val utf8 = Charset.forName("UTF-8")
   implicit val stringHttpWrite: HttpWrite[String] = new StringHttpWrite
-  final class StringHttpWrite extends HttpWrite[String] {
+  private final class StringHttpWrite extends HttpWrite[String] {
     def toByteArray(a: String): Array[Byte] = a.getBytes(utf8)
+    def contentType: Option[String] = None
+  }
+  implicit val encodedStringHttpWrite: HttpWrite[EncodedString] = new EncodedStringHttpWrite
+  private final class EncodedStringHttpWrite extends HttpWrite[EncodedString] {
+    def toByteArray(a: EncodedString): Array[Byte] = a.string.getBytes(a.charset)
     def contentType: Option[String] = None
   }
 }

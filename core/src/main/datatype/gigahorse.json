@@ -169,6 +169,12 @@
           "default": "ConfigDefaults.defaultMaxConnectionsPerHost",
           "since": "0.1.0"
         }
+      ],
+      "extra": [
+        "def withUserAgent(userAgent: String): Config = copy(userAgentOpt = Some(userAgent))",
+        "def withAuth(auth: Realm): Config = copy(authOpt = Some(auth))",
+        "def withAuth(username: String, password: String): Config = copy(authOpt = Some(Realm(username = username, password = password)))",
+        "def withAuth(username: String, password: String, scheme: AuthScheme): Config = copy(authOpt = Some(Realm(username = username, password = password, scheme = scheme)))"
       ]
     },
     {
@@ -190,7 +196,7 @@
           "doc": [
             "The method for this request."
           ],
-          "default": "\"GET\"",
+          "default": "HttpVerbs.GET",
           "since": "0.1.0"
         },
         {
@@ -272,34 +278,60 @@
       "extra": [
         "import java.io.File",
         "import java.nio.charset.Charset",
-        "import AhcHttpClient.{ utf8, setBodyString, setBody }",
         "",
         "/** Uses GET method. */",
-        "def get: Request = this.withMethod(\"GET\")",
+        "def get: Request                                   = this.withMethod(HttpVerbs.GET)",
         "/** Uses PATCH method with the given body. */",
-        "def patch[A: HttpWrite](body: A): Request = setBody(this.withMethod(\"PATCH\"), body)",
+        "def patch[A: HttpWrite](body: A): Request          = this.withMethod(HttpVerbs.PATCH).withBody(body)",
         "/** Uses PATCH method with the given body. */",
-        "def patch(body: String, charset: Charset): Request = setBodyString(this.withMethod(\"PATCH\"), body, charset)",
+        "def patch(body: String, charset: Charset): Request = this.withMethod(HttpVerbs.PATCH).withBody(EncodedString(body, charset))",
         "/** Uses PATCH method with the given file. */",
-        "def patch(file: File): Request = this.withMethod(\"PATCH\").withBody(FileBody(file))",
+        "def patch(file: File): Request                     = this.withMethod(HttpVerbs.PATCH).withBody(FileBody(file))",
         "/** Uses POST method with the given body. */",
-        "def post[A: HttpWrite](body: A): Request = setBody(this.withMethod(\"POST\"), body)",
+        "def post[A: HttpWrite](body: A): Request           = this.withMethod(HttpVerbs.POST).withBody(body)",
         "/** Uses POST method with the given body. */",
-        "def post(body: String, charset: Charset): Request = setBodyString(this.withMethod(\"POST\"), body, charset)",
+        "def post(body: String, charset: Charset): Request  = this.withMethod(HttpVerbs.POST).withBody(EncodedString(body, charset))",
         "/** Uses POST method with the given file. */",
-        "def post(file: File): Request = this.withMethod(\"POST\").withBody(FileBody(file))",
+        "def post(file: File): Request                      = this.withMethod(HttpVerbs.POST).withBody(FileBody(file))",
         "/** Uses PUT method with the given body. */",
-        "def put[A: HttpWrite](body: A): Request = setBody(this.withMethod(\"PUT\"), body)",
+        "def put[A: HttpWrite](body: A): Request            = this.withMethod(HttpVerbs.PUT).withBody(body)",
         "/** Uses PUT method with the given body. */",
-        "def put(body: String, charset: Charset): Request = setBodyString(this.withMethod(\"PUT\"), body, charset)",
+        "def put(body: String, charset: Charset): Request   = this.withMethod(HttpVerbs.PUT).withBody(EncodedString(body, charset))",
         "/** Uses PUT method with the given file. */",
-        "def put(file: File): Request = this.withMethod(\"PUT\").withBody(FileBody(file))",
+        "def put(file: File): Request                       = this.withMethod(HttpVerbs.PUT).withBody(FileBody(file))",
         "/** Uses DELETE method. */",
-        "def delete: Request = this.withMethod(\"DELETE\")",
+        "def delete: Request                                = this.withMethod(HttpVerbs.DELETE)",
         "/** Uses HEAD method. */",
-        "def head: Request = this.withMethod(\"HEAD\")",
+        "def head: Request                                  = this.withMethod(HttpVerbs.HEAD)",
         "/** Uses OPTIONS method. */",
-        "def options: Request = this.withMethod(\"OPTIONS\")"
+        "def options: Request                               = this.withMethod(HttpVerbs.OPTIONS)",
+        "def withBody[A: HttpWrite](body: A): Request =",
+        "  {",
+        "    val w = implicitly[HttpWrite[A]]",
+        "    val r = this.withBody(InMemoryBody(w.toByteArray(body)))",
+        "    (w.contentType, r.contentType) match {",
+        "      case (None, _)    => r",
+        "      case (_, Some(_)) => r",
+        "      case (Some(x), _) => r.addHeader(HeaderNames.CONTENT_TYPE -> x)",
+        "    }",
+        "  }",
+        "def contentType: Option[String] =",
+        "  {",
+        "    this.headers.find(p => p._1 == HeaderNames.CONTENT_TYPE) map { case (header, values) =>",
+        "      values.head",
+        "    }}",
+        "def withAuth(auth: Realm): Request = copy(authOpt = Some(auth))",
+        "def withAuth(username: String, password: String): Request = copy(authOpt = Some(Realm(username = username, password = password)))",
+        "def withAuth(username: String, password: String, scheme: AuthScheme): Request = copy(authOpt = Some(Realm(username = username, password = password, scheme = scheme)))",
+        "def withHeaders(headers0: (String, String)*): Request = copy(headers = Map(headers0 map { case (k, v) => k -> List(v) }: _*))",
+        "def addHeader(headers0: (String, String)*): Request = this.addHeaders(headers0: _*)",
+        "def addHeaders(headers0: (String, String)*): Request = copy(headers = this.headers ++ Map(headers0 map { case (k, v) => k -> List(v) }: _*))",
+        "def withQueryString(parameters: (String, String)*): Request = copy(queryString = Map(parameters map { case (k, v) => k -> List(v) }: _*))",
+        "def addQueryString(parameters: (String, String)*): Request = copy(queryString = this.queryString ++ Map(parameters map { case (k, v) => k -> List(v) }: _*))",
+        "def withFollowRedirects(follow: Boolean): Request = copy(followRedirectsOpt = Some(follow))",
+        "def withRequestTimeout(requestTimeout: scala.concurrent.duration.Duration): Request = copy(requestTimeoutOpt = Some(requestTimeout))",
+        "def withVirtualHost(virtualHost: String): Request = copy(virtualHostOpt = Some(virtualHost))",
+        "def withProxyServer(proxyServer: ProxyServer): Request = copy(proxyServerOpt = Some(proxyServer))"
       ]
     },
     {
@@ -367,7 +399,7 @@
             "The scheme for this authentication."
           ],
           "default": "AuthScheme.Basic",
-          "since": "0.1.0"
+          "since": "0.0.1"
         },
         {
           "name": "usePreemptiveAuth",
@@ -462,6 +494,20 @@
           "default": "false",
           "since": "0.1.0"
         }
+      ],
+      "extra": [
+        "def withRealmName(realmName: String): Realm = copy(realmNameOpt = Some(realmName))",
+        "def withNonce(nonce: String): Realm = copy(nonceOpt = Some(nonce))",
+        "def withAlgorithm(algorithm: String): Realm = copy(algorithmOpt = Some(algorithm))",
+        "def withResponse(response: String): Realm = copy(responseOpt = Some(response))",
+        "def withOpaque(opaque: String): Realm = copy(opaqueOpt = Some(opaque))",
+        "def withQop(qop: String): Realm = copy(qopOpt = Some(qop))",
+        "def withNc(nc: String): Realm = copy(ncOpt = Some(nc))",
+        "def withUri(uri: java.net.URI): Realm = copy(uriOpt = Some(uri))",
+        "def withmethodName(methodName: String): Realm = copy(methodNameOpt = Some(methodName))",
+        "def withCharset(charset: java.nio.charset.Charset): Realm = copy(charsetOpt = Some(charset))",
+        "def withNtlmDomainOpt(ntlmDomain: String): Realm = copy(ntlmDomainOpt = Some(ntlmDomain))",
+        "def withNtlmHost(ntlmHost: String): Realm = copy(ntlmHostOpt = Some(ntlmHost))"
       ]
     },
     {
@@ -522,7 +568,12 @@
           "name": "DefaultProxyServer",
           "namespace": "gigahorse",
           "type": "record",
-          "target": "Scala"
+          "target": "Scala",
+          "extra": [
+            "def withAuth(auth: Realm): DefaultProxyServer = copy(authOpt = Some(auth))",
+            "def withAuth(username: String, password: String): DefaultProxyServer = copy(authOpt = Some(Realm(username = username, password = password)))",
+            "def withAuth(username: String, password: String, scheme: AuthScheme): DefaultProxyServer = copy(authOpt = Some(Realm(username = username, password = password, scheme = scheme)))"
+          ]
         }
       ]
     },
@@ -533,6 +584,22 @@
       "target": "Scala",
       "symbols": [
         "Continue", "Abort", "Upgrade"
+      ]
+    },
+    {
+      "name": "EncodedString",
+      "namespace": "gigahorse",
+      "type": "record",
+      "target": "Scala",
+      "fields": [
+        {
+          "name": "string",
+          "type": "String"
+        },
+        {
+          "name": "charset",
+          "type": "java.nio.charset.Charset"
+        }
       ]
     }
   ]
