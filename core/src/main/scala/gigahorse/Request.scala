@@ -27,34 +27,60 @@ final class Request(
   val proxyServerOpt: Option[ProxyServer]) extends Serializable {
   import java.io.File
   import java.nio.charset.Charset
-  import AhcHttpClient.{ utf8, setBodyString, setBody }
   /** Uses GET method. */
-  def get: Request = this.withMethod("GET")
+  def get: Request                                   = this.withMethod(HttpVerbs.GET)
   /** Uses PATCH method with the given body. */
-  def patch[A: HttpWrite](body: A): Request = setBody(this.withMethod("PATCH"), body)
+  def patch[A: HttpWrite](body: A): Request          = this.withMethod(HttpVerbs.PATCH).withBody(body)
   /** Uses PATCH method with the given body. */
-  def patch(body: String, charset: Charset): Request = setBodyString(this.withMethod("PATCH"), body, charset)
+  def patch(body: String, charset: Charset): Request = this.withMethod(HttpVerbs.PATCH).withBody(EncodedString(body, charset))
   /** Uses PATCH method with the given file. */
-  def patch(file: File): Request = this.withMethod("PATCH").withBody(FileBody(file))
+  def patch(file: File): Request                     = this.withMethod(HttpVerbs.PATCH).withBody(FileBody(file))
   /** Uses POST method with the given body. */
-  def post[A: HttpWrite](body: A): Request = setBody(this.withMethod("POST"), body)
+  def post[A: HttpWrite](body: A): Request           = this.withMethod(HttpVerbs.POST).withBody(body)
   /** Uses POST method with the given body. */
-  def post(body: String, charset: Charset): Request = setBodyString(this.withMethod("POST"), body, charset)
+  def post(body: String, charset: Charset): Request  = this.withMethod(HttpVerbs.POST).withBody(EncodedString(body, charset))
   /** Uses POST method with the given file. */
-  def post(file: File): Request = this.withMethod("POST").withBody(FileBody(file))
+  def post(file: File): Request                      = this.withMethod(HttpVerbs.POST).withBody(FileBody(file))
   /** Uses PUT method with the given body. */
-  def put[A: HttpWrite](body: A): Request = setBody(this.withMethod("PUT"), body)
+  def put[A: HttpWrite](body: A): Request            = this.withMethod(HttpVerbs.PUT).withBody(body)
   /** Uses PUT method with the given body. */
-  def put(body: String, charset: Charset): Request = setBodyString(this.withMethod("PUT"), body, charset)
+  def put(body: String, charset: Charset): Request   = this.withMethod(HttpVerbs.PUT).withBody(EncodedString(body, charset))
   /** Uses PUT method with the given file. */
-  def put(file: File): Request = this.withMethod("PUT").withBody(FileBody(file))
+  def put(file: File): Request                       = this.withMethod(HttpVerbs.PUT).withBody(FileBody(file))
   /** Uses DELETE method. */
-  def delete: Request = this.withMethod("DELETE")
+  def delete: Request                                = this.withMethod(HttpVerbs.DELETE)
   /** Uses HEAD method. */
-  def head: Request = this.withMethod("HEAD")
+  def head: Request                                  = this.withMethod(HttpVerbs.HEAD)
   /** Uses OPTIONS method. */
-  def options: Request = this.withMethod("OPTIONS")
-  def this(url: String) = this(url, "GET", EmptyBody(), Map(), Map(), None, None, None, None, None, None)
+  def options: Request                               = this.withMethod(HttpVerbs.OPTIONS)
+  def withBody[A: HttpWrite](body: A): Request =
+  {
+    val w = implicitly[HttpWrite[A]]
+    val r = this.withBody(InMemoryBody(w.toByteArray(body)))
+    (w.contentType, r.contentType) match {
+      case (None, _)    => r
+      case (_, Some(_)) => r
+      case (Some(x), _) => r.addHeader(HeaderNames.CONTENT_TYPE -> x)
+    }
+  }
+  def contentType: Option[String] =
+  {
+    this.headers.find(p => p._1 == HeaderNames.CONTENT_TYPE) map { case (header, values) =>
+    values.head
+  }}
+  def withAuth(auth: Realm): Request = copy(authOpt = Some(auth))
+  def withAuth(username: String, password: String): Request = copy(authOpt = Some(Realm(username = username, password = password)))
+  def withAuth(username: String, password: String, scheme: AuthScheme): Request = copy(authOpt = Some(Realm(username = username, password = password, scheme = scheme)))
+  def withHeaders(headers0: (String, String)*): Request = copy(headers = Map(headers0 map { case (k, v) => k -> List(v) }: _*))
+  def addHeader(headers0: (String, String)*): Request = this.addHeaders(headers0: _*)
+  def addHeaders(headers0: (String, String)*): Request = copy(headers = this.headers ++ Map(headers0 map { case (k, v) => k -> List(v) }: _*))
+  def withQueryString(parameters: (String, String)*): Request = copy(queryString = Map(parameters map { case (k, v) => k -> List(v) }: _*))
+  def addQueryString(parameters: (String, String)*): Request = copy(queryString = this.queryString ++ Map(parameters map { case (k, v) => k -> List(v) }: _*))
+  def withFollowRedirects(follow: Boolean): Request = copy(followRedirectsOpt = Some(follow))
+  def withRequestTimeout(requestTimeout: scala.concurrent.duration.Duration): Request = copy(requestTimeoutOpt = Some(requestTimeout))
+  def withVirtualHost(virtualHost: String): Request = copy(virtualHostOpt = Some(virtualHost))
+  def withProxyServer(proxyServer: ProxyServer): Request = copy(proxyServerOpt = Some(proxyServer))
+  def this(url: String) = this(url, HttpVerbs.GET, EmptyBody(), Map(), Map(), None, None, None, None, None, None)
   
   override def equals(o: Any): Boolean = o match {
     case x: Request => (this.url == x.url) && (this.method == x.method) && (this.body == x.body) && (this.headers == x.headers) && (this.queryString == x.queryString) && (this.signatureOpt == x.signatureOpt) && (this.authOpt == x.authOpt) && (this.followRedirectsOpt == x.followRedirectsOpt) && (this.requestTimeoutOpt == x.requestTimeoutOpt) && (this.virtualHostOpt == x.virtualHostOpt) && (this.proxyServerOpt == x.proxyServerOpt)
@@ -104,6 +130,6 @@ final class Request(
   }
 }
 object Request {
-  def apply(url: String): Request = new Request(url, "GET", EmptyBody(), Map(), Map(), None, None, None, None, None, None)
+  def apply(url: String): Request = new Request(url, HttpVerbs.GET, EmptyBody(), Map(), Map(), None, None, None, None, None, None)
   def apply(url: String, method: String, body: Body, headers: Map[String, List[String]], queryString: Map[String, List[String]], signatureOpt: Option[SignatureCalculator], authOpt: Option[Realm], followRedirectsOpt: Option[Boolean], requestTimeoutOpt: Option[scala.concurrent.duration.Duration], virtualHostOpt: Option[String], proxyServerOpt: Option[ProxyServer]): Request = new Request(url, method, body, headers, queryString, signatureOpt, authOpt, followRedirectsOpt, requestTimeoutOpt, virtualHostOpt, proxyServerOpt)
 }

@@ -25,7 +25,7 @@ import com.ning.http.client.{ Response => XResponse, Request => XRequest, ProxyS
 import com.ning.http.client.AsyncHandler.{ STATE => XState }
 import com.ning.http.util.AsyncHttpProviderUtils
 import com.ning.http.client.Realm.{ RealmBuilder, AuthScheme => XAuthScheme }
-import org.jboss.netty.handler.codec.http.{ HttpHeaders, QueryStringDecoder }
+import org.jboss.netty.handler.codec.http.QueryStringDecoder
 
 class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
   import AhcHttpClient._
@@ -131,21 +131,21 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
         builder.setBody(bodyGenerator)
         (builder, request.headers)
       case b: InMemoryBody =>
-        val ct: String = contentType(request).getOrElse("text/plain")
+        val ct: String = contentType.getOrElse("text/plain")
 
         val h = try {
           // Only parse out the form body if we are doing the signature calculation.
-          if (ct.contains(HttpHeaders.Values.APPLICATION_X_WWW_FORM_URLENCODED) && signatureOpt.isDefined) {
+          if (ct.contains(ContentTypes.FORM) && signatureOpt.isDefined) {
             // If we are taking responsibility for setting the request body, we should block any
             // externally defined Content-Length field (see #5221 for the details)
-            val filteredHeaders = request.headers.filterNot { case (k, v) => k.equalsIgnoreCase(HttpHeaders.Names.CONTENT_LENGTH) }
+            val filteredHeaders = request.headers.filterNot { case (k, v) => k.equalsIgnoreCase(HeaderNames.CONTENT_LENGTH) }
 
             // extract the content type and the charset
             val charset = Charset.forName(
               Option(AsyncHttpProviderUtils.parseCharset(ct)).getOrElse {
                 // NingWSRequest modifies headers to include the charset, but this fails tests in Scala.
                 //val contentTypeList = Seq(ct + "; charset=utf-8")
-                //possiblyModifiedHeaders = this.headers.updated(HttpHeaders.Names.CONTENT_TYPE, contentTypeList)
+                //possiblyModifiedHeaders = this.headers.updated(HeaderNames.CONTENT_TYPE, contentTypeList)
                 "utf-8"
               }
             )
@@ -193,21 +193,6 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
 }
 
 object AhcHttpClient {
-  val utf8 = Charset.forName("UTF-8")
-  private[gigahorse] def setBodyString(request: Request, body: String, charset: Charset): Request =
-    request.withBody(InMemoryBody(body.getBytes(charset)))
-
-  private[gigahorse] def setBody[A: HttpWrite](request: Request, body: A): Request =
-    {
-      val w = implicitly[HttpWrite[A]]
-      val r = request.withBody(InMemoryBody(w.toByteArray(body)))
-      (w.contentType, contentType(r)) match {
-        case (None, _)    => r
-        case (_, Some(_)) => r
-        case (Some(x), _) => r.withHeaders(r.headers.updated(HttpHeaders.Names.CONTENT_TYPE, x :: Nil))
-      }
-    }
-
   def toState(x: XState): State =
     x match {
       case XState.CONTINUE => State.Continue
@@ -220,12 +205,6 @@ object AhcHttpClient {
       case State.Continue => XState.CONTINUE
       case State.Abort    => XState.ABORT
       case State.Upgrade  => XState.UPGRADE
-    }
-
-  def contentType(request: Request): Option[String] =
-    request.headers.find(p => p._1 == HttpHeaders.Names.CONTENT_TYPE).map {
-      case (header, values) =>
-        values.head
     }
 
   def buildRealm(auth: Realm): XRealm =
@@ -244,18 +223,18 @@ object AhcHttpClient {
       builder.setPrincipal(auth.username)
       builder.setPassword(auth.password)
       builder.setUsePreemptiveAuth(auth.usePreemptiveAuth)
-      auth.realmNameOpt foreach { builder.setRealmName }
-      auth.nonceOpt foreach { builder.setNonce }
-      auth.algorithmOpt foreach { builder.setAlgorithm }
-      auth.responseOpt foreach { builder.setResponse }
-      auth.opaqueOpt foreach { builder.setOpaque }
-      auth.qopOpt foreach { builder.setQop }
-      auth.ncOpt foreach { builder.setNc }
-      auth.uriOpt foreach { x => builder.setUri(Uri.create(x.toString)) }
+      auth.realmNameOpt  foreach { builder.setRealmName }
+      auth.nonceOpt      foreach { builder.setNonce }
+      auth.algorithmOpt  foreach { builder.setAlgorithm }
+      auth.responseOpt   foreach { builder.setResponse }
+      auth.opaqueOpt     foreach { builder.setOpaque }
+      auth.qopOpt        foreach { builder.setQop }
+      auth.ncOpt         foreach { builder.setNc }
+      auth.uriOpt        foreach { x => builder.setUri(Uri.create(x.toString)) }
       auth.methodNameOpt foreach { builder.setMethodName }
-      auth.charsetOpt foreach { x => builder.setCharset(x) }
+      auth.charsetOpt    foreach { x => builder.setCharset(x) }
       auth.ntlmDomainOpt foreach { builder.setNtlmDomain }
-      auth.ntlmHostOpt foreach { builder.setNtlmHost }
+      auth.ntlmHostOpt   foreach { builder.setNtlmHost }
       builder.setUseAbsoluteURI(auth.useAbsoluteURI)
       builder.setOmitQuery(auth.omitQuery)
       builder.build()

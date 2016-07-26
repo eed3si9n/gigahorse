@@ -10,7 +10,9 @@ final class DefaultProxyServer(
   securedPort: Option[Int],
   authOpt: Option[Realm],
   nonProxyHosts: List[String]) extends gigahorse.ProxyServer(host, port, securedPort, authOpt, nonProxyHosts) {
-  
+  def withAuth(auth: Realm): DefaultProxyServer = copy(authOpt = Some(auth))
+  def withAuth(username: String, password: String): DefaultProxyServer = copy(authOpt = Some(Realm(username = username, password = password)))
+  def withAuth(username: String, password: String, scheme: AuthScheme): DefaultProxyServer = copy(authOpt = Some(Realm(username = username, password = password, scheme = scheme)))
   def this(host: String, port: Int, securedPort: Option[Int]) = this(host, port, securedPort, None, List())
   
   override def equals(o: Any): Boolean = o match {

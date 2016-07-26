@@ -28,10 +28,10 @@ class HttpClientSpec extends FlatSpec with Matchers {
     import gigahorse.Gigahorse
     Gigahorse.withHttp(Gigahorse.config) { http =>
       val r = Gigahorse.url("http://api.duckduckgo.com").
-        withQueryString(Map(
-          "q" -> List("1 + 1"),
-          "format" -> List("json")
-        )).get
+        addQueryString(
+          "q" -> "1 + 1",
+          "format" -> "json"
+        ).get
       val f = http.run(r)
       val res = Await.result(f, 120.seconds)
       assert(res.body contains "2 (number)")

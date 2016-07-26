@@ -51,7 +51,10 @@ final class Config(
   val maxConnections: Int,
   /** The maximum number of connections to make per host. -1 means no maximum. */
   val maxConnectionsPerHost: Int) extends Serializable {
-  
+  def withUserAgent(userAgent: String): Config = copy(userAgentOpt = Some(userAgent))
+  def withAuth(auth: Realm): Config = copy(authOpt = Some(auth))
+  def withAuth(username: String, password: String): Config = copy(authOpt = Some(Realm(username = username, password = password)))
+  def withAuth(username: String, password: String, scheme: AuthScheme): Config = copy(authOpt = Some(Realm(username = username, password = password, scheme = scheme)))
   def this() = this(ConfigDefaults.defaultConnectTimeout, ConfigDefaults.defaultRequestTimeout, ConfigDefaults.defaultReadTimeout, ConfigDefaults.defaultFollowRedirect, ConfigDefaults.defaultMaxRedirects, ConfigDefaults.defaultCompressionEnforced, ConfigDefaults.defaultUserAgentOpt, ConfigDefaults.defaultAuthOpt, ConfigDefaults.defaultSslConfig, ConfigDefaults.defaultMaxRequestRetry, ConfigDefaults.defaultDisableUrlEncoding, ConfigDefaults.defaultUseProxyProperties, ConfigDefaults.defaultKeepAlive, ConfigDefaults.defaultPooledConnectionIdleTimeout, ConfigDefaults.defaultConnectionTtl, ConfigDefaults.defaultMaxConnections, ConfigDefaults.defaultMaxConnectionsPerHost)
   
   override def equals(o: Any): Boolean = o match {

@@ -27,8 +27,20 @@ final class Realm(
   val ntlmHostOpt: Option[String],
   val useAbsoluteURI: Boolean,
   val omitQuery: Boolean) extends Serializable {
-  
+  def withRealmName(realmName: String): Realm = copy(realmNameOpt = Some(realmName))
+  def withNonce(nonce: String): Realm = copy(nonceOpt = Some(nonce))
+  def withAlgorithm(algorithm: String): Realm = copy(algorithmOpt = Some(algorithm))
+  def withResponse(response: String): Realm = copy(responseOpt = Some(response))
+  def withOpaque(opaque: String): Realm = copy(opaqueOpt = Some(opaque))
+  def withQop(qop: String): Realm = copy(qopOpt = Some(qop))
+  def withNc(nc: String): Realm = copy(ncOpt = Some(nc))
+  def withUri(uri: java.net.URI): Realm = copy(uriOpt = Some(uri))
+  def withmethodName(methodName: String): Realm = copy(methodNameOpt = Some(methodName))
+  def withCharset(charset: java.nio.charset.Charset): Realm = copy(charsetOpt = Some(charset))
+  def withNtlmDomainOpt(ntlmDomain: String): Realm = copy(ntlmDomainOpt = Some(ntlmDomain))
+  def withNtlmHost(ntlmHost: String): Realm = copy(ntlmHostOpt = Some(ntlmHost))
   def this(username: String, password: String) = this(username, password, AuthScheme.Basic, true, None, None, None, None, None, None, None, None, None, None, None, None, false, false)
+  def this(username: String, password: String, scheme: AuthScheme) = this(username, password, scheme, true, None, None, None, None, None, None, None, None, None, None, None, None, false, false)
   
   override def equals(o: Any): Boolean = o match {
     case x: Realm => (this.username == x.username) && (this.password == x.password) && (this.scheme == x.scheme) && (this.usePreemptiveAuth == x.usePreemptiveAuth) && (this.realmNameOpt == x.realmNameOpt) && (this.nonceOpt == x.nonceOpt) && (this.algorithmOpt == x.algorithmOpt) && (this.responseOpt == x.responseOpt) && (this.opaqueOpt == x.opaqueOpt) && (this.qopOpt == x.qopOpt) && (this.ncOpt == x.ncOpt) && (this.uriOpt == x.uriOpt) && (this.methodNameOpt == x.methodNameOpt) && (this.charsetOpt == x.charsetOpt) && (this.ntlmDomainOpt == x.ntlmDomainOpt) && (this.ntlmHostOpt == x.ntlmHostOpt) && (this.useAbsoluteURI == x.useAbsoluteURI) && (this.omitQuery == x.omitQuery)
@@ -100,5 +112,6 @@ final class Realm(
 }
 object Realm {
   def apply(username: String, password: String): Realm = new Realm(username, password, AuthScheme.Basic, true, None, None, None, None, None, None, None, None, None, None, None, None, false, false)
+  def apply(username: String, password: String, scheme: AuthScheme): Realm = new Realm(username, password, scheme, true, None, None, None, None, None, None, None, None, None, None, None, None, false, false)
   def apply(username: String, password: String, scheme: AuthScheme, usePreemptiveAuth: Boolean, realmNameOpt: Option[String], nonceOpt: Option[String], algorithmOpt: Option[String], responseOpt: Option[String], opaqueOpt: Option[String], qopOpt: Option[String], ncOpt: Option[String], uriOpt: Option[java.net.URI], methodNameOpt: Option[String], charsetOpt: Option[java.nio.charset.Charset], ntlmDomainOpt: Option[String], ntlmHostOpt: Option[String], useAbsoluteURI: Boolean, omitQuery: Boolean): Realm = new Realm(username, password, scheme, usePreemptiveAuth, realmNameOpt, nonceOpt, algorithmOpt, responseOpt, opaqueOpt, qopOpt, ncOpt, uriOpt, methodNameOpt, charsetOpt, ntlmDomainOpt, ntlmHostOpt, useAbsoluteURI, omitQuery)
 }
