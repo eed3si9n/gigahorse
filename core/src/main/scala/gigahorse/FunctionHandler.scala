@@ -16,6 +16,10 @@
 
 package gigahorse
 
-abstract class HttpRead[A] {
-  def fromByteArray(bytes: Array[Byte], contentType: Option[String]): A
+abstract class FunctionHandler[A](f: Response => A) extends CompletionHandler[A] {
+  override def onCompleted(response: Response): A = f(response)
+}
+
+object FunctionHandler {
+  def apply[A](f: Response => A): FunctionHandler[A] = new FunctionHandler[A](f) {}
 }
