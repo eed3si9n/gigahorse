@@ -38,7 +38,21 @@ class HttpClientSpec extends FlatSpec with Matchers {
     }
   }
 
-  "http.run(r, Gigahorse.toEither)" should "retrieve a resource and convert to Right" in {
+  "http.run(r, Gigahorse.asString)" should "retrieve a resource as String" in {
+    import gigahorse.Gigahorse
+    Gigahorse.withHttp(Gigahorse.config) { http =>
+      val r = Gigahorse.url("http://api.duckduckgo.com").
+        addQueryString(
+          "q" -> "1 + 1",
+          "format" -> "json"
+        ).get
+      val f = http.run(r, Gigahorse.asString)
+      val res = Await.result(f, 120.seconds)
+      assert(res contains "2 (number)")
+    }
+  }
+
+  "http.run(r, Gigahorse.asEither)" should "retrieve a resource and convert to Right" in {
     import gigahorse.Gigahorse
     import scala.concurrent.ExecutionContext.Implicits._
     Gigahorse.withHttp(Gigahorse.config) { http =>
@@ -47,7 +61,7 @@ class HttpClientSpec extends FlatSpec with Matchers {
           "q" -> "1 + 1",
           "format" -> "json"
         ).get
-      val f = http.run(r, Gigahorse.toEither map { r => r.body })
+      val f = http.run(r, Gigahorse.asEither map Gigahorse.asString)
       val res = Await.result(f, 120.seconds)
       assert(res.toString contains "2 (number)")
     }
@@ -58,7 +72,7 @@ class HttpClientSpec extends FlatSpec with Matchers {
     import scala.concurrent.ExecutionContext.Implicits._
     Gigahorse.withHttp(Gigahorse.config) { http =>
       val r = Gigahorse.url("http://getstatuscode.com/500")
-      val f = http.run(r, Gigahorse.toEither)
+      val f = http.run(r, Gigahorse.asEither)
       val res = Await.result(f, 120.seconds)
       assert(res.left.get.toString contains "Unexpected status: 500")
     }
@@ -88,12 +102,12 @@ class HttpClientSpec extends FlatSpec with Matchers {
     }
   }
 
-  "http.process(r, Gigahorse.toEither)" should "preserve an error response and convert to Right given 404" in {
+  "http.process(r, Gigahorse.asEither)" should "preserve an error response and convert to Right given 404" in {
     import gigahorse.Gigahorse
     import scala.concurrent.ExecutionContext.Implicits._
     Gigahorse.withHttp(Gigahorse.config) { http =>
       val r = Gigahorse.url("http://getstatuscode.com/404")
-      val f = http.process(r, Gigahorse.toEither)
+      val f = http.process(r, Gigahorse.asEither)
       val res = Await.result(f, 120.seconds)
       assert(res.right.get.body contains "404 HTTP Status Code")
     }

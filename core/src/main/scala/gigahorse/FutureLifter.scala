@@ -31,5 +31,5 @@ final class FutureLifter[A](f: Response => A) {
 }
 
 object FutureLifter {
-  def toEither: FutureLifter[Response] = new FutureLifter[Response](identity)
+  def asEither: FutureLifter[Response] = new FutureLifter[Response](identity)
 }
