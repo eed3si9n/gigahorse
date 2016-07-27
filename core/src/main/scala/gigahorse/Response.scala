@@ -34,11 +34,6 @@ abstract class Response {
   def bodyAsBytes: Array[Byte]
 
   /**
-   * The response body as an `A`.
-   */
-  def as[A: HttpRead]: A
-
-  /**
    * The response status code.
    */
   def status: Int

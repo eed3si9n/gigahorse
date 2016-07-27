@@ -50,16 +50,6 @@ class AhcResponse(ahcResponse: XResponse) extends Response {
   }
 
   /**
-   * The response body as an `A`.
-   */
-  def as[A: HttpRead]: A =
-    {
-      val r = implicitly[HttpRead[A]]
-      val contentType = Option(ahcResponse.getContentType)
-      r.fromByteArray(bodyAsBytes, contentType)
-    }
-
-  /**
    * Return the headers of the response as a case-insensitive map
    */
   lazy val allHeaders: Map[String, List[String]] =

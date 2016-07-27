@@ -20,7 +20,7 @@ package gigahorse
 import scala.collection.JavaConverters._
 import java.io.{ File, UnsupportedEncodingException }
 import java.nio.charset.{ Charset, StandardCharsets }
-import scala.concurrent.{ Future, Promise }
+import scala.concurrent.{ Future, Promise, ExecutionContext }
 import com.ning.http.client.{ Response => XResponse, Request => XRequest, ProxyServer => XProxyServer, Realm => XRealm, _ }
 import com.ning.http.client.AsyncHandler.{ STATE => XState }
 import com.ning.http.util.AsyncHttpProviderUtils
@@ -38,13 +38,20 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
   def this(config: Config) =
     this(AhcConfig.buildConfig(config))
 
-  def run(request: Request): Future[Response] = process(request, runHandler)
-  private[gigahorse] val runHandler: CompletionHandler[Response] = new CompletionHandler[Response] {
-    override def onCompleted(response: Response) = response
-  }
+  /** Runs the request and return a Future of Response. */
+  def run(request: Request): Future[Response] =
+    process(request, OkHandler[Response](identity))
+
+  /** Runs the request and return a Future of A. */
+  def run[A](request: Request, f: Response => A): Future[A] =
+    process(request, OkHandler[A](f))
+
+  /** Runs the request and return a Future of Either a Response or a Throwable. */
+  def run[A](request: Request, lifter: FutureLifter[A])(implicit ec: ExecutionContext): Future[Either[Throwable, A]] =
+    lifter.run(run(request))
 
   def download(request: Request, file: File): Future[File] =
-    process(request, new CompletionHandler[File] {
+    process(request, new OkHandler[File](_ => ???) {
       import java.io.FileOutputStream
       val out = new FileOutputStream(file)
       override def onBodyPartReceived(content: HttpResponseBodyPart): State = {
@@ -54,30 +61,43 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
       override def onCompleted(response: Response) = file
     })
 
+  /** Executes the request and return a Future of Response. Does not error on non-OK response. */
+  def process(request: Request): Future[Response] =
+    process(request, FunctionHandler[Response](identity))
+
+  /** Executes the request and return a Future of A. Does not error on non-OK response. */
+  def process[A](request: Request, f: Response => A): Future[A] =
+    process(request, FunctionHandler[A](f))
+
+  /** Executes the request and return a Future of Either a Response or a Throwable. Does not error on non-OK response. */
+  def process[A](request: Request, lifter: FutureLifter[A])(implicit ec: ExecutionContext): Future[Either[Throwable, A]] =
+    lifter.run(process(request))
+
+  /** Executes the request. Does not error on non-OK response. */
   def process[A](request: Request, handler: CompletionHandler[A]): Future[A] =
     {
       import com.ning.http.client.AsyncCompletionHandler
       val result = Promise[A]()
       val xrequest = buildRequest(request)
       asyncHttpClient.executeRequest(xrequest, new AsyncHandler[XResponse]() {
-        def onCompleted(response: XResponse): XResponse = {
-          result.success(handler.onCompleted(new AhcResponse(response)))
-          response
-        }
-        override def onCompleted(): XResponse = {
-          onCompleted(handler.builder.build())
-        }
-        override def onThrowable(t: Throwable): Unit = {
-          result.failure(t)
-        }
-        override def onBodyPartReceived(bodyPart: HttpResponseBodyPart): XState = {
-          fromState(handler.onBodyPartReceived(bodyPart))
-        }
         override def onStatusReceived(status: HttpResponseStatus): XState = {
           fromState(handler.onStatusReceived(status))
         }
         override def onHeadersReceived(headers: HttpResponseHeaders): XState = {
           fromState(handler.onHeadersReceived(headers))
+        }
+        override def onBodyPartReceived(bodyPart: HttpResponseBodyPart): XState = {
+          fromState(handler.onBodyPartReceived(bodyPart))
+        }
+        override def onCompleted(): XResponse = {
+          onCompleted(handler.builder.build())
+        }
+        def onCompleted(response: XResponse): XResponse = {
+          result.success(handler.onCompleted(new AhcResponse(response)))
+          response
+        }
+        override def onThrowable(t: Throwable): Unit = {
+          result.failure(t)
         }
       })
       result.future

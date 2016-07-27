@@ -49,6 +49,9 @@ abstract class Gigahorse {
 
   /** Returns HttpClient. You must call `close` when you're done. */
   def http(config: Config): HttpClient = new AhcHttpClient(config)
+
+  /** Lifts Future[Reponse] result to Future[Either[Throwable, Reponse]] */
+  lazy val toEither: FutureLifter[Response] = FutureLifter.toEither
 }
 
 object Gigahorse extends Gigahorse

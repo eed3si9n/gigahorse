@@ -16,7 +16,7 @@
 
 package gigahorse
 
-import scala.concurrent.Future
+import scala.concurrent.{ Future, ExecutionContext }
 import java.io.File
 
 abstract class HttpClient extends AutoCloseable {
@@ -25,11 +25,27 @@ abstract class HttpClient extends AutoCloseable {
   /** Closes this client, and releases underlying resources. */
   def close(): Unit
 
-  /** Executes the request. */
+  /** Runs the request and return a Future of Response. Errors on non-OK response. */
   def run(request: Request): Future[Response]
 
-  /** Downloads the request to the file. */
+  /** Runs the request and return a Future of A. Errors on non-OK response. */
+  def run[A](request: Request, f: Response => A): Future[A]
+
+  /** Runs the request and return a Future of Either a Response or a Throwable. Errors on non-OK response. */
+  def run[A](request: Request, lifter: FutureLifter[A])(implicit ec: ExecutionContext): Future[Either[Throwable, A]]
+
+  /** Downloads the request to the file. Errors on non-OK response. */
   def download(request: Request, file: File): Future[File]
 
+  /** Executes the request and return a Future of Response. Does not error on non-OK response. */
+  def process(request: Request): Future[Response]
+
+  /** Executes the request and return a Future of A. Does not error on non-OK response. */
+  def process[A](request: Request, f: Response => A): Future[A]
+
+  /** Executes the request and return a Future of Either a Response or a Throwable. Does not error on non-OK response. */
+  def process[A](request: Request, lifter: FutureLifter[A])(implicit ec: ExecutionContext): Future[Either[Throwable, A]]
+
+  /** Executes the request. Does not error on non-OK response. */
   def process[A](request: Request, handler: CompletionHandler[A]): Future[A]
 }
