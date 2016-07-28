@@ -34,12 +34,12 @@
           "since": "0.1.0"
         },
         {
-          "name": "followRedirect",
+          "name": "followRedirects",
           "type": "boolean",
           "doc": [
             "Is HTTP redirect enabled. (Default: `true`)"
           ],
-          "default": "ConfigDefaults.defaultFollowRedirect",
+          "default": "ConfigDefaults.defaultFollowRedirects",
           "since": "0.1.0"
         },
         {

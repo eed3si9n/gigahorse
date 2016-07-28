@@ -42,7 +42,7 @@ object ConfigParser {
         connectTimeout        = config.getDuration("connectTimeout", defaultConnectTimeout),
         requestTimeout        = config.getDuration("requestTimeout", defaultRequestTimeout),
         readTimeout           = config.getDuration("readTimeout", defaultReadTimeout),
-        followRedirect        = config.getBoolean("followRedirect", defaultFollowRedirect),
+        followRedirects       = config.getBoolean("followRedirects", defaultFollowRedirects),
         maxRedirects          = config.getInt("maxRedirects", defaultMaxRedirects),
         compressionEnforced   = config.getBoolean("compressionEnforced", defaultCompressionEnforced),
         userAgentOpt          = config.getStringOption("userAgent", defaultUserAgentOpt),
@@ -97,7 +97,7 @@ object ConfigDefaults {
   val defaultConnectTimeout        = Duration("120s")
   val defaultRequestTimeout        = Duration("120s")
   val defaultReadTimeout           = Duration("120s")
-  val defaultFollowRedirect        = true
+  val defaultFollowRedirects       = true
   val defaultMaxRedirects          = 5
   val defaultCompressionEnforced   = false
   val defaultUserAgentOpt          = None

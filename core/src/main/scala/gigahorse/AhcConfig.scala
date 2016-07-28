@@ -40,7 +40,7 @@ object AhcConfig {
       // builder.setWebSocketTimeout(toMillis(config.webSocketIdleTimeout))
 
       // http
-      builder.setFollowRedirect(config.followRedirect)
+      builder.setFollowRedirect(config.followRedirects)
       builder.setMaxRedirects(config.maxRedirects)
       builder.setCompressionEnforced(config.compressionEnforced)
       config.userAgentOpt foreach { builder.setUserAgent }
