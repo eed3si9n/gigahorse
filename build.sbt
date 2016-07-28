@@ -2,6 +2,7 @@ import Dependencies._
 
 lazy val root = (project in file(".")).
   aggregate(core).
+  dependsOn(core).
   settings(inThisBuild(List(
       organization := "com.eed3si9n",
       scalaVersion := "2.11.8",

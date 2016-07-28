@@ -1,0 +1,44 @@
+/* floating image */
+
+div.floatingimage {
+  float: left;
+  margin: 0px 20px 20px 0px;
+}
+
+div.floatingimage img {
+  margin: 0px;
+}
+
+div.credit {
+  color: #909090;
+  font-family: arial, helvetica, sans-serif;
+  font-size: 0.6em;
+  margin: 0px;
+  padding: 0px;
+  line-height: 0.6em;
+  text-align: right;
+}
+
+@media screen and (min-device-width: 800px), projection {
+  div.container {
+    width: 70%;
+  }
+  div.contents {
+    padding-top: 0px;
+  }
+  div.span-16 {
+    width: 80%;
+  }
+  div.span-16 div.span-16 {
+    width: 100%;
+  }
+  div.prepend-1 {
+    padding-left: 5%;
+  }
+  div.append-1 {
+    padding-right: 5%;
+  }
+  p {
+    width: 45em;
+  }
+}

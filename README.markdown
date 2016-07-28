@@ -3,7 +3,7 @@ Gigahorse
 
 Gigahorse is an HTTP client for Scala with Async Http Client undernieth.
 
-![Giga Horse](gigahorse.jpg)
+![Giga Horse](docs/files/gigahorse.jpg)
 
 dependencies
 ------------
