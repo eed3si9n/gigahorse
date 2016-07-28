@@ -1,7 +1,7 @@
 import Dependencies._
 
 lazy val root = (project in file(".")).
-  aggregate(core).
+  aggregate(core, akkaHttp).
   dependsOn(core).
   settings(inThisBuild(List(
       organization := "com.eed3si9n",
@@ -42,4 +42,13 @@ lazy val core = (project in file("core")).
     sourceManaged in (Compile, generateDatatypes) := (sourceDirectory in Compile).value / "scala",
     // You need this otherwise you get X is already defined as class.
     sources in Compile := (sources in Compile).value.toList.distinct
+  )
+
+lazy val akkaHttp = (project in file("akka-http")).
+  dependsOn(core).
+  settings(
+    commonSettings,
+    name := "gigahorse-akka-http",
+    libraryDependencies ++= Seq(akkaHttpCore, akkaHttpExperimental, scalatest % Test, sbtIo % Test),
+    dependencyOverrides += sslConfig
   )
