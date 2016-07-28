@@ -76,6 +76,7 @@ final class Request(
   def withHeaders(headers0: (String, String)*): Request = copy(headers = Map(headers0 map { case (k, v) => k -> List(v) }: _*))
   def addHeader(headers0: (String, String)*): Request = this.addHeaders(headers0: _*)
   def addHeaders(headers0: (String, String)*): Request = copy(headers = this.headers ++ Map(headers0 map { case (k, v) => k -> List(v) }: _*))
+  def addHeaders(headers0: Map[String, List[String]]): Request = copy(headers = this.headers ++ headers0)
   def withQueryString(parameters: (String, String)*): Request = copy(queryString = Map(parameters map { case (k, v) => k -> List(v) }: _*))
   def addQueryString(parameters: (String, String)*): Request = copy(queryString = this.queryString ++ Map(parameters map { case (k, v) => k -> List(v) }: _*))
   def withFollowRedirects(follow: Boolean): Request = copy(followRedirectsOpt = Some(follow))
