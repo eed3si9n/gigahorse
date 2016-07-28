@@ -504,9 +504,9 @@
         "def withQop(qop: String): Realm = copy(qopOpt = Some(qop))",
         "def withNc(nc: String): Realm = copy(ncOpt = Some(nc))",
         "def withUri(uri: java.net.URI): Realm = copy(uriOpt = Some(uri))",
-        "def withmethodName(methodName: String): Realm = copy(methodNameOpt = Some(methodName))",
+        "def withMethodName(methodName: String): Realm = copy(methodNameOpt = Some(methodName))",
         "def withCharset(charset: java.nio.charset.Charset): Realm = copy(charsetOpt = Some(charset))",
-        "def withNtlmDomainOpt(ntlmDomain: String): Realm = copy(ntlmDomainOpt = Some(ntlmDomain))",
+        "def withNtlmDomain(ntlmDomain: String): Realm = copy(ntlmDomainOpt = Some(ntlmDomain))",
         "def withNtlmHost(ntlmHost: String): Realm = copy(ntlmHostOpt = Some(ntlmHost))"
       ]
     },
