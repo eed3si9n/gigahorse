@@ -1,2 +1,4 @@
 project/pf.sbt
 pf.sbt
+
+rsync.sh

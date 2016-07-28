@@ -1,0 +1,25 @@
+This is the initial release of Gigahorse, an HTTP client for Scala.
+
+Here’s a quick example of how to make a `GET` call using Gigahorse:
+
+    scala> import gigahorse._
+    import gigahorse._
+
+    scala> import scala.concurrent._, duration._
+    import scala.concurrent._
+    import duration._
+
+    scala> Gigahorse.withHttp(Gigahorse.config) { http =>
+             val r = Gigahorse.url("http://api.duckduckgo.com").get.
+               addQueryString(
+                 "q" -> "1 + 1",
+                 "format" -> "json"
+               )
+             val f = http.run(r, Gigahorse.asString andThen {_.take(60)})
+             Await.result(f, 120.seconds)
+           }
+    res0: String = {"DefinitionSource":"","Heading":"1+1","ImageWidth":0,"Relat
+
+For more info, see [the Gigahorse docs][docs].
+
+  [docs]: http://eed3si9n.com/gigahorse/
