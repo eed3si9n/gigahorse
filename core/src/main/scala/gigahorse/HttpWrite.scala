@@ -35,4 +35,13 @@ object HttpWrite {
     def toByteArray(a: EncodedString): Array[Byte] = a.string.getBytes(a.charset)
     def contentType: Option[String] = None
   }
+  implicit val urlEncodedFormHttpWrite: HttpWrite[Map[String, List[String]]] = new UrlEncodedFormHttpWrite
+  private final class UrlEncodedFormHttpWrite extends HttpWrite[Map[String, List[String]]] {
+    import java.net.URLEncoder
+    def toByteArray(formData: Map[String, List[String]]): Array[Byte] =
+      (formData map { case (k, vs) =>
+        vs.map(c => k + "=" + URLEncoder.encode(c, "UTF-8"))
+      }).flatten.mkString("&").getBytes(utf8)
+    def contentType: Option[String] = Some(ContentTypes.FORM)
+  }
 }
