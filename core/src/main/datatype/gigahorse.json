@@ -80,7 +80,7 @@
         },
         {
           "name": "ssl",
-          "type": "com.typesafe.sslconfig.ssl.SSLConfig",
+          "type": "com.typesafe.sslconfig.ssl.SSLConfigSettings",
           "doc": [
             "The SSL configuration."
           ],

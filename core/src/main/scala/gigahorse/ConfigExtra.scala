@@ -21,7 +21,7 @@ import java.nio.charset.Charset
 import java.net.URI
 import com.typesafe.config.{ Config => XConfig }
 import scala.concurrent.duration.Duration
-import com.typesafe.sslconfig.ssl.{ SSLConfig, SSLConfigFactory }
+import com.typesafe.sslconfig.ssl.{ SSLConfigSettings, SSLConfigFactory }
 
 object ConfigParser {
   import ConfigDefaults._

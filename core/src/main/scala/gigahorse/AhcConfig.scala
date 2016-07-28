@@ -67,7 +67,7 @@ object AhcConfig {
     else -1
 
   // https://github.com/playframework/playframework/blob/2.4.x/framework/src/play-ws/src/main/scala/play/api/libs/ws/ning/NingConfig.scala
-  def configureSsl(sslConfig: SSLConfig, builder: AsyncHttpClientConfig.Builder): Unit =
+  def configureSsl(sslConfig: SSLConfigSettings, builder: AsyncHttpClientConfig.Builder): Unit =
     {
       // context!
       val sslContext = if (sslConfig.default) {
@@ -109,7 +109,7 @@ object AhcConfig {
       builder.setSSLContext(sslContext)
     }
 
-  def validateDefaultTrustManager(sslConfig: SSLConfig): Unit =
+  def validateDefaultTrustManager(sslConfig: SSLConfigSettings): Unit =
     {
       // If we are using a default SSL context, we can't filter out certificates with weak algorithms
       // We ALSO don't have access to the trust manager from the SSLContext without doing horrible things
@@ -139,13 +139,13 @@ object AhcConfig {
       }
     }
 
-  def buildKeyManagerFactory(ssl: SSLConfig): KeyManagerFactoryWrapper =
+  def buildKeyManagerFactory(ssl: SSLConfigSettings): KeyManagerFactoryWrapper =
     new DefaultKeyManagerFactoryWrapper(ssl.keyManagerConfig.algorithm)
 
-  def buildTrustManagerFactory(ssl: SSLConfig): TrustManagerFactoryWrapper =
+  def buildTrustManagerFactory(ssl: SSLConfigSettings): TrustManagerFactoryWrapper =
     new DefaultTrustManagerFactoryWrapper(ssl.trustManagerConfig.algorithm)
 
-  def configureProtocols(existingProtocols: Array[String], sslConfig: SSLConfig): Array[String] =
+  def configureProtocols(existingProtocols: Array[String], sslConfig: SSLConfigSettings): Array[String] =
     {
       val definedProtocols = sslConfig.enabledProtocols match {
         case Some(configuredProtocols) =>
@@ -169,7 +169,7 @@ object AhcConfig {
       definedProtocols
     }
 
-  def configureCipherSuites(existingCiphers: Array[String], sslConfig: SSLConfig): Array[String] =
+  def configureCipherSuites(existingCiphers: Array[String], sslConfig: SSLConfigSettings): Array[String] =
     {
       val definedCiphers = sslConfig.enabledCipherSuites match {
         case Some(configuredCiphers) =>
@@ -191,7 +191,7 @@ object AhcConfig {
       definedCiphers
     }
 
-  def buildHostnameVerifier(sslConfig: SSLConfig): HostnameVerifier =
+  def buildHostnameVerifier(sslConfig: SSLConfigSettings): HostnameVerifier =
     {
       import java.lang.reflect.Constructor
       // logger.debug("buildHostnameVerifier: enabling hostname verification using {}", sslConfig.hostnameVerifierClass)
