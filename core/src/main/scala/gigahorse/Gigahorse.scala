@@ -16,6 +16,8 @@
 
 package gigahorse
 
+import java.nio.charset.Charset
+
 abstract class Gigahorse {
   /**
    * Generates a request.
@@ -55,6 +57,9 @@ abstract class Gigahorse {
 
   /** Lifts Future[Reponse] result to Future[Either[Throwable, Reponse]] */
   lazy val asEither: FutureLifter[Response] = FutureLifter.asEither
+
+  /** UTF-8. */
+  val utf8 = Charset.forName("UTF-8")
 }
 
 object Gigahorse extends Gigahorse

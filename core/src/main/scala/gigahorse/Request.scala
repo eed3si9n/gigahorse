@@ -60,7 +60,7 @@ final class Request(
     (w.contentType, r.contentType) match {
       case (None, _)    => r
       case (_, Some(_)) => r
-      case (Some(x), _) => r.addHeader(HeaderNames.CONTENT_TYPE -> x)
+      case (Some(x), _) => r.withContentType(x)
     }
   }
   def contentType: Option[String] =
@@ -68,12 +68,15 @@ final class Request(
     this.headers.find(p => p._1 == HeaderNames.CONTENT_TYPE) map { case (header, values) =>
     values.head
   }}
+  def withContentType(ct: String): Request = this.addHeader(HeaderNames.CONTENT_TYPE -> ct)
+  def withContentType(mt: String, charset: Charset): Request = this.withContentType(mt + ";charset=" + charset.toString)
   def withAuth(auth: Realm): Request = copy(authOpt = Some(auth))
   def withAuth(username: String, password: String): Request = copy(authOpt = Some(Realm(username = username, password = password)))
   def withAuth(username: String, password: String, scheme: AuthScheme): Request = copy(authOpt = Some(Realm(username = username, password = password, scheme = scheme)))
   def withHeaders(headers0: (String, String)*): Request = copy(headers = Map(headers0 map { case (k, v) => k -> List(v) }: _*))
   def addHeader(headers0: (String, String)*): Request = this.addHeaders(headers0: _*)
   def addHeaders(headers0: (String, String)*): Request = copy(headers = this.headers ++ Map(headers0 map { case (k, v) => k -> List(v) }: _*))
+  def addHeaders(headers0: Map[String, List[String]]): Request = copy(headers = this.headers ++ headers0)
   def withQueryString(parameters: (String, String)*): Request = copy(queryString = Map(parameters map { case (k, v) => k -> List(v) }: _*))
   def addQueryString(parameters: (String, String)*): Request = copy(queryString = this.queryString ++ Map(parameters map { case (k, v) => k -> List(v) }: _*))
   def withFollowRedirects(follow: Boolean): Request = copy(followRedirectsOpt = Some(follow))
