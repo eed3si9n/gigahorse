@@ -17,7 +17,7 @@ lazy val root = (project in file(".")).
       version := "0.1.0-SNAPSHOT",
       crossScalaVersions := Seq("2.10.6", "2.11.8"),
       scalaVersion := "2.11.8",
-      description := "An HTTP client for Scala with Async Http Client undernieth.",
+      description := "An HTTP client for Scala with Async Http Client underneath.",
       licenses := Seq("Apache 2" -> new URL("http://www.apache.org/licenses/LICENSE-2.0.txt"))
     )),
     name := "gigahorse",
