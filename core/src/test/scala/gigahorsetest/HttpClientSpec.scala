@@ -20,8 +20,6 @@ import org.scalatest._
 import scala.concurrent._
 import scala.concurrent.duration._
 import java.io.File
-import sbt.io.IO
-import sbt.io.syntax._
 
 class HttpClientSpec extends AsyncFlatSpec {
   import gigahorse.Gigahorse
@@ -77,7 +75,7 @@ class HttpClientSpec extends AsyncFlatSpec {
   "http.download" should "download a resource" in
     withHttp { http =>
       withTemporaryDirectory{ dir =>
-        val file = dir / "Google_2015_logo.svg"
+        val file = new File(dir, "Google_2015_logo.svg")
         val r = Gigahorse.url("https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg")
         val f = http.download(r, file)
         f map { x =>
