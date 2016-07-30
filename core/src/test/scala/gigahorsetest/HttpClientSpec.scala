@@ -23,93 +23,125 @@ import java.io.File
 import sbt.io.IO
 import sbt.io.syntax._
 
-class HttpClientSpec extends FlatSpec with Matchers {
-  "http.run(r)" should "retrieve a resource" in {
-    import gigahorse.Gigahorse
-    Gigahorse.withHttp(Gigahorse.config) { http =>
+class HttpClientSpec extends AsyncFlatSpec {
+  import gigahorse.Gigahorse
+
+  "http.run(r)" should "retrieve a resource" in
+    withHttp { http =>
       val r = Gigahorse.url("http://api.duckduckgo.com").
         addQueryString(
           "q" -> "1 + 1",
           "format" -> "json"
         ).get
       val f = http.run(r)
-      val res = Await.result(f, 120.seconds)
-      assert(res.body contains "2 (number)")
+      f map { res =>
+        assert(res.body contains "2 (number)")
+      }
     }
-  }
 
-  "http.run(r, Gigahorse.asString)" should "retrieve a resource as String" in {
-    import gigahorse.Gigahorse
-    Gigahorse.withHttp(Gigahorse.config) { http =>
+  "http.run(r, Gigahorse.asString)" should "retrieve a resource as String" in
+    withHttp { http =>
       val r = Gigahorse.url("http://api.duckduckgo.com").
         addQueryString(
           "q" -> "1 + 1",
           "format" -> "json"
         ).get
       val f = http.run(r, Gigahorse.asString)
-      val res = Await.result(f, 120.seconds)
-      assert(res contains "2 (number)")
+      f map { s =>
+        assert(s contains "2 (number)")
+      }
     }
-  }
 
-  "http.run(r, Gigahorse.asEither)" should "retrieve a resource and convert to Right" in {
-    import gigahorse.Gigahorse
-    import scala.concurrent.ExecutionContext.Implicits._
-    Gigahorse.withHttp(Gigahorse.config) { http =>
+  "http.run(r, Gigahorse.asEither)" should "retrieve a resource and convert to Right" in
+    withHttp { http =>
       val r = Gigahorse.url("http://api.duckduckgo.com").
         addQueryString(
           "q" -> "1 + 1",
           "format" -> "json"
         ).get
       val f = http.run(r, Gigahorse.asEither map Gigahorse.asString)
-      val res = Await.result(f, 120.seconds)
-      assert(res.toString contains "2 (number)")
+      f map { either =>
+        assert(either.right.get.toString contains "2 (number)")
+      }
     }
-  }
 
-  it should "retrieve a resource and convert to Left given 500" in {
-    import gigahorse.Gigahorse
-    import scala.concurrent.ExecutionContext.Implicits._
-    Gigahorse.withHttp(Gigahorse.config) { http =>
+  it should "retrieve a resource and convert to Left given 500" in
+    withHttp { http =>
       val r = Gigahorse.url("http://getstatuscode.com/500")
       val f = http.run(r, Gigahorse.asEither)
-      val res = Await.result(f, 120.seconds)
-      assert(res.left.get.toString contains "Unexpected status: 500")
+      f map { either =>
+        assert(either.left.get.toString contains "Unexpected status: 500")
+      }
     }
-  }
 
-  "http.download" should "download a resource" in {
-    import gigahorse.Gigahorse
-    Gigahorse.withHttp(Gigahorse.config) { http =>
-      IO.withTemporaryDirectory{ dir =>
+  "http.download" should "download a resource" in
+    withHttp { http =>
+      withTemporaryDirectory{ dir =>
         val file = dir / "Google_2015_logo.svg"
         val r = Gigahorse.url("https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg")
         val f = http.download(r, file)
-        val res = Await.result(f, 120.seconds)
-        assert(file.exists)
+        f map { x =>
+          assert(file.exists)
+        }
       }
     }
-  }
 
-  "http.process(r)" should "preserve an error response" in {
-    import gigahorse.Gigahorse
-    import scala.concurrent.ExecutionContext.Implicits._
-    Gigahorse.withHttp(Gigahorse.config) { http =>
+  "http.process(r)" should "preserve an error response" in
+    withHttp { http =>
       val r = Gigahorse.url("http://getstatuscode.com/500")
       val f = http.process(r)
-      val res = Await.result(f, 120.seconds)
-      assert(res.body contains "500 HTTP Status Code")
+      f map { res =>
+        assert(res.body contains "500 HTTP Status Code")
+      }
     }
-  }
 
-  "http.process(r, Gigahorse.asEither)" should "preserve an error response and convert to Right given 404" in {
-    import gigahorse.Gigahorse
-    import scala.concurrent.ExecutionContext.Implicits._
-    Gigahorse.withHttp(Gigahorse.config) { http =>
+  "http.process(r, Gigahorse.asEither)" should "preserve an error response and convert to Right given 404" in
+    withHttp { http =>
       val r = Gigahorse.url("http://getstatuscode.com/404")
       val f = http.process(r, Gigahorse.asEither)
-      val res = Await.result(f, 120.seconds)
-      assert(res.right.get.body contains "404 HTTP Status Code")
+      f map { either =>
+        assert(either.right.get.body contains "404 HTTP Status Code")
+      }
     }
-  }
+
+  // custom loan pattern
+  def withHttp(testCode: gigahorse.HttpClient => Future[Assertion]): Future[Assertion] =
+    {
+      val http = Gigahorse.http(Gigahorse.config)
+      complete {
+        testCode(http)
+      } lastly {
+        http.close()
+      }
+    }
+
+  /** The maximum number of times a unique temporary filename is attempted to be created.*/
+  private[this] val MaximumTries = 10
+  private[this] val random = new java.util.Random
+  private[this] val temporaryDirectory = new File(System.getProperty("java.io.tmpdir"))
+  def withTemporaryDirectory(testCode: File => Future[Assertion]): Future[Assertion] =
+    {
+      val dir = createUniqueDirectory(temporaryDirectory)
+      complete {
+        testCode(dir)
+      } lastly {
+        dir.delete()
+      }
+    }
+  private[this] def createUniqueDirectory(baseDirectory: File): File =
+    {
+      def create(tries: Int): File =
+        {
+          if (tries > MaximumTries)
+            sys.error("Could not create temporary directory.")
+          else {
+            val randomName = "sbt_" + java.lang.Integer.toHexString(random.nextInt)
+            val f = new File(baseDirectory, randomName)
+
+            try { f.mkdirs; f }
+            catch { case e: Exception => create(tries + 1) }
+          }
+        }
+      create(0)
+    }
 }
