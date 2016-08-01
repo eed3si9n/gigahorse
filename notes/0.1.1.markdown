@@ -1,0 +1,3 @@
+### fixes and enhacements
+
+- Fixes 0.1.0 publishing. It was bringing in unnecessary dependencies.
