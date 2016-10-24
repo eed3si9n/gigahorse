@@ -16,8 +16,7 @@
 
 package gigahorse
 
-import com.ning.http.client.{ Response => XResponse, Request => XRequest, _ }
-import com.ning.http.client.AsyncHandler.STATE
+import org.asynchttpclient.{ Response => XResponse, _ }
 
 abstract class CompletionHandler[A] {
   val builder = new XResponse.ResponseBuilder

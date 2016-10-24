@@ -1,7 +1,7 @@
 import sbt._
 
 object Dependencies {
-  val ahc = "com.ning" % "async-http-client" % "1.9.38"
-  val scalatest = "org.scalatest" %% "scalatest" % "3.0.0-RC4"
-  val sslConfig = "com.typesafe" %% "ssl-config-core" % "0.1.3"
+  val ahc = "org.asynchttpclient" % "async-http-client" % "2.0.19"
+  val scalatest = "org.scalatest" %% "scalatest" % "3.0.0"
+  val sslConfig = "com.typesafe" %% "ssl-config-core" % "0.2.1"
 }

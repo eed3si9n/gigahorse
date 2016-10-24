@@ -19,17 +19,18 @@ package gigahorse
 
 import scala.collection.JavaConverters._
 import java.io.{ File, UnsupportedEncodingException }
-import java.nio.charset.{ Charset, StandardCharsets }
+import java.nio.charset.Charset
 import scala.concurrent.{ Future, Promise, ExecutionContext }
-import com.ning.http.client.{ Response => XResponse, Request => XRequest, ProxyServer => XProxyServer, Realm => XRealm, _ }
-import com.ning.http.client.AsyncHandler.{ STATE => XState }
-import com.ning.http.util.AsyncHttpProviderUtils
-import com.ning.http.client.Realm.{ RealmBuilder, AuthScheme => XAuthScheme }
-import org.jboss.netty.handler.codec.http.QueryStringDecoder
+import org.asynchttpclient.{ Response => XResponse, Request => XRequest, Realm => XRealm, _ }
+import org.asynchttpclient.AsyncHandler.{ State => XState }
+import org.asynchttpclient.proxy.{ ProxyServer => XProxyServer }
+import org.asynchttpclient.util.HttpUtils
+import org.asynchttpclient.Realm.{ AuthScheme => XAuthScheme }
+import io.netty.handler.codec.http.QueryStringDecoder
 
 class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
   import AhcHttpClient._
-  private val asyncHttpClient = new AsyncHttpClient(config)
+  private val asyncHttpClient = new DefaultAsyncHttpClient(config)
   def underlying[A]: A = asyncHttpClient.asInstanceOf[A]
   def close(): Unit = asyncHttpClient.close()
   override def toString: String =
@@ -53,12 +54,15 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
   def download(request: Request, file: File): Future[File] =
     process(request, new OkHandler[File](_ => ???) {
       import java.io.FileOutputStream
-      val out = new FileOutputStream(file)
+      val out = new FileOutputStream(file).getChannel
       override def onBodyPartReceived(content: HttpResponseBodyPart): State = {
-        content.writeTo(out)
+        out.write(content.getBodyByteBuffer)
         State.Continue
       }
-      override def onCompleted(response: Response) = file
+      override def onCompleted(response: Response) = {
+        out.close()
+        file
+      }
     })
 
   /** Executes the request and return a Future of Response. Does not error on non-OK response. */
@@ -76,7 +80,6 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
   /** Executes the request. Does not error on non-OK response. */
   def process[A](request: Request, handler: CompletionHandler[A]): Future[A] =
     {
-      import com.ning.http.client.AsyncCompletionHandler
       val result = Promise[A]()
       val xrequest = buildRequest(request)
       asyncHttpClient.executeRequest(xrequest, new AsyncHandler[XResponse]() {
@@ -135,7 +138,7 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
 
     // Configuration settings on the builder, if applicable
     virtualHostOpt.foreach(builder.setVirtualHost)
-    followRedirectsOpt.foreach(builder.setFollowRedirects)
+    followRedirectsOpt.foreach(builder.setFollowRedirect)
 
     proxyServerOpt.foreach(p => builder.setProxyServer(buildProxy(p)))
 
@@ -146,7 +149,7 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
     val (builderWithBody, updatedHeaders) = body match {
       case b: EmptyBody => (builder, request.headers)
       case b: FileBody =>
-        import com.ning.http.client.generators.FileBodyGenerator
+        import org.asynchttpclient.request.body.generator.FileBodyGenerator
         val bodyGenerator = new FileBodyGenerator(b.file)
         builder.setBody(bodyGenerator)
         (builder, request.headers)
@@ -161,14 +164,13 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
             val filteredHeaders = request.headers.filterNot { case (k, v) => k.equalsIgnoreCase(HeaderNames.CONTENT_LENGTH) }
 
             // extract the content type and the charset
-            val charset = Charset.forName(
-              Option(AsyncHttpProviderUtils.parseCharset(ct)).getOrElse {
+            val charset =
+              Option(HttpUtils.parseCharset(ct)).getOrElse {
                 // NingWSRequest modifies headers to include the charset, but this fails tests in Scala.
                 //val contentTypeList = Seq(ct + "; charset=utf-8")
                 //possiblyModifiedHeaders = this.headers.updated(HeaderNames.CONTENT_TYPE, contentTypeList)
-                "utf-8"
+                Charset.forName("utf-8")
               }
-            )
 
             // Get the string body given the given charset...
             val stringBody = new String(b.bytes, charset)
@@ -176,7 +178,7 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
             // so we have to parse it out and add it rather than using setBody.
 
             val params = for {
-              (key, values) <- new QueryStringDecoder("/?" + stringBody, charset).getParameters.asScala.toList // FormUrlEncodedParser.parse(stringBody).toSeq
+              (key, values) <- new QueryStringDecoder("/?" + stringBody, charset).parameters.asScala.toList // FormUrlEncodedParser.parse(stringBody).toSeq
               value <- values.asScala.toList
             } yield new Param(key, value)
             builder.setFormParams(params.asJava)
@@ -203,7 +205,7 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
 
     // Set the signature calculator.
     signatureOpt.map {
-      case signatureCalculator: com.ning.http.client.SignatureCalculator =>
+      case signatureCalculator: org.asynchttpclient.SignatureCalculator =>
         builderWithBody.setSignatureCalculator(signatureCalculator)
       case _ =>
         throw new IllegalStateException("Unknown signature calculator found: use a class that implements SignatureCalculator")
@@ -229,19 +231,16 @@ object AhcHttpClient {
 
   def buildRealm(auth: Realm): XRealm =
     {
-      import com.ning.http.client.uri.Uri
-      val builder = new RealmBuilder
+      import org.asynchttpclient.uri.Uri
+      val builder = new XRealm.Builder(auth.username, auth.password)
       builder.setScheme(auth.scheme match {
         case AuthScheme.Digest   => XAuthScheme.DIGEST
         case AuthScheme.Basic    => XAuthScheme.BASIC
         case AuthScheme.NTLM     => XAuthScheme.NTLM
         case AuthScheme.SPNEGO   => XAuthScheme.SPNEGO
         case AuthScheme.Kerberos => XAuthScheme.KERBEROS
-        case AuthScheme.None     => XAuthScheme.NONE
         case _ => throw new RuntimeException("Unknown scheme " + auth.scheme)
       })
-      builder.setPrincipal(auth.username)
-      builder.setPassword(auth.password)
       builder.setUsePreemptiveAuth(auth.usePreemptiveAuth)
       auth.realmNameOpt  foreach { builder.setRealmName }
       auth.nonceOpt      foreach { builder.setNonce }
@@ -262,30 +261,8 @@ object AhcHttpClient {
 
   def buildProxy(proxy: ProxyServer): XProxyServer =
     {
-      import com.ning.http.client.ProxyServer.Protocol
-      val protocol = (for {
-        auth <- proxy.authOpt
-        uri <- auth.uriOpt
-        s <- Option(uri.getScheme)
-      } yield s).getOrElse("http").toLowerCase match {
-        case "http"     => Protocol.HTTP
-        case "https"    => Protocol.HTTPS
-        case "kerberos" => Protocol.KERBEROS
-        case "ntlm"     => Protocol.NTLM
-        case "spnego"   => Protocol.SPNEGO
-        case s          => throw new RuntimeException("Unrecognized protocol " + s)
-      }
-      val p = new XProxyServer(protocol, proxy.host, proxy.port,
-        proxy.authOpt.map(_.username).orNull,
-        proxy.authOpt.map(_.password).orNull)
-      proxy.nonProxyHosts foreach { h =>
-        p.addNonProxyHost(h)
-      }
-      proxy.authOpt foreach { auth =>
-        auth.ntlmDomainOpt foreach {p.setNtlmDomain}
-        auth.ntlmHostOpt foreach { p.setNtlmHost }
-        auth.charsetOpt foreach { p.setCharset }
-      }
-      p
+      new XProxyServer(proxy.host, proxy.port, proxy.securedPort.getOrElse(proxy.port),
+        proxy.authOpt.map(buildRealm).getOrElse(null),
+        proxy.nonProxyHosts.asJava)
     }
 }

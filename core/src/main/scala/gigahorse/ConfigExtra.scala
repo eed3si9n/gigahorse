@@ -21,7 +21,7 @@ import java.nio.charset.Charset
 import java.net.URI
 import com.typesafe.config.{ Config => XConfig }
 import scala.concurrent.duration.Duration
-import com.typesafe.sslconfig.ssl.{ SSLConfig, SSLConfigFactory }
+import com.typesafe.sslconfig.ssl.SSLConfigFactory
 
 object ConfigParser {
   import ConfigDefaults._
@@ -83,7 +83,6 @@ object ConfigParser {
 
   def parseScheme(s: String): AuthScheme =
     s.toLowerCase match {
-      case "none"     => AuthScheme.None
       case "basic"    => AuthScheme.Basic
       case "digest"   => AuthScheme.Digest
       case "ntlm"     => AuthScheme.NTLM

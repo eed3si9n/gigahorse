@@ -11,10 +11,7 @@ abstract class ProxyServer(
   val port: Int,
   /** The secured port of the proxy server. */
   val securedPort: Option[Int],
-  /**
-   *  The realm of the proxy server.
-   *  `None` will fallback to "http".
-   */
+  /**  The realm of the proxy server. */
   val authOpt: Option[Realm],
   val nonProxyHosts: List[String]) extends Serializable {
   

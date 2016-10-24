@@ -22,7 +22,7 @@ final class Config(
   /** Set the authentication that will be used for all requests. */
   val authOpt: Option[Realm],
   /** The SSL configuration. */
-  val ssl: com.typesafe.sslconfig.ssl.SSLConfig,
+  val ssl: com.typesafe.sslconfig.ssl.SSLConfigSettings,
   /** The maximum number of times to retry a request if it fails. (Default: 5) */
   val maxRequestRetry: Int,
   /** Whether raw URL should be used. (Default: false) */
@@ -67,7 +67,7 @@ final class Config(
   override def toString: String = {
     "Config(" + connectTimeout + ", " + requestTimeout + ", " + readTimeout + ", " + followRedirects + ", " + maxRedirects + ", " + compressionEnforced + ", " + userAgentOpt + ", " + authOpt + ", " + ssl + ", " + maxRequestRetry + ", " + disableUrlEncoding + ", " + useProxyProperties + ", " + keepAlive + ", " + pooledConnectionIdleTimeout + ", " + connectionTtl + ", " + maxConnections + ", " + maxConnectionsPerHost + ")"
   }
-  private[this] def copy(connectTimeout: scala.concurrent.duration.Duration = connectTimeout, requestTimeout: scala.concurrent.duration.Duration = requestTimeout, readTimeout: scala.concurrent.duration.Duration = readTimeout, followRedirects: Boolean = followRedirects, maxRedirects: Int = maxRedirects, compressionEnforced: Boolean = compressionEnforced, userAgentOpt: Option[String] = userAgentOpt, authOpt: Option[Realm] = authOpt, ssl: com.typesafe.sslconfig.ssl.SSLConfig = ssl, maxRequestRetry: Int = maxRequestRetry, disableUrlEncoding: Boolean = disableUrlEncoding, useProxyProperties: Boolean = useProxyProperties, keepAlive: Boolean = keepAlive, pooledConnectionIdleTimeout: scala.concurrent.duration.Duration = pooledConnectionIdleTimeout, connectionTtl: scala.concurrent.duration.Duration = connectionTtl, maxConnections: Int = maxConnections, maxConnectionsPerHost: Int = maxConnectionsPerHost): Config = {
+  private[this] def copy(connectTimeout: scala.concurrent.duration.Duration = connectTimeout, requestTimeout: scala.concurrent.duration.Duration = requestTimeout, readTimeout: scala.concurrent.duration.Duration = readTimeout, followRedirects: Boolean = followRedirects, maxRedirects: Int = maxRedirects, compressionEnforced: Boolean = compressionEnforced, userAgentOpt: Option[String] = userAgentOpt, authOpt: Option[Realm] = authOpt, ssl: com.typesafe.sslconfig.ssl.SSLConfigSettings = ssl, maxRequestRetry: Int = maxRequestRetry, disableUrlEncoding: Boolean = disableUrlEncoding, useProxyProperties: Boolean = useProxyProperties, keepAlive: Boolean = keepAlive, pooledConnectionIdleTimeout: scala.concurrent.duration.Duration = pooledConnectionIdleTimeout, connectionTtl: scala.concurrent.duration.Duration = connectionTtl, maxConnections: Int = maxConnections, maxConnectionsPerHost: Int = maxConnectionsPerHost): Config = {
     new Config(connectTimeout, requestTimeout, readTimeout, followRedirects, maxRedirects, compressionEnforced, userAgentOpt, authOpt, ssl, maxRequestRetry, disableUrlEncoding, useProxyProperties, keepAlive, pooledConnectionIdleTimeout, connectionTtl, maxConnections, maxConnectionsPerHost)
   }
   def withConnectTimeout(connectTimeout: scala.concurrent.duration.Duration): Config = {
@@ -94,7 +94,7 @@ final class Config(
   def withAuthOpt(authOpt: Option[Realm]): Config = {
     copy(authOpt = authOpt)
   }
-  def withSsl(ssl: com.typesafe.sslconfig.ssl.SSLConfig): Config = {
+  def withSsl(ssl: com.typesafe.sslconfig.ssl.SSLConfigSettings): Config = {
     copy(ssl = ssl)
   }
   def withMaxRequestRetry(maxRequestRetry: Int): Config = {
@@ -124,5 +124,5 @@ final class Config(
 }
 object Config {
   def apply(): Config = new Config(ConfigDefaults.defaultConnectTimeout, ConfigDefaults.defaultRequestTimeout, ConfigDefaults.defaultReadTimeout, ConfigDefaults.defaultFollowRedirects, ConfigDefaults.defaultMaxRedirects, ConfigDefaults.defaultCompressionEnforced, ConfigDefaults.defaultUserAgentOpt, ConfigDefaults.defaultAuthOpt, ConfigDefaults.defaultSslConfig, ConfigDefaults.defaultMaxRequestRetry, ConfigDefaults.defaultDisableUrlEncoding, ConfigDefaults.defaultUseProxyProperties, ConfigDefaults.defaultKeepAlive, ConfigDefaults.defaultPooledConnectionIdleTimeout, ConfigDefaults.defaultConnectionTtl, ConfigDefaults.defaultMaxConnections, ConfigDefaults.defaultMaxConnectionsPerHost)
-  def apply(connectTimeout: scala.concurrent.duration.Duration, requestTimeout: scala.concurrent.duration.Duration, readTimeout: scala.concurrent.duration.Duration, followRedirects: Boolean, maxRedirects: Int, compressionEnforced: Boolean, userAgentOpt: Option[String], authOpt: Option[Realm], ssl: com.typesafe.sslconfig.ssl.SSLConfig, maxRequestRetry: Int, disableUrlEncoding: Boolean, useProxyProperties: Boolean, keepAlive: Boolean, pooledConnectionIdleTimeout: scala.concurrent.duration.Duration, connectionTtl: scala.concurrent.duration.Duration, maxConnections: Int, maxConnectionsPerHost: Int): Config = new Config(connectTimeout, requestTimeout, readTimeout, followRedirects, maxRedirects, compressionEnforced, userAgentOpt, authOpt, ssl, maxRequestRetry, disableUrlEncoding, useProxyProperties, keepAlive, pooledConnectionIdleTimeout, connectionTtl, maxConnections, maxConnectionsPerHost)
+  def apply(connectTimeout: scala.concurrent.duration.Duration, requestTimeout: scala.concurrent.duration.Duration, readTimeout: scala.concurrent.duration.Duration, followRedirects: Boolean, maxRedirects: Int, compressionEnforced: Boolean, userAgentOpt: Option[String], authOpt: Option[Realm], ssl: com.typesafe.sslconfig.ssl.SSLConfigSettings, maxRequestRetry: Int, disableUrlEncoding: Boolean, useProxyProperties: Boolean, keepAlive: Boolean, pooledConnectionIdleTimeout: scala.concurrent.duration.Duration, connectionTtl: scala.concurrent.duration.Duration, maxConnections: Int, maxConnectionsPerHost: Int): Config = new Config(connectTimeout, requestTimeout, readTimeout, followRedirects, maxRedirects, compressionEnforced, userAgentOpt, authOpt, ssl, maxRequestRetry, disableUrlEncoding, useProxyProperties, keepAlive, pooledConnectionIdleTimeout, connectionTtl, maxConnections, maxConnectionsPerHost)
 }

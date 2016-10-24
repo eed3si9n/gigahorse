@@ -80,7 +80,7 @@
         },
         {
           "name": "ssl",
-          "type": "com.typesafe.sslconfig.ssl.SSLConfig",
+          "type": "com.typesafe.sslconfig.ssl.SSLConfigSettings",
           "doc": [
             "The SSL configuration."
           ],
@@ -519,7 +519,7 @@
       "type": "enum",
       "target": "Scala",
       "symbols": [
-        "None", "Basic", "Digest", "NTLM", "SPNEGO", "Kerberos"
+        "Basic", "Digest", "NTLM", "SPNEGO", "Kerberos"
       ]
     },
     {
@@ -553,8 +553,7 @@
           "name": "authOpt",
           "type": "Realm?",
           "doc": [
-            " The realm of the proxy server.",
-            " `None` will fallback to \"http\"."
+            " The realm of the proxy server."
           ],
           "default": "None",
           "since": "0.1.0"
