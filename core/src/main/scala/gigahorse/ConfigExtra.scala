@@ -110,6 +110,7 @@ object ConfigDefaults {
   val defaultConnectionTtl         = Duration.Inf
   val defaultMaxConnections        = -1
   val defaultMaxConnectionsPerHost = -1
+  val defaultWebSocketMaxFrameSize = 64 * 1024
 }
 
 class RichXConfig(config: XConfig) {

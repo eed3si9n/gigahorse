@@ -27,6 +27,7 @@ import org.asynchttpclient.proxy.{ ProxyServer => XProxyServer }
 import org.asynchttpclient.util.HttpUtils
 import org.asynchttpclient.Realm.{ AuthScheme => XAuthScheme }
 import io.netty.handler.codec.http.QueryStringDecoder
+import org.asynchttpclient.ws.WebSocketUpgradeHandler
 
 class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
   import AhcHttpClient._
@@ -103,6 +104,16 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
           result.failure(t)
         }
       })
+      result.future
+    }
+
+  /** Open a websocket connection. */
+  def websocket(request: Request)(handler: PartialFunction[WebSocketEvent, Unit]): Future[WebSocket] =
+    {
+      val result = Promise[WebSocket]()
+      val xrequest = buildRequest(request)
+      val upgradeHandler = new WebSocketUpgradeHandler.Builder()
+      asyncHttpClient.executeRequest(xrequest, upgradeHandler.addWebSocketListener(new WebSocketListener(handler, result)).build())
       result.future
     }
 

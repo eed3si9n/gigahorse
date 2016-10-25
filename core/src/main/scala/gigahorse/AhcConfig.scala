@@ -61,6 +61,10 @@ object AhcConfig {
       builder.setMaxConnections(config.maxConnections)
       configureSsl(config.ssl, builder)
 
+      // websocket
+
+      builder.setWebSocketMaxFrameSize(config.webSocketMaxFrameSize)
+
       builder.build()
     }
 

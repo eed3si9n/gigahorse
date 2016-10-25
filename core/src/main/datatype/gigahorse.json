@@ -168,6 +168,15 @@
           ],
           "default": "ConfigDefaults.defaultMaxConnectionsPerHost",
           "since": "0.1.0"
+        },
+        {
+          "name": "webSocketMaxFrameSize",
+          "type": "int",
+          "doc": [
+            "The maximum accepted size of a websocket message fragment. (Default: 64Kb)"
+          ],
+          "default": "ConfigDefaults.defaultWebSocketMaxFrameSize",
+          "since": "0.2.0"
         }
       ],
       "extra": [
