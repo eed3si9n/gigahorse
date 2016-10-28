@@ -48,4 +48,7 @@ abstract class HttpClient extends AutoCloseable {
 
   /** Executes the request. Does not error on non-OK response. */
   def process[A](request: Request, handler: CompletionHandler[A]): Future[A]
+
+  /** Open a websocket connection. */
+  def websocket(request: Request)(handler: PartialFunction[WebSocketEvent, Unit]): Future[WebSocket]
 }
