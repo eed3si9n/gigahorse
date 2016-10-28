@@ -80,7 +80,7 @@
         },
         {
           "name": "ssl",
-          "type": "com.typesafe.sslconfig.ssl.SSLConfig",
+          "type": "com.typesafe.sslconfig.ssl.SSLConfigSettings",
           "doc": [
             "The SSL configuration."
           ],
@@ -168,6 +168,15 @@
           ],
           "default": "ConfigDefaults.defaultMaxConnectionsPerHost",
           "since": "0.1.0"
+        },
+        {
+          "name": "webSocketMaxFrameSize",
+          "type": "int",
+          "doc": [
+            "The maximum accepted size of a websocket message fragment. (Default: 64Kb)"
+          ],
+          "default": "ConfigDefaults.defaultWebSocketMaxFrameSize",
+          "since": "0.2.0"
         }
       ],
       "extra": [
@@ -519,7 +528,7 @@
       "type": "enum",
       "target": "Scala",
       "symbols": [
-        "None", "Basic", "Digest", "NTLM", "SPNEGO", "Kerberos"
+        "Basic", "Digest", "NTLM", "SPNEGO", "Kerberos"
       ]
     },
     {
@@ -553,8 +562,7 @@
           "name": "authOpt",
           "type": "Realm?",
           "doc": [
-            " The realm of the proxy server.",
-            " `None` will fallback to \"http\"."
+            " The realm of the proxy server."
           ],
           "default": "None",
           "since": "0.1.0"

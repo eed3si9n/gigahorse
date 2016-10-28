@@ -8,7 +8,6 @@ sealed abstract class AuthScheme extends Serializable
 object AuthScheme {
   
   
-  case object None extends AuthScheme
   case object Basic extends AuthScheme
   case object Digest extends AuthScheme
   case object NTLM extends AuthScheme

@@ -15,5 +15,5 @@
  */
 
 package object gigahorse {
-  type AsyncHandler[A] = com.ning.http.client.AsyncHandler[A]
+  type AsyncHandler[A] = org.asynchttpclient.AsyncHandler[A]
 }

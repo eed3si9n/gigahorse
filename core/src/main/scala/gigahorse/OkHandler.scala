@@ -16,7 +16,7 @@
 
 package gigahorse
 
-import com.ning.http.client._
+import org.asynchttpclient._
 
 abstract class OkHandler[A](f: Response => A) extends FunctionHandler[A](f) {
   override def onStatusReceived(status: HttpResponseStatus): State = {

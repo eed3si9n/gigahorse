@@ -17,9 +17,13 @@
 package gigahorsetest
 
 import org.scalatest._
+
 import scala.concurrent._
-import scala.concurrent.duration._
 import java.io.File
+
+import gigahorse.WebSocketEvent
+
+import scala.util.{ Failure, Success }
 
 class HttpClientSpec extends AsyncFlatSpec {
   import gigahorse.Gigahorse
@@ -47,6 +51,26 @@ class HttpClientSpec extends AsyncFlatSpec {
       val f = http.run(r, Gigahorse.asString)
       f map { s =>
         assert(s contains "2 (number)")
+      }
+    }
+
+  "http.websocket(r)" should "open a websocket connection and exchange messages" in
+    withHttp { http =>
+      import WebSocketEvent._
+      val r = Gigahorse.url("ws://echo.websocket.org").get
+      val p = Promise[String]()
+      val m = "Hello World!"
+      val h: PartialFunction[WebSocketEvent, Unit] = {
+        case TextMessage(ws, message) =>
+          p.complete(Success(message))
+          ws.close()
+      }
+      val f = http.websocket(r)(h) flatMap { ws =>
+        ws.sendMessage(m)
+        p.future
+      }
+      f map { s =>
+        assert(s === m)
       }
     }
 

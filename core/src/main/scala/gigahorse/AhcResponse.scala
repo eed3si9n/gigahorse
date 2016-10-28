@@ -18,8 +18,8 @@
 package gigahorse
 
 import scala.collection.JavaConverters._
-import com.ning.http.client.{ Response => XResponse, _ }
-import com.ning.http.util.AsyncHttpProviderUtils
+import org.asynchttpclient.{ Response => XResponse, _ }
+import org.asynchttpclient.util.HttpUtils
 import java.nio.charset.Charset
 import scala.collection.immutable.TreeMap
 
@@ -42,9 +42,9 @@ class AhcResponse(ahcResponse: XResponse) extends Response {
     // explicitly set, while Plays default encoding is UTF-8.  So, use UTF-8 if charset is not explicitly
     // set and content type is not text/*, otherwise default to ISO-8859-1
     val contentType = Option(ahcResponse.getContentType).getOrElse("application/octet-stream")
-    val charset: String = Option(AsyncHttpProviderUtils.parseCharset(contentType)).getOrElse {
-      if (contentType.startsWith("text/")) AsyncHttpProviderUtils.DEFAULT_CHARSET.toString
-      else "utf-8"
+    val charset: Charset = Option(HttpUtils.parseCharset(contentType)).getOrElse {
+      if (contentType.startsWith("text/")) HttpUtils.DEFAULT_CHARSET
+      else Charset.forName("utf-8")
     }
     ahcResponse.getResponseBody(charset)
   }
@@ -54,7 +54,7 @@ class AhcResponse(ahcResponse: XResponse) extends Response {
    */
   lazy val allHeaders: Map[String, List[String]] =
     TreeMap[String, List[String]]() ++
-      mapAsScalaMapConverter(ahcResponse.getHeaders).asScala.mapValues(_.asScala.toList)
+      ahcResponse.getHeaders.asScala.toList.groupBy(_.getKey).mapValues(_.map(_.getValue))
 
   /**
    * The response status code.
