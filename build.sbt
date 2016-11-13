@@ -6,7 +6,7 @@ lazy val root = (project in file(".")).
   settings(inThisBuild(List(
       organization := "com.eed3si9n",
       scalaVersion := "2.11.8",
-      crossScalaVersions := Seq("2.11.8"),
+      crossScalaVersions := Seq("2.11.8", "2.12.0"),
       organizationName := "eed3si9n",
       organizationHomepage := Some(url("http://eed3si9n.com/")),
       homepage := Some(url("https://github.com/eed3si9n/gigahorse")),
