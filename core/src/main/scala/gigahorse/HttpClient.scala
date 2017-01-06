@@ -25,29 +25,29 @@ abstract class HttpClient extends AutoCloseable {
   /** Closes this client, and releases underlying resources. */
   def close(): Unit
 
-  /** Runs the request and return a Future of Response. Errors on non-OK response. */
-  def run(request: Request): Future[Response]
+  /** Runs the request and return a Future of FullResponse. Errors on non-OK response. */
+  def run(request: Request): Future[FullResponse]
 
   /** Runs the request and return a Future of A. Errors on non-OK response. */
-  def run[A](request: Request, f: Response => A): Future[A]
+  def run[A](request: Request, f: FullResponse => A): Future[A]
 
-  /** Runs the request and return a Future of Either a Response or a Throwable. Errors on non-OK response. */
+  /** Runs the request and return a Future of Either a FullResponse or a Throwable. Errors on non-OK response. */
   def run[A](request: Request, lifter: FutureLifter[A])(implicit ec: ExecutionContext): Future[Either[Throwable, A]]
 
   /** Downloads the request to the file. Errors on non-OK response. */
   def download(request: Request, file: File): Future[File]
 
-  /** Executes the request and return a Future of Response. Does not error on non-OK response. */
-  def process(request: Request): Future[Response]
+  /** Executes the request and return a Future of FullResponse. Does not error on non-OK response. */
+  def process(request: Request): Future[FullResponse]
 
   /** Executes the request and return a Future of A. Does not error on non-OK response. */
-  def process[A](request: Request, f: Response => A): Future[A]
+  def process[A](request: Request, f: FullResponse => A): Future[A]
 
-  /** Executes the request and return a Future of Either a Response or a Throwable. Does not error on non-OK response. */
+  /** Executes the request and return a Future of Either a FullResponse or a Throwable. Does not error on non-OK response. */
   def process[A](request: Request, lifter: FutureLifter[A])(implicit ec: ExecutionContext): Future[Either[Throwable, A]]
 
   /** Executes the request. Does not error on non-OK response. */
-  def process[A](request: Request, handler: CompletionHandler[A]): Future[A]
+  // def process[A](request: Request, handler: CompletionHandler[A]): Future[A]
 
   /** Open a websocket connection. */
   def websocket(request: Request)(handler: PartialFunction[WebSocketEvent, Unit]): Future[WebSocket]

@@ -14,6 +14,17 @@
  * limitations under the License.
  */
 
-package object gigahorse {
-  type AsyncHandler[A] = org.asynchttpclient.AsyncHandler[A]
+package gigahorse
+package support.akkahttp
+
+import scala.concurrent.Future
+import akka.http.scaladsl.model.HttpResponse
+
+abstract class FunctionHandler[A](f: FullResponse => A) extends AkkaHttpCompletionHandler[A] {
+  override def onCompleted(response: FullResponse): A = f(response)
+}
+
+object FunctionHandler {
+  def apply[A](f: FullResponse => A): FunctionHandler[A] =
+    new FunctionHandler[A](f) {}
 }

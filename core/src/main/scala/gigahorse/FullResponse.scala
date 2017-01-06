@@ -17,7 +17,12 @@
 
 package gigahorse
 
-abstract class Response {
+import scala.concurrent._
+import java.nio.ByteBuffer
+
+/** Represents a completed response.
+ */
+abstract class FullResponse {
   /**
    * Return the current headers of the request being constructed
    */
@@ -26,12 +31,12 @@ abstract class Response {
   /**
    * The response body as String.
    */
-  def body: String
+  def bodyAsString: String
 
   /**
-   * The response body as a byte array.
+   * The response body as a `ByteBuffer`.
    */
-  def bodyAsBytes: Array[Byte]
+  def bodyAsByteBuffer: ByteBuffer
 
   /**
    * The response status code.

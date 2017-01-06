@@ -15,10 +15,11 @@
  */
 
 package gigahorse
+package support.asynchttpclient
 
-import org.asynchttpclient._
+import org.asynchttpclient.{ Response => XResponse, _ }
 
-abstract class OkHandler[A](f: Response => A) extends FunctionHandler[A](f) {
+abstract class OkHandler[A](f: FullResponse => A) extends FunctionHandler[A](f) {
   override def onStatusReceived(status: HttpResponseStatus): State = {
     val code = status.getStatusCode
     if (code / 100 == 2) super.onStatusReceived(status)
@@ -27,18 +28,5 @@ abstract class OkHandler[A](f: Response => A) extends FunctionHandler[A](f) {
 }
 
 object OkHandler {
-  def apply[A](f: Response => A): OkHandler[A] = new OkHandler[A](f) {}
-}
-
-final class StatusError(val status: Int) extends RuntimeException("Unexpected status: " + status.toString) {
-  override def equals(o: Any): Boolean = o match {
-    case x: StatusError => (this.status == x.status)
-    case _ => false
-  }
-  override def hashCode: Int = {
-    (17 + status.##)
-  }
-}
-object StatusError {
-  def apply(status: Int): StatusError = new StatusError(status)
+  def apply[A](f: FullResponse => A): OkHandler[A] = new OkHandler[A](f) {}
 }

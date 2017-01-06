@@ -20,7 +20,7 @@ package gigahorse
 import java.nio.charset.Charset
 import java.net.URI
 import com.typesafe.config.{ Config => XConfig }
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.{ Duration, FiniteDuration }
 import com.typesafe.sslconfig.ssl.SSLConfigFactory
 
 object ConfigParser {
@@ -39,9 +39,9 @@ object ConfigParser {
         if (config.hasPath("auth")) Some(parseRealm(config.getConfig("auth")))
         else defaultAuthOpt
       Config(
-        connectTimeout        = config.getDuration("connectTimeout", defaultConnectTimeout),
-        requestTimeout        = config.getDuration("requestTimeout", defaultRequestTimeout),
-        readTimeout           = config.getDuration("readTimeout", defaultReadTimeout),
+        connectTimeout        = config.getFiniteDuration("connectTimeout", defaultConnectTimeout),
+        requestTimeout        = config.getFiniteDuration("requestTimeout", defaultRequestTimeout),
+        readTimeout           = config.getFiniteDuration("readTimeout", defaultReadTimeout),
         followRedirects       = config.getBoolean("followRedirects", defaultFollowRedirects),
         maxRedirects          = config.getInt("maxRedirects", defaultMaxRedirects),
         compressionEnforced   = config.getBoolean("compressionEnforced", defaultCompressionEnforced),
@@ -93,9 +93,9 @@ object ConfigParser {
 }
 
 object ConfigDefaults {
-  val defaultConnectTimeout        = Duration("120s")
-  val defaultRequestTimeout        = Duration("120s")
-  val defaultReadTimeout           = Duration("120s")
+  val defaultConnectTimeout        = FiniteDuration(120, "s")
+  val defaultRequestTimeout        = FiniteDuration(120, "s")
+  val defaultReadTimeout           = FiniteDuration(120, "s")
   val defaultFollowRedirects       = true
   val defaultMaxRedirects          = 5
   val defaultCompressionEnforced   = false
@@ -128,5 +128,12 @@ class RichXConfig(config: XConfig) {
     else fallback
   def getDuration(path: String, fallback: Duration): Duration =
     if (config.hasPath(path)) Duration(config.getString(path))
+    else fallback
+  def getFiniteDuration(path: String, fallback: FiniteDuration): FiniteDuration =
+    if (config.hasPath(path)) {
+      val d = Duration(config.getString(path))
+      if (d.isFinite) FiniteDuration(d.toMillis, "ms")
+      else sys.error(s"A FiniteDuration is required for $path")
+    }
     else fallback
 }

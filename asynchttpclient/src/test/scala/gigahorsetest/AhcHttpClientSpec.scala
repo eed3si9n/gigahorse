@@ -14,12 +14,21 @@
  * limitations under the License.
  */
 
-package gigahorse
+package gigahorsetest
 
-abstract class FunctionHandler[A](f: Response => A) extends CompletionHandler[A] {
-  override def onCompleted(response: Response): A = f(response)
-}
+import org.scalatest._
+import scala.concurrent.Future
 
-object FunctionHandler {
-  def apply[A](f: Response => A): FunctionHandler[A] = new FunctionHandler[A](f) {}
+class AhcClientSpec extends BaseHttpClientSpec {
+  import gigahorse.support.asynchttpclient.Gigahorse
+  // custom loan pattern
+  override def withHttp(testCode: gigahorse.HttpClient => Future[Assertion]): Future[Assertion] =
+    {
+      val http = Gigahorse.http(Gigahorse.config)
+      complete {
+        testCode(http)
+      } lastly {
+        http.close()
+      }
+    }
 }

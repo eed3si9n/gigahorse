@@ -15,7 +15,20 @@
  */
 
 package gigahorse
+package support.akkahttp
 
-abstract class CompletionHandler[A] {
-  def onCompleted(response: FullResponse): A
+import akka.http.scaladsl.model.StatusCode
+import akka.http.scaladsl.model.HttpResponse
+
+abstract class OkHandler[A](f: FullResponse => A) extends FunctionHandler[A](f) {
+  override def onStatusReceived(status: StatusCode): State =
+    {
+      if (status.isFailure) State.Abort
+      else super.onStatusReceived(status)
+    }
+}
+
+object OkHandler {
+  def apply[A](f: FullResponse => A): OkHandler[A] =
+    new OkHandler[A](f) {}
 }

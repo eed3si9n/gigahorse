@@ -17,18 +17,36 @@
 package gigahorsetest
 
 import org.scalatest._
-
-import scala.concurrent._
-import java.io.File
-
-import gigahorse.WebSocketEvent
-
 import scala.util.{ Failure, Success }
+import scala.concurrent._
+import scala.concurrent.duration._
+import java.io.File
+import gigahorse.{ HeaderNames, WebSocketEvent }
 
-class HttpClientSpec extends AsyncFlatSpec {
-  import gigahorse.Gigahorse
+abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers {
+  // custom loan pattern
+  def withHttp(testCode: gigahorse.HttpClient => Future[Assertion]): Future[Assertion]
+  private[this] val Gigahorse = gigahorse.GigahorseSupport
 
-  "http.run(r)" should "retrieve a resource" in
+  "http.run(r)" should "retrieve a resource from Wikipedia" in {
+    withHttp { http =>
+      val r = Gigahorse.url("https://en.wikipedia.org/w/api.php").
+        addQueryString(
+          "action" -> "query",
+          "format" -> "json",
+          "titles" -> "Mad_Max"
+        ).get.
+        addHeaders(
+          HeaderNames.ACCEPT -> "application/json"
+        )
+      val f = http.run(r)
+      f map { res =>
+        assert(res.bodyAsString contains "Mad Max")
+      }
+    }
+  }
+
+  it should "retrieve a resource from Duckduckgo.com" in
     withHttp { http =>
       val r = Gigahorse.url("http://api.duckduckgo.com").
         addQueryString(
@@ -37,20 +55,21 @@ class HttpClientSpec extends AsyncFlatSpec {
         ).get
       val f = http.run(r)
       f map { res =>
-        assert(res.body contains "2 (number)")
+        assert(res.bodyAsString contains "2 (number)")
       }
     }
 
   "http.run(r, Gigahorse.asString)" should "retrieve a resource as String" in
     withHttp { http =>
-      val r = Gigahorse.url("http://api.duckduckgo.com").
+      val r = Gigahorse.url("https://en.wikipedia.org/w/api.php").
         addQueryString(
-          "q" -> "1 + 1",
-          "format" -> "json"
+          "action" -> "query",
+          "format" -> "json",
+          "titles" -> "Mad_Max"
         ).get
       val f = http.run(r, Gigahorse.asString)
       f map { s =>
-        assert(s contains "2 (number)")
+        assert(s contains "Mad Max")
       }
     }
 
@@ -111,10 +130,9 @@ class HttpClientSpec extends AsyncFlatSpec {
   "http.process(r)" should "preserve an error response" in
     withHttp { http =>
       val r = Gigahorse.url("http://getstatuscode.com/500")
-      val f = http.process(r)
-      f map { res =>
-        assert(res.body contains "500 HTTP Status Code")
-      }
+      for {
+        res  <- http.process(r)
+      } yield assert(res.bodyAsString contains "500 HTTP Status Code")
     }
 
   "http.process(r, Gigahorse.asEither)" should "preserve an error response and convert to Right given 404" in
@@ -122,18 +140,7 @@ class HttpClientSpec extends AsyncFlatSpec {
       val r = Gigahorse.url("http://getstatuscode.com/404")
       val f = http.process(r, Gigahorse.asEither)
       f map { either =>
-        assert(either.right.get.body contains "404 HTTP Status Code")
-      }
-    }
-
-  // custom loan pattern
-  def withHttp(testCode: gigahorse.HttpClient => Future[Assertion]): Future[Assertion] =
-    {
-      val http = Gigahorse.http(Gigahorse.config)
-      complete {
-        testCode(http)
-      } lastly {
-        http.close()
+        assert(either.right.get.bodyAsString contains "404 HTTP Status Code")
       }
     }
 

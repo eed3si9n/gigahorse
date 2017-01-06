@@ -15,6 +15,7 @@
  */
 
 package gigahorse
+package support.asynchttpclient
 
 import org.asynchttpclient.ws.{ WebSocketByteListener, WebSocketPingListener, WebSocketPongListener, WebSocketTextListener, WebSocket => XWebSocket, WebSocketListener => XWebSocketListener }
 

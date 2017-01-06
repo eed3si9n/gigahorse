@@ -1,7 +1,13 @@
 import sbt._
 
 object Dependencies {
+  val scala211 = "2.11.8"
+  val scala212 = "2.12.1"
+  val scalaBoth = Seq(scala211, scala212)
   val ahc = "org.asynchttpclient" % "async-http-client" % "2.0.19"
   val scalatest = "org.scalatest" %% "scalatest" % "3.0.0"
   val sslConfig = "com.typesafe" %% "ssl-config-core" % "0.2.1"
+  val akkaHttpCore = "com.typesafe.akka" %% "akka-http-core" % "10.0.1"
+  val akkaHttpExperimental = "com.typesafe.akka" %% "akka-http" % "10.0.1"
+  val sbtIo = "org.scala-sbt" %% "io" % "1.0.0-M7"
 }
