@@ -21,8 +21,8 @@ import scala.concurrent.{ Future, ExecutionContext }
 /**
  * Lifts Future[A] into Future[Either[Throwable, A]]
  */
-final class FutureLifter[A](f: Response => A) {
-  def run(value: Future[Response])(implicit ec: ExecutionContext): Future[Either[Throwable, A]] =
+final class FutureLifter[A](f: FullResponse => A) {
+  def run(value: Future[FullResponse])(implicit ec: ExecutionContext): Future[Either[Throwable, A]] =
     value map { r => Right[Throwable, A](f(r)) } recoverWith { case e =>
       Future.successful(Left[Throwable, A](e)) }
 
@@ -31,5 +31,5 @@ final class FutureLifter[A](f: Response => A) {
 }
 
 object FutureLifter {
-  def asEither: FutureLifter[Response] = new FutureLifter[Response](identity)
+  def asEither: FutureLifter[FullResponse] = new FutureLifter[FullResponse](identity)
 }

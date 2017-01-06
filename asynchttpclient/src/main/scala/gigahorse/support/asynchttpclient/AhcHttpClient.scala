@@ -16,6 +16,7 @@
  */
 
 package gigahorse
+package support.asynchttpclient
 
 import scala.collection.JavaConverters._
 import java.io.{ File, UnsupportedEncodingException }
@@ -40,15 +41,15 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
   def this(config: Config) =
     this(AhcConfig.buildConfig(config))
 
-  /** Runs the request and return a Future of Response. */
-  def run(request: Request): Future[Response] =
-    process(request, OkHandler[Response](identity))
+  /** Runs the request and return a Future of FullResponse. */
+  def run(request: Request): Future[FullResponse] =
+    process(request, OkHandler[FullResponse](identity))
 
   /** Runs the request and return a Future of A. */
-  def run[A](request: Request, f: Response => A): Future[A] =
+  def run[A](request: Request, f: FullResponse => A): Future[A] =
     process(request, OkHandler[A](f))
 
-  /** Runs the request and return a Future of Either a Response or a Throwable. */
+  /** Runs the request and return a Future of Either a FullResponse or a Throwable. */
   def run[A](request: Request, lifter: FutureLifter[A])(implicit ec: ExecutionContext): Future[Either[Throwable, A]] =
     lifter.run(run(request))
 
@@ -60,18 +61,18 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
         out.write(content.getBodyByteBuffer)
         State.Continue
       }
-      override def onCompleted(response: Response) = {
+      override def onCompleted(response: FullResponse) = {
         out.close()
         file
       }
     })
 
-  /** Executes the request and return a Future of Response. Does not error on non-OK response. */
-  def process(request: Request): Future[Response] =
-    process(request, FunctionHandler[Response](identity))
+  /** Executes the request and return a Future of FullResponse. Does not error on non-OK response. */
+  def process(request: Request): Future[FullResponse] =
+    process(request, FunctionHandler[FullResponse](identity))
 
   /** Executes the request and return a Future of A. Does not error on non-OK response. */
-  def process[A](request: Request, f: Response => A): Future[A] =
+  def process[A](request: Request, f: FullResponse => A): Future[A] =
     process(request, FunctionHandler[A](f))
 
   /** Executes the request and return a Future of Either a Response or a Throwable. Does not error on non-OK response. */
@@ -79,7 +80,7 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
     lifter.run(process(request))
 
   /** Executes the request. Does not error on non-OK response. */
-  def process[A](request: Request, handler: CompletionHandler[A]): Future[A] =
+  def process[A](request: Request, handler: AhcCompletionHandler[A]): Future[A] =
     {
       val result = Promise[A]()
       val xrequest = buildRequest(request)
@@ -97,7 +98,7 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
           onCompleted(handler.builder.build())
         }
         def onCompleted(response: XResponse): XResponse = {
-          result.success(handler.onCompleted(new AhcResponse(response)))
+          result.success(handler.onCompleted(new AhcFullResponse(response)))
           response
         }
         override def onThrowable(t: Throwable): Unit = {
@@ -113,7 +114,8 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
       val result = Promise[WebSocket]()
       val xrequest = buildRequest(request)
       val upgradeHandler = new WebSocketUpgradeHandler.Builder()
-      asyncHttpClient.executeRequest(xrequest, upgradeHandler.addWebSocketListener(new WebSocketListener(handler, result)).build())
+      asyncHttpClient.executeRequest(xrequest, upgradeHandler.addWebSocketListener(
+        new WebSocketListener(handler, result)).build())
       result.future
     }
 

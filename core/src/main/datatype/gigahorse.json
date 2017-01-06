@@ -17,7 +17,7 @@
         },
         {
           "name": "requestTimeout",
-          "type": "scala.concurrent.duration.Duration",
+          "type": "scala.concurrent.duration.FiniteDuration",
           "doc": [
             "The maximum time an `HttpClient` waits until the response is completed. (Default: 120s)"
           ],

@@ -16,6 +16,7 @@
  */
 
 package gigahorse
+package support.asynchttpclient
 
 import org.asynchttpclient._
 

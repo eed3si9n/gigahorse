@@ -15,7 +15,8 @@
  */
 
 package gigahorse
+package support
 
-abstract class CompletionHandler[A] {
-  def onCompleted(response: FullResponse): A
+package object asynchttpclient {
+  type AsyncHandler[A] = org.asynchttpclient.AsyncHandler[A]
 }

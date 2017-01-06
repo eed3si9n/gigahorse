@@ -1,12 +1,12 @@
 import Dependencies._
 
 lazy val root = (project in file(".")).
-  aggregate(core).
+  aggregate(core, akkaHttp, asynchttpclient).
   dependsOn(core).
   settings(inThisBuild(List(
       organization := "com.eed3si9n",
       scalaVersion := "2.11.8",
-      crossScalaVersions := Seq("2.11.8", "2.12.0"),
+      crossScalaVersions := scalaBoth,
       organizationName := "eed3si9n",
       organizationHomepage := Some(url("http://eed3si9n.com/")),
       homepage := Some(url("https://github.com/eed3si9n/gigahorse")),
@@ -36,8 +36,33 @@ lazy val core = (project in file("core")).
   settings(
     commonSettings,
     name := "gigahorse-core",
-    libraryDependencies ++= Seq(ahc, sslConfig, scalatest % Test),
+    libraryDependencies ++= Seq(sslConfig, scalatest % Test),
     sourceManaged in (Compile, generateDatatypes) := (sourceDirectory in Compile).value / "scala",
     // You need this otherwise you get X is already defined as class.
     sources in Compile := (sources in Compile).value.toList.distinct
+  )
+
+lazy val commonTest = (project in file("common-test")).
+  dependsOn(core).
+  settings(
+    libraryDependencies ++= Seq(scalatest),
+    publish := (),
+    publishLocal := ()
+  )
+
+lazy val asynchttpclient = (project in file("asynchttpclient")).
+  dependsOn(core, commonTest % Test).
+  settings(
+    commonSettings,
+    name := "gigahorse-asynchttpclient",
+    libraryDependencies ++= Seq(ahc, scalatest % Test)
+  )
+
+lazy val akkaHttp = (project in file("akka-http")).
+  dependsOn(core, commonTest % Test).
+  settings(
+    commonSettings,
+    name := "gigahorse-akka-http",
+    libraryDependencies ++= Seq(akkaHttpCore, akkaHttpExperimental, scalatest % Test),
+    dependencyOverrides += sslConfig
   )

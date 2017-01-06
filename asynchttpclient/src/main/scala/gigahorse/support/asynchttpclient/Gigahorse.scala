@@ -15,18 +15,12 @@
  */
 
 package gigahorse
+package support.asynchttpclient
 
 import java.nio.charset.Charset
+import scala.concurrent.Future
 
-abstract class Gigahorse {
-  /**
-   * Generates a request.
-   *
-   * @param url The base URL to make HTTP requests to.
-   * @return Request
-   */
-  def url(url: String): Request = Request(url)
-
+abstract class Gigahorse extends GigahorseSupport {
   def withHttp[A](config: Config)(f: HttpClient => A): A =
     {
       val client: HttpClient = http(config)
@@ -37,29 +31,12 @@ abstract class Gigahorse {
         client.close()
       }
     }
+
   def withHttp[A](f: HttpClient => A): A =
     withHttp(config)(f)
 
-  /** Returns default configuration using `application.conf` if present. */
-  def config: Config =
-    {
-      import com.typesafe.config.ConfigFactory
-      val c = ConfigFactory.load
-      if (c.hasPath(ConfigParser.rootPath)) ConfigParser.parse(c)
-      else Config()
-    }
-
   /** Returns HttpClient. You must call `close` when you're done. */
   def http(config: Config): HttpClient = new AhcHttpClient(config)
-
-  /** Function from `Response` to `String` */
-  lazy val asString: Response => String = _.body
-
-  /** Lifts Future[Reponse] result to Future[Either[Throwable, Reponse]] */
-  lazy val asEither: FutureLifter[Response] = FutureLifter.asEither
-
-  /** UTF-8. */
-  val utf8 = Charset.forName("UTF-8")
 }
 
 object Gigahorse extends Gigahorse

@@ -15,7 +15,12 @@
  */
 
 package gigahorse
+package support.asynchttpclient
 
-abstract class CompletionHandler[A] {
-  def onCompleted(response: FullResponse): A
+abstract class FunctionHandler[A](f: FullResponse => A) extends AhcCompletionHandler[A] {
+  override def onCompleted(response: FullResponse): A = f(response)
+}
+
+object FunctionHandler {
+  def apply[A](f: FullResponse => A): FunctionHandler[A] = new FunctionHandler[A](f) {}
 }
