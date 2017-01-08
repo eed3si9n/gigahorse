@@ -127,18 +127,18 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers {
       }
     }
 
-  "http.process(r)" should "preserve an error response" in
+  "http.processFull(r)" should "preserve an error response" in
     withHttp { http =>
       val r = Gigahorse.url("http://getstatuscode.com/500")
       for {
-        res  <- http.process(r)
+        res  <- http.processFull(r)
       } yield assert(res.bodyAsString contains "500 HTTP Status Code")
     }
 
-  "http.process(r, Gigahorse.asEither)" should "preserve an error response and convert to Right given 404" in
+  "http.processFull(r, Gigahorse.asEither)" should "preserve an error response and convert to Right given 404" in
     withHttp { http =>
       val r = Gigahorse.url("http://getstatuscode.com/404")
-      val f = http.process(r, Gigahorse.asEither)
+      val f = http.processFull(r, Gigahorse.asEither)
       f map { either =>
         assert(either.right.get.bodyAsString contains "404 HTTP Status Code")
       }

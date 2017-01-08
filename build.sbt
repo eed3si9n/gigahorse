@@ -16,7 +16,17 @@ lazy val root = (project in file(".")).
       ),
       version := "0.2-SNAPSHOT",
       description := "An HTTP client for Scala with Async Http Client underneath.",
-      licenses := Seq("Apache 2" -> new URL("http://www.apache.org/licenses/LICENSE-2.0.txt"))
+      licenses := Seq("Apache 2" -> new URL("http://www.apache.org/licenses/LICENSE-2.0.txt")),
+      scalacOptions ++= Seq(
+        "-deprecation", "-Ywarn-unused", "-Ywarn-unused-import"
+      ),
+      scalacOptions := {
+        val old = scalacOptions.value
+        scalaBinaryVersion.value match {
+          case "2.12" => old
+          case _      => old filterNot Set("-Xfatal-warnings", "-deprecation", "-Ywarn-unused", "-Ywarn-unused-import")
+        }
+      }
     )),
     name := "gigahorse",
     publish := (),
@@ -36,7 +46,7 @@ lazy val core = (project in file("core")).
   settings(
     commonSettings,
     name := "gigahorse-core",
-    libraryDependencies ++= Seq(sslConfig, scalatest % Test),
+    libraryDependencies ++= Seq(sslConfig, reactiveStreams, scalatest % Test),
     sourceManaged in (Compile, generateDatatypes) := (sourceDirectory in Compile).value / "scala",
     // You need this otherwise you get X is already defined as class.
     sources in Compile := (sources in Compile).value.toList.distinct
@@ -55,7 +65,7 @@ lazy val asynchttpclient = (project in file("asynchttpclient")).
   settings(
     commonSettings,
     name := "gigahorse-asynchttpclient",
-    libraryDependencies ++= Seq(ahc, scalatest % Test)
+    libraryDependencies ++= Seq(ahc)
   )
 
 lazy val akkaHttp = (project in file("akka-http")).
@@ -63,6 +73,6 @@ lazy val akkaHttp = (project in file("akka-http")).
   settings(
     commonSettings,
     name := "gigahorse-akka-http",
-    libraryDependencies ++= Seq(akkaHttpCore, akkaHttpExperimental, scalatest % Test),
+    libraryDependencies ++= Seq(akkaHttpCore, Dependencies.akkaHttp),
     dependencyOverrides += sslConfig
   )

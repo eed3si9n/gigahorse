@@ -42,6 +42,7 @@ object ConfigParser {
         connectTimeout        = config.getFiniteDuration("connectTimeout", defaultConnectTimeout),
         requestTimeout        = config.getFiniteDuration("requestTimeout", defaultRequestTimeout),
         readTimeout           = config.getFiniteDuration("readTimeout", defaultReadTimeout),
+        frameTimeout          = config.getFiniteDuration("frameTimeout", defaultFrameTimeout),
         followRedirects       = config.getBoolean("followRedirects", defaultFollowRedirects),
         maxRedirects          = config.getInt("maxRedirects", defaultMaxRedirects),
         compressionEnforced   = config.getBoolean("compressionEnforced", defaultCompressionEnforced),
@@ -55,7 +56,9 @@ object ConfigParser {
         pooledConnectionIdleTimeout = config.getDuration("pooledConnectionIdleTimeout", defaultPooledConnectionIdleTimeout),
         connectionTtl         = config.getDuration("connectionTtl", defaultConnectionTtl),
         maxConnections        = config.getInt("maxConnections", defaultMaxConnections),
-        maxConnectionsPerHost = config.getInt("maxConnectionsPerHost", defaultMaxConnectionsPerHost)
+        maxConnectionsPerHost = config.getInt("maxConnectionsPerHost", defaultMaxConnectionsPerHost),
+        maxFrameSize          = config.getMemorySize("maxFrameSize", defaultMaxFrameSize),
+        webSocketMaxFrameSize = config.getMemorySize("webSocketMaxFrameSize", defaultWebSocketMaxFrameSize)
       )
     }
 
@@ -96,6 +99,7 @@ object ConfigDefaults {
   val defaultConnectTimeout        = FiniteDuration(120, "s")
   val defaultRequestTimeout        = FiniteDuration(120, "s")
   val defaultReadTimeout           = FiniteDuration(120, "s")
+  val defaultFrameTimeout          = FiniteDuration(200, "ms")
   val defaultFollowRedirects       = true
   val defaultMaxRedirects          = 5
   val defaultCompressionEnforced   = false
@@ -110,7 +114,8 @@ object ConfigDefaults {
   val defaultConnectionTtl         = Duration.Inf
   val defaultMaxConnections        = -1
   val defaultMaxConnectionsPerHost = -1
-  val defaultWebSocketMaxFrameSize = 64 * 1024
+  val defaultMaxFrameSize          = ConfigMemorySize(1024 * 1024)
+  val defaultWebSocketMaxFrameSize = ConfigMemorySize(1024 * 1024)
 }
 
 class RichXConfig(config: XConfig) {
@@ -135,5 +140,8 @@ class RichXConfig(config: XConfig) {
       if (d.isFinite) FiniteDuration(d.toMillis, "ms")
       else sys.error(s"A FiniteDuration is required for $path")
     }
+    else fallback
+  def getMemorySize(path: String, fallback: ConfigMemorySize): ConfigMemorySize =
+    if (config.hasPath(path)) ConfigMemorySize(config.getBytes(path))
     else fallback
 }

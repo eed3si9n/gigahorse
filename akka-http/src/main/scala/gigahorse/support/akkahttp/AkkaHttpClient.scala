@@ -17,17 +17,15 @@
 package gigahorse
 package support.akkahttp
 
-import scala.collection.JavaConverters._
-import java.io.{ File, UnsupportedEncodingException }
-import java.nio.charset.{ Charset, StandardCharsets }
+import java.io.File
 import scala.concurrent.{ Future, Promise, ExecutionContext }
-import akka.actor.{ Actor, ActorSystem, Props }
-import akka.stream.{ OverflowStrategy, Materializer }
-import akka.stream.scaladsl.{ FileIO, SourceQueueWithComplete }
+import akka.actor.ActorSystem
+import akka.stream.Materializer
 import akka.http.scaladsl.{ Http => AkkaHttp }
-import akka.http.scaladsl.model.{ HttpRequest, HttpResponse, ResponseEntity, HttpEntity, Uri,
+import akka.http.scaladsl.model.{ HttpRequest, HttpResponse, Uri,
   StatusCodes, HttpMethod, HttpMethods, HttpHeader }
 import akka.http.scaladsl.model.ws.WebSocketRequest
+import DownloadHandler.asFile
 
 class AkkaHttpClient(config: Config, system: ActorSystem)(implicit fm: Materializer) extends HttpClient {
   private val akkaHttp = AkkaHttp(system)
@@ -47,20 +45,39 @@ class AkkaHttpClient(config: Config, system: ActorSystem)(implicit fm: Materiali
   def run[A](request: Request, lifter: FutureLifter[A])(implicit ec: ExecutionContext): Future[Either[Throwable, A]] =
     lifter.run(run(request))
 
-  /** Downloads the request to the file. Errors on non-OK response. */
-  def download(request: Request, file: File): Future[File] =
-    process(request, AkkaHttpDownloadHandler(file))
-
   /** Executes the request and return a Future of FullResponse. Does not error on non-OK response. */
-  def process(request: Request): Future[FullResponse] = process(request, identity[FullResponse] _)
+  def processFull(request: Request): Future[FullResponse] = processFull(request, identity[FullResponse] _)
 
   /** Executes the request and return a Future of A. Does not error on non-OK response. */
-  def process[A](request: Request, f: FullResponse => A): Future[A] =
+  def processFull[A](request: Request, f: FullResponse => A): Future[A] =
     process(request, FunctionHandler(f))
 
   /** Executes the request and return a Future of Either a FullResponse or a Throwable. Does not error on non-OK response. */
-  def process[A](request: Request, lifter: FutureLifter[A])(implicit ec: ExecutionContext): Future[Either[Throwable, A]] =
-    lifter.run(process(request))
+  def processFull[A](request: Request, lifter: FutureLifter[A])(implicit ec: ExecutionContext): Future[Either[Throwable, A]] =
+    lifter.run(processFull(request))
+
+  /** Runs the request and return a Future of StreamResponse. */
+  def runStream(request: Request): Future[StreamResponse] =
+    processStream(request, OkHandler.stream[StreamResponse](Future.successful))
+
+  /** Runs the request and return a Future of A. */
+  def runStream[A](request: Request, f: StreamResponse => Future[A]): Future[A] =
+    processStream(request, OkHandler.stream[A](f))
+
+  def download(request: Request, file: File): Future[File] =
+    runStream(request, asFile(file))
+
+  /** Executes the request and return a Future of StreamResponse. Does not error on non-OK response. */
+  def processStream(request: Request): Future[StreamResponse] =
+    processStream(request, FunctionHandler.stream[StreamResponse](Future.successful))
+
+  /** Executes the request and return a Future of A. Does not error on non-OK response. */
+  def processStream[A](request: Request, f: StreamResponse => Future[A]): Future[A] =
+    processStream(request, FunctionHandler.stream(f))
+
+  /** Executes the request. Does not error on non-OK response. */
+  def processStream[A](request: Request, handler: AkkaHttpStreamHandler[A]): Future[A] =
+    process(request, handler)
 
   /** Executes the request. Does not error on non-OK response. */
   def process[A](request: Request, handler: AkkaHttpCompletionHandler[A]): Future[A] =
@@ -74,7 +91,7 @@ class AkkaHttpClient(config: Config, system: ActorSystem)(implicit fm: Materiali
             response.entity.discardBytes(fm)
             p.failure { StatusError(response.status.intValue) }
           }
-          else p.success()
+          else p.success(())
           p.future
         }
       for {
@@ -142,7 +159,7 @@ class AkkaHttpClient(config: Config, system: ActorSystem)(implicit fm: Materiali
       // upgradeResponse is a Future[WebSocketUpgradeResponse] that
       // completes or fails when the connection succeeds or fails
       // and closed is a Future[Done] representing the stream completion from above
-      val (upgradeResponse, closed) = akkaHttp.singleWebSocketRequest(xrequest, flow)
+      val (upgradeResponse, _) = akkaHttp.singleWebSocketRequest(xrequest, flow)
       val connected = upgradeResponse.map { upgrade =>
         // just like a regular http request we can access response status which is available via upgrade.response.status
         // status code 101 (Switching Protocols) indicates that server support WebSockets

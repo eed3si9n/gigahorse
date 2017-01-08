@@ -1,5 +1,6 @@
 /*
- * Copyright 2016 by Eugene Yokota
+ * Original implementation (C) 2009-2016 Lightbend Inc. (https://www.lightbend.com).
+ * Adapted and extended in 2016 by Eugene Yokota
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,37 +19,44 @@ package gigahorse
 package support.akkahttp
 
 import java.nio.ByteBuffer
+import org.reactivestreams.Publisher
+import scala.concurrent.ExecutionContext
 import scala.collection.immutable.TreeMap
+import akka.util.ByteString
 import akka.http.scaladsl.model._
 import akka.stream.Materializer
+import akka.stream.scaladsl.{ Sink, Source, Framing }
 
-class AkkaHttpFullResponse(akkaHttpResponse: HttpResponse, entity: HttpEntity.Strict)(implicit val fm: Materializer) extends FullResponse {
+/** Represents a stream response.
+ */
+class AkkaHttpStreamResponse(akkaHttpResponse: HttpResponse, config: Config)(implicit fm: Materializer, ec: ExecutionContext) extends StreamResponse {
   /**
    * @return The underlying entity object.
    */
-  def underlying[A] = entity.asInstanceOf[A]
+  def underlying[A] = akkaHttpResponse.asInstanceOf[A]
+
+  def asSource: Source[ByteString, Any] = akkaHttpResponse.entity.dataBytes
 
   /**
-   * @return The underlying response object.
+   * The response body as Reactive Stream.
    */
-  def underlyingResponse[A] = akkaHttpResponse.asInstanceOf[A]
+  override def byteBuffers: Stream[ByteBuffer] = new AkkaHttpStream(byteBufferSource)
+
+  def byteBufferSource: Source[ByteBuffer, Any] =
+    asSource
+      .groupedWithin(64 * 1024, config.frameTimeout)
+      .mapConcat(xs => xs map { _.toByteBuffer })
 
   /**
-   * The response body as a `ByteBuffer`.
+   * The response body as Reactive Stream of Newline delimited strings.
    */
-  def bodyAsByteBuffer: ByteBuffer = entity.data.asByteBuffer
+  override def newLineDelimited: Stream[String] = new AkkaHttpStream(newLineDelimitedSource)
 
-  /**
-   * The response body as String.
-   */
-  lazy val bodyAsString: String = {
-    // RFC-2616#3.7.1 states that any text/* mime type should default to ISO-8859-1 charset if not
-    // explicitly set, while Plays default encoding is UTF-8.  So, use UTF-8 if charset is not explicitly
-    // set and content type is not text/*, otherwise default to ISO-8859-1
-    val contentType = entity.contentType
-    val charset = contentType.charsetOption getOrElse HttpCharsets.`UTF-8`
-    entity.data.decodeString(charset.value)
-  }
+  def newLineDelimitedSource: Source[String, Any] =
+    asSource
+      .via(Framing.delimiter(ByteString("\n"),
+        maximumFrameLength = config.maxFrameSize.bytes.toInt, allowTruncation = false))
+      .map(_.utf8String)
 
   /**
    * Return the headers of the response as a case-insensitive map

@@ -19,7 +19,6 @@ package support.akkahttp
 
 import akka.actor._
 import akka.stream.actor._
-import akka.stream.scaladsl._
 import akka.http.scaladsl.model.ws.Message
 
 object MessageForwarder {

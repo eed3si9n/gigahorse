@@ -8,7 +8,7 @@
       "fields": [
         {
           "name": "connectTimeout",
-          "type": "scala.concurrent.duration.Duration",
+          "type": "scala.concurrent.duration.FiniteDuration",
           "doc": [
             "The maximum time an `HttpClient` can wait when connecting to a remote host. (Default: 120s)"
           ],
@@ -26,11 +26,20 @@
         },
         {
           "name": "readTimeout",
-          "type": "scala.concurrent.duration.Duration",
+          "type": "scala.concurrent.duration.FiniteDuration",
           "doc": [
             "The maximum time an `HttpClient` can stay idle. (Default: 120s)"
           ],
           "default": "ConfigDefaults.defaultReadTimeout",
+          "since": "0.1.0"
+        },
+        {
+          "name": "frameTimeout",
+          "type": "scala.concurrent.duration.FiniteDuration",
+          "doc": [
+            "The maximum time an `HttpClient` waits until the stream is framed. (Default: 200ms)"
+          ],
+          "default": "ConfigDefaults.defaultFrameTimeout",
           "since": "0.1.0"
         },
         {
@@ -170,13 +179,22 @@
           "since": "0.1.0"
         },
         {
-          "name": "webSocketMaxFrameSize",
-          "type": "int",
+          "name": "maxFrameSize",
+          "type": "gigahorse.ConfigMemorySize",
           "doc": [
-            "The maximum accepted size of a websocket message fragment. (Default: 64Kb)"
+            "The maximum size of a stream fragment. (Default: 1M)"
+          ],
+          "default": "ConfigDefaults.defaultMaxFrameSize",
+          "since": "0.1.0"
+        },
+        {
+          "name": "webSocketMaxFrameSize",
+          "type": "gigahorse.ConfigMemorySize",
+          "doc": [
+            "The maximum accepted size of a websocket message fragment. (Default: 1M)"
           ],
           "default": "ConfigDefaults.defaultWebSocketMaxFrameSize",
-          "since": "0.2.0"
+          "since": "0.1.0"
         }
       ],
       "extra": [
@@ -610,6 +628,18 @@
         {
           "name": "charset",
           "type": "java.nio.charset.Charset"
+        }
+      ]
+    },
+    {
+      "name": "ConfigMemorySize",
+      "namespace": "gigahorse",
+      "type": "record",
+      "target": "Scala",
+      "fields": [
+        {
+          "name": "bytes",
+          "type": "Long"
         }
       ]
     }

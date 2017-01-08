@@ -16,7 +16,9 @@
 
 package gigahorse
 
+import java.nio.ByteBuffer
 import java.nio.charset.Charset
+import java.io.{ File, FileOutputStream }
 import scala.concurrent.Future
 
 /** Common interface for Gigahorse backends.
@@ -39,11 +41,21 @@ abstract class GigahorseSupport {
       else Config()
     }
 
-  /** Function from `Response` to `String` */
+  /** Function from `FullResponse` to `String` */
   lazy val asString: FullResponse => String = _.bodyAsString
 
-  /** Lifts Future[Reponse] result to Future[Either[Throwable, Reponse]] */
+  /** Lifts Future[FullResponse] result to Future[Either[Throwable, Reponse]] */
   lazy val asEither: FutureLifter[FullResponse] = FutureLifter.asEither
+
+  /** Function from `StreamResponse` to `Stream[String]` */
+  lazy val asStringStream: StreamResponse => Stream[String] = _.newLineDelimited
+
+  /** Function from `StreamResponse` to `Stream[ByteBuffer]` */
+  lazy val asByteStream: StreamResponse => Stream[ByteBuffer] = _.byteBuffers
+
+  /** Function from `StreamResponse` to `Future[File]` */
+  def asFile(file: File): StreamResponse => Future[File] =
+    DownloadHandler.asFile(file)
 
   /** UTF-8. */
   val utf8 = Charset.forName("UTF-8")

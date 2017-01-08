@@ -19,12 +19,11 @@ package gigahorse
 package support.asynchttpclient
 
 import scala.collection.JavaConverters._
-import org.asynchttpclient.{ Response => XResponse, _ }
+import org.asynchttpclient.{ Response => XResponse }
 import org.asynchttpclient.util.HttpUtils
 import java.nio.charset.Charset
 import java.nio.ByteBuffer
 import scala.collection.immutable.TreeMap
-import scala.concurrent.{ Future, Promise }
 
 class AhcFullResponse(ahcResponse: XResponse) extends FullResponse {
   /**

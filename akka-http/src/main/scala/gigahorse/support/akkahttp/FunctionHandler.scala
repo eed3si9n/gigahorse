@@ -18,13 +18,18 @@ package gigahorse
 package support.akkahttp
 
 import scala.concurrent.Future
-import akka.http.scaladsl.model.HttpResponse
 
 abstract class FunctionHandler[A](f: FullResponse => A) extends AkkaHttpCompletionHandler[A] {
   override def onCompleted(response: FullResponse): A = f(response)
 }
 
+abstract class StreamFunctionHandler[A](f: StreamResponse => Future[A]) extends AkkaHttpStreamHandler[A] {
+  override def onStream(response: StreamResponse): Future[A] = f(response)
+}
+
 object FunctionHandler {
   def apply[A](f: FullResponse => A): FunctionHandler[A] =
     new FunctionHandler[A](f) {}
+  def stream[A](f: StreamResponse => Future[A]): StreamFunctionHandler[A] =
+    new StreamFunctionHandler[A](f) {}
 }

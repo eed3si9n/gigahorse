@@ -6,11 +6,13 @@
 package gigahorse
 final class Config(
   /** The maximum time an `HttpClient` can wait when connecting to a remote host. (Default: 120s) */
-  val connectTimeout: scala.concurrent.duration.Duration,
+  val connectTimeout: scala.concurrent.duration.FiniteDuration,
   /** The maximum time an `HttpClient` waits until the response is completed. (Default: 120s) */
   val requestTimeout: scala.concurrent.duration.FiniteDuration,
   /** The maximum time an `HttpClient` can stay idle. (Default: 120s) */
-  val readTimeout: scala.concurrent.duration.Duration,
+  val readTimeout: scala.concurrent.duration.FiniteDuration,
+  /** The maximum time an `HttpClient` waits until the stream is framed. (Default: 200ms) */
+  val frameTimeout: scala.concurrent.duration.FiniteDuration,
   /** Is HTTP redirect enabled. (Default: `true`) */
   val followRedirects: Boolean,
   /** The maximum number of redirects. (Default: 5) */
@@ -51,36 +53,40 @@ final class Config(
   val maxConnections: Int,
   /** The maximum number of connections to make per host. -1 means no maximum. */
   val maxConnectionsPerHost: Int,
-  /** The maximum accepted size of a websocket message fragment. (Default: 64Kb) */
-  val webSocketMaxFrameSize: Int) extends Serializable {
+  /** The maximum size of a stream fragment. (Default: 1M) */
+  val maxFrameSize: gigahorse.ConfigMemorySize,
+  /** The maximum accepted size of a websocket message fragment. (Default: 1M) */
+  val webSocketMaxFrameSize: gigahorse.ConfigMemorySize) extends Serializable {
   def withUserAgent(userAgent: String): Config = copy(userAgentOpt = Some(userAgent))
   def withAuth(auth: Realm): Config = copy(authOpt = Some(auth))
   def withAuth(username: String, password: String): Config = copy(authOpt = Some(Realm(username = username, password = password)))
   def withAuth(username: String, password: String, scheme: AuthScheme): Config = copy(authOpt = Some(Realm(username = username, password = password, scheme = scheme)))
-  def this() = this(ConfigDefaults.defaultConnectTimeout, ConfigDefaults.defaultRequestTimeout, ConfigDefaults.defaultReadTimeout, ConfigDefaults.defaultFollowRedirects, ConfigDefaults.defaultMaxRedirects, ConfigDefaults.defaultCompressionEnforced, ConfigDefaults.defaultUserAgentOpt, ConfigDefaults.defaultAuthOpt, ConfigDefaults.defaultSslConfig, ConfigDefaults.defaultMaxRequestRetry, ConfigDefaults.defaultDisableUrlEncoding, ConfigDefaults.defaultUseProxyProperties, ConfigDefaults.defaultKeepAlive, ConfigDefaults.defaultPooledConnectionIdleTimeout, ConfigDefaults.defaultConnectionTtl, ConfigDefaults.defaultMaxConnections, ConfigDefaults.defaultMaxConnectionsPerHost, ConfigDefaults.defaultWebSocketMaxFrameSize)
-  def this(connectTimeout: scala.concurrent.duration.Duration, requestTimeout: scala.concurrent.duration.FiniteDuration, readTimeout: scala.concurrent.duration.Duration, followRedirects: Boolean, maxRedirects: Int, compressionEnforced: Boolean, userAgentOpt: Option[String], authOpt: Option[Realm], ssl: com.typesafe.sslconfig.ssl.SSLConfigSettings, maxRequestRetry: Int, disableUrlEncoding: Boolean, useProxyProperties: Boolean, keepAlive: Boolean, pooledConnectionIdleTimeout: scala.concurrent.duration.Duration, connectionTtl: scala.concurrent.duration.Duration, maxConnections: Int, maxConnectionsPerHost: Int) = this(connectTimeout, requestTimeout, readTimeout, followRedirects, maxRedirects, compressionEnforced, userAgentOpt, authOpt, ssl, maxRequestRetry, disableUrlEncoding, useProxyProperties, keepAlive, pooledConnectionIdleTimeout, connectionTtl, maxConnections, maxConnectionsPerHost, ConfigDefaults.defaultWebSocketMaxFrameSize)
+  def this() = this(ConfigDefaults.defaultConnectTimeout, ConfigDefaults.defaultRequestTimeout, ConfigDefaults.defaultReadTimeout, ConfigDefaults.defaultFrameTimeout, ConfigDefaults.defaultFollowRedirects, ConfigDefaults.defaultMaxRedirects, ConfigDefaults.defaultCompressionEnforced, ConfigDefaults.defaultUserAgentOpt, ConfigDefaults.defaultAuthOpt, ConfigDefaults.defaultSslConfig, ConfigDefaults.defaultMaxRequestRetry, ConfigDefaults.defaultDisableUrlEncoding, ConfigDefaults.defaultUseProxyProperties, ConfigDefaults.defaultKeepAlive, ConfigDefaults.defaultPooledConnectionIdleTimeout, ConfigDefaults.defaultConnectionTtl, ConfigDefaults.defaultMaxConnections, ConfigDefaults.defaultMaxConnectionsPerHost, ConfigDefaults.defaultMaxFrameSize, ConfigDefaults.defaultWebSocketMaxFrameSize)
   
   override def equals(o: Any): Boolean = o match {
-    case x: Config => (this.connectTimeout == x.connectTimeout) && (this.requestTimeout == x.requestTimeout) && (this.readTimeout == x.readTimeout) && (this.followRedirects == x.followRedirects) && (this.maxRedirects == x.maxRedirects) && (this.compressionEnforced == x.compressionEnforced) && (this.userAgentOpt == x.userAgentOpt) && (this.authOpt == x.authOpt) && (this.ssl == x.ssl) && (this.maxRequestRetry == x.maxRequestRetry) && (this.disableUrlEncoding == x.disableUrlEncoding) && (this.useProxyProperties == x.useProxyProperties) && (this.keepAlive == x.keepAlive) && (this.pooledConnectionIdleTimeout == x.pooledConnectionIdleTimeout) && (this.connectionTtl == x.connectionTtl) && (this.maxConnections == x.maxConnections) && (this.maxConnectionsPerHost == x.maxConnectionsPerHost) && (this.webSocketMaxFrameSize == x.webSocketMaxFrameSize)
+    case x: Config => (this.connectTimeout == x.connectTimeout) && (this.requestTimeout == x.requestTimeout) && (this.readTimeout == x.readTimeout) && (this.frameTimeout == x.frameTimeout) && (this.followRedirects == x.followRedirects) && (this.maxRedirects == x.maxRedirects) && (this.compressionEnforced == x.compressionEnforced) && (this.userAgentOpt == x.userAgentOpt) && (this.authOpt == x.authOpt) && (this.ssl == x.ssl) && (this.maxRequestRetry == x.maxRequestRetry) && (this.disableUrlEncoding == x.disableUrlEncoding) && (this.useProxyProperties == x.useProxyProperties) && (this.keepAlive == x.keepAlive) && (this.pooledConnectionIdleTimeout == x.pooledConnectionIdleTimeout) && (this.connectionTtl == x.connectionTtl) && (this.maxConnections == x.maxConnections) && (this.maxConnectionsPerHost == x.maxConnectionsPerHost) && (this.maxFrameSize == x.maxFrameSize) && (this.webSocketMaxFrameSize == x.webSocketMaxFrameSize)
     case _ => false
   }
   override def hashCode: Int = {
-    37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + connectTimeout.##) + requestTimeout.##) + readTimeout.##) + followRedirects.##) + maxRedirects.##) + compressionEnforced.##) + userAgentOpt.##) + authOpt.##) + ssl.##) + maxRequestRetry.##) + disableUrlEncoding.##) + useProxyProperties.##) + keepAlive.##) + pooledConnectionIdleTimeout.##) + connectionTtl.##) + maxConnections.##) + maxConnectionsPerHost.##) + webSocketMaxFrameSize.##)
+    37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + connectTimeout.##) + requestTimeout.##) + readTimeout.##) + frameTimeout.##) + followRedirects.##) + maxRedirects.##) + compressionEnforced.##) + userAgentOpt.##) + authOpt.##) + ssl.##) + maxRequestRetry.##) + disableUrlEncoding.##) + useProxyProperties.##) + keepAlive.##) + pooledConnectionIdleTimeout.##) + connectionTtl.##) + maxConnections.##) + maxConnectionsPerHost.##) + maxFrameSize.##) + webSocketMaxFrameSize.##)
   }
   override def toString: String = {
-    "Config(" + connectTimeout + ", " + requestTimeout + ", " + readTimeout + ", " + followRedirects + ", " + maxRedirects + ", " + compressionEnforced + ", " + userAgentOpt + ", " + authOpt + ", " + ssl + ", " + maxRequestRetry + ", " + disableUrlEncoding + ", " + useProxyProperties + ", " + keepAlive + ", " + pooledConnectionIdleTimeout + ", " + connectionTtl + ", " + maxConnections + ", " + maxConnectionsPerHost + ", " + webSocketMaxFrameSize + ")"
+    "Config(" + connectTimeout + ", " + requestTimeout + ", " + readTimeout + ", " + frameTimeout + ", " + followRedirects + ", " + maxRedirects + ", " + compressionEnforced + ", " + userAgentOpt + ", " + authOpt + ", " + ssl + ", " + maxRequestRetry + ", " + disableUrlEncoding + ", " + useProxyProperties + ", " + keepAlive + ", " + pooledConnectionIdleTimeout + ", " + connectionTtl + ", " + maxConnections + ", " + maxConnectionsPerHost + ", " + maxFrameSize + ", " + webSocketMaxFrameSize + ")"
   }
-  private[this] def copy(connectTimeout: scala.concurrent.duration.Duration = connectTimeout, requestTimeout: scala.concurrent.duration.FiniteDuration = requestTimeout, readTimeout: scala.concurrent.duration.Duration = readTimeout, followRedirects: Boolean = followRedirects, maxRedirects: Int = maxRedirects, compressionEnforced: Boolean = compressionEnforced, userAgentOpt: Option[String] = userAgentOpt, authOpt: Option[Realm] = authOpt, ssl: com.typesafe.sslconfig.ssl.SSLConfigSettings = ssl, maxRequestRetry: Int = maxRequestRetry, disableUrlEncoding: Boolean = disableUrlEncoding, useProxyProperties: Boolean = useProxyProperties, keepAlive: Boolean = keepAlive, pooledConnectionIdleTimeout: scala.concurrent.duration.Duration = pooledConnectionIdleTimeout, connectionTtl: scala.concurrent.duration.Duration = connectionTtl, maxConnections: Int = maxConnections, maxConnectionsPerHost: Int = maxConnectionsPerHost, webSocketMaxFrameSize: Int = webSocketMaxFrameSize): Config = {
-    new Config(connectTimeout, requestTimeout, readTimeout, followRedirects, maxRedirects, compressionEnforced, userAgentOpt, authOpt, ssl, maxRequestRetry, disableUrlEncoding, useProxyProperties, keepAlive, pooledConnectionIdleTimeout, connectionTtl, maxConnections, maxConnectionsPerHost, webSocketMaxFrameSize)
+  private[this] def copy(connectTimeout: scala.concurrent.duration.FiniteDuration = connectTimeout, requestTimeout: scala.concurrent.duration.FiniteDuration = requestTimeout, readTimeout: scala.concurrent.duration.FiniteDuration = readTimeout, frameTimeout: scala.concurrent.duration.FiniteDuration = frameTimeout, followRedirects: Boolean = followRedirects, maxRedirects: Int = maxRedirects, compressionEnforced: Boolean = compressionEnforced, userAgentOpt: Option[String] = userAgentOpt, authOpt: Option[Realm] = authOpt, ssl: com.typesafe.sslconfig.ssl.SSLConfigSettings = ssl, maxRequestRetry: Int = maxRequestRetry, disableUrlEncoding: Boolean = disableUrlEncoding, useProxyProperties: Boolean = useProxyProperties, keepAlive: Boolean = keepAlive, pooledConnectionIdleTimeout: scala.concurrent.duration.Duration = pooledConnectionIdleTimeout, connectionTtl: scala.concurrent.duration.Duration = connectionTtl, maxConnections: Int = maxConnections, maxConnectionsPerHost: Int = maxConnectionsPerHost, maxFrameSize: gigahorse.ConfigMemorySize = maxFrameSize, webSocketMaxFrameSize: gigahorse.ConfigMemorySize = webSocketMaxFrameSize): Config = {
+    new Config(connectTimeout, requestTimeout, readTimeout, frameTimeout, followRedirects, maxRedirects, compressionEnforced, userAgentOpt, authOpt, ssl, maxRequestRetry, disableUrlEncoding, useProxyProperties, keepAlive, pooledConnectionIdleTimeout, connectionTtl, maxConnections, maxConnectionsPerHost, maxFrameSize, webSocketMaxFrameSize)
   }
-  def withConnectTimeout(connectTimeout: scala.concurrent.duration.Duration): Config = {
+  def withConnectTimeout(connectTimeout: scala.concurrent.duration.FiniteDuration): Config = {
     copy(connectTimeout = connectTimeout)
   }
   def withRequestTimeout(requestTimeout: scala.concurrent.duration.FiniteDuration): Config = {
     copy(requestTimeout = requestTimeout)
   }
-  def withReadTimeout(readTimeout: scala.concurrent.duration.Duration): Config = {
+  def withReadTimeout(readTimeout: scala.concurrent.duration.FiniteDuration): Config = {
     copy(readTimeout = readTimeout)
+  }
+  def withFrameTimeout(frameTimeout: scala.concurrent.duration.FiniteDuration): Config = {
+    copy(frameTimeout = frameTimeout)
   }
   def withFollowRedirects(followRedirects: Boolean): Config = {
     copy(followRedirects = followRedirects)
@@ -124,12 +130,14 @@ final class Config(
   def withMaxConnectionsPerHost(maxConnectionsPerHost: Int): Config = {
     copy(maxConnectionsPerHost = maxConnectionsPerHost)
   }
-  def withWebSocketMaxFrameSize(webSocketMaxFrameSize: Int): Config = {
+  def withMaxFrameSize(maxFrameSize: gigahorse.ConfigMemorySize): Config = {
+    copy(maxFrameSize = maxFrameSize)
+  }
+  def withWebSocketMaxFrameSize(webSocketMaxFrameSize: gigahorse.ConfigMemorySize): Config = {
     copy(webSocketMaxFrameSize = webSocketMaxFrameSize)
   }
 }
 object Config {
-  def apply(): Config = new Config(ConfigDefaults.defaultConnectTimeout, ConfigDefaults.defaultRequestTimeout, ConfigDefaults.defaultReadTimeout, ConfigDefaults.defaultFollowRedirects, ConfigDefaults.defaultMaxRedirects, ConfigDefaults.defaultCompressionEnforced, ConfigDefaults.defaultUserAgentOpt, ConfigDefaults.defaultAuthOpt, ConfigDefaults.defaultSslConfig, ConfigDefaults.defaultMaxRequestRetry, ConfigDefaults.defaultDisableUrlEncoding, ConfigDefaults.defaultUseProxyProperties, ConfigDefaults.defaultKeepAlive, ConfigDefaults.defaultPooledConnectionIdleTimeout, ConfigDefaults.defaultConnectionTtl, ConfigDefaults.defaultMaxConnections, ConfigDefaults.defaultMaxConnectionsPerHost, ConfigDefaults.defaultWebSocketMaxFrameSize)
-  def apply(connectTimeout: scala.concurrent.duration.Duration, requestTimeout: scala.concurrent.duration.FiniteDuration, readTimeout: scala.concurrent.duration.Duration, followRedirects: Boolean, maxRedirects: Int, compressionEnforced: Boolean, userAgentOpt: Option[String], authOpt: Option[Realm], ssl: com.typesafe.sslconfig.ssl.SSLConfigSettings, maxRequestRetry: Int, disableUrlEncoding: Boolean, useProxyProperties: Boolean, keepAlive: Boolean, pooledConnectionIdleTimeout: scala.concurrent.duration.Duration, connectionTtl: scala.concurrent.duration.Duration, maxConnections: Int, maxConnectionsPerHost: Int): Config = new Config(connectTimeout, requestTimeout, readTimeout, followRedirects, maxRedirects, compressionEnforced, userAgentOpt, authOpt, ssl, maxRequestRetry, disableUrlEncoding, useProxyProperties, keepAlive, pooledConnectionIdleTimeout, connectionTtl, maxConnections, maxConnectionsPerHost, ConfigDefaults.defaultWebSocketMaxFrameSize)
-  def apply(connectTimeout: scala.concurrent.duration.Duration, requestTimeout: scala.concurrent.duration.FiniteDuration, readTimeout: scala.concurrent.duration.Duration, followRedirects: Boolean, maxRedirects: Int, compressionEnforced: Boolean, userAgentOpt: Option[String], authOpt: Option[Realm], ssl: com.typesafe.sslconfig.ssl.SSLConfigSettings, maxRequestRetry: Int, disableUrlEncoding: Boolean, useProxyProperties: Boolean, keepAlive: Boolean, pooledConnectionIdleTimeout: scala.concurrent.duration.Duration, connectionTtl: scala.concurrent.duration.Duration, maxConnections: Int, maxConnectionsPerHost: Int, webSocketMaxFrameSize: Int): Config = new Config(connectTimeout, requestTimeout, readTimeout, followRedirects, maxRedirects, compressionEnforced, userAgentOpt, authOpt, ssl, maxRequestRetry, disableUrlEncoding, useProxyProperties, keepAlive, pooledConnectionIdleTimeout, connectionTtl, maxConnections, maxConnectionsPerHost, webSocketMaxFrameSize)
+  def apply(): Config = new Config(ConfigDefaults.defaultConnectTimeout, ConfigDefaults.defaultRequestTimeout, ConfigDefaults.defaultReadTimeout, ConfigDefaults.defaultFrameTimeout, ConfigDefaults.defaultFollowRedirects, ConfigDefaults.defaultMaxRedirects, ConfigDefaults.defaultCompressionEnforced, ConfigDefaults.defaultUserAgentOpt, ConfigDefaults.defaultAuthOpt, ConfigDefaults.defaultSslConfig, ConfigDefaults.defaultMaxRequestRetry, ConfigDefaults.defaultDisableUrlEncoding, ConfigDefaults.defaultUseProxyProperties, ConfigDefaults.defaultKeepAlive, ConfigDefaults.defaultPooledConnectionIdleTimeout, ConfigDefaults.defaultConnectionTtl, ConfigDefaults.defaultMaxConnections, ConfigDefaults.defaultMaxConnectionsPerHost, ConfigDefaults.defaultMaxFrameSize, ConfigDefaults.defaultWebSocketMaxFrameSize)
+  def apply(connectTimeout: scala.concurrent.duration.FiniteDuration, requestTimeout: scala.concurrent.duration.FiniteDuration, readTimeout: scala.concurrent.duration.FiniteDuration, frameTimeout: scala.concurrent.duration.FiniteDuration, followRedirects: Boolean, maxRedirects: Int, compressionEnforced: Boolean, userAgentOpt: Option[String], authOpt: Option[Realm], ssl: com.typesafe.sslconfig.ssl.SSLConfigSettings, maxRequestRetry: Int, disableUrlEncoding: Boolean, useProxyProperties: Boolean, keepAlive: Boolean, pooledConnectionIdleTimeout: scala.concurrent.duration.Duration, connectionTtl: scala.concurrent.duration.Duration, maxConnections: Int, maxConnectionsPerHost: Int, maxFrameSize: gigahorse.ConfigMemorySize, webSocketMaxFrameSize: gigahorse.ConfigMemorySize): Config = new Config(connectTimeout, requestTimeout, readTimeout, frameTimeout, followRedirects, maxRedirects, compressionEnforced, userAgentOpt, authOpt, ssl, maxRequestRetry, disableUrlEncoding, useProxyProperties, keepAlive, pooledConnectionIdleTimeout, connectionTtl, maxConnections, maxConnectionsPerHost, maxFrameSize, webSocketMaxFrameSize)
 }

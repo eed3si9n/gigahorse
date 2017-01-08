@@ -17,23 +17,20 @@
 package gigahorse
 package support.asynchttpclient
 
-abstract class Gigahorse extends GigahorseSupport {
-  def withHttp[A](config: Config)(f: HttpClient => A): A =
-    {
-      val client: HttpClient = http(config)
-      try {
-        f(client)
-      }
-      finally {
-        client.close()
-      }
-    }
+import scala.concurrent.Future
+import org.asynchttpclient.{ Response => XResponse, _ }
 
-  def withHttp[A](f: HttpClient => A): A =
-    withHttp(config)(f)
+abstract class AhcStreamHandler[A] extends AhcHandler {
+  val builder = new XResponse.ResponseBuilder
 
-  /** Returns HttpClient. You must call `close` when you're done. */
-  def http(config: Config): HttpClient = new AhcHttpClient(config)
+  def onStatusReceived(status: HttpResponseStatus): State = {
+    builder.reset()
+    builder.accumulate(status)
+    State.Continue
+  }
+  def onHeadersReceived(headers: HttpResponseHeaders): State = {
+    builder.accumulate(headers)
+    State.Continue
+  }
+  def onStream(response: StreamResponse): Future[A]
 }
-
-object Gigahorse extends Gigahorse

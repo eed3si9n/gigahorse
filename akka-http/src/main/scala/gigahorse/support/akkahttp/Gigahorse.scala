@@ -17,10 +17,8 @@
 package gigahorse
 package support.akkahttp
 
-import java.nio.charset.Charset
-import akka.actor.{ Actor, ActorSystem }
+import akka.actor.ActorSystem
 import akka.stream.{ Materializer, ActorMaterializer }
-import scala.concurrent.Future
 
 abstract class Gigahorse extends GigahorseSupport {
   /** Returns HttpClient. You must call `close` when you're done. */
@@ -35,7 +33,7 @@ abstract class Gigahorse extends GigahorseSupport {
         f(client)
       }
       finally {
-        system.shutdown()
+        system.terminate()
       }
     }
   def withHttp[A](f: HttpClient => A): A =

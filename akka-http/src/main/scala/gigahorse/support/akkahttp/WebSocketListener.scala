@@ -21,8 +21,8 @@ import akka.{ Done, NotUsed }
 import akka.util.ByteString
 import akka.stream.scaladsl._
 import scala.util.Success
-import scala.concurrent.{ Future, Promise, ExecutionContext }
-import akka.actor.{ ActorRef, ActorSystem, Props, PoisonPill }
+import scala.concurrent.{ Future, Promise }
+import akka.actor.{ ActorSystem, Props, PoisonPill }
 import akka.stream.actor.ActorPublisher
 import akka.http.scaladsl.model.ws.{ Message, TextMessage => XTextMessage, BinaryMessage => XBinaryMessage }
 import WebSocketEvent._

@@ -17,23 +17,9 @@
 package gigahorse
 package support.asynchttpclient
 
-abstract class Gigahorse extends GigahorseSupport {
-  def withHttp[A](config: Config)(f: HttpClient => A): A =
-    {
-      val client: HttpClient = http(config)
-      try {
-        f(client)
-      }
-      finally {
-        client.close()
-      }
-    }
+import org.asynchttpclient._
 
-  def withHttp[A](f: HttpClient => A): A =
-    withHttp(config)(f)
-
-  /** Returns HttpClient. You must call `close` when you're done. */
-  def http(config: Config): HttpClient = new AhcHttpClient(config)
+trait AhcHandler {
+  def onStatusReceived(status: HttpResponseStatus): State
+  def onHeadersReceived(headers: HttpResponseHeaders): State
 }
-
-object Gigahorse extends Gigahorse
