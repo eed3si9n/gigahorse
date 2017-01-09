@@ -26,7 +26,7 @@
         },
         {
           "name": "readTimeout",
-          "type": "scala.concurrent.duration.FiniteDuration",
+          "type": "scala.concurrent.duration.Duration",
           "doc": [
             "The maximum time an `HttpClient` can stay idle. (Default: 120s)"
           ],

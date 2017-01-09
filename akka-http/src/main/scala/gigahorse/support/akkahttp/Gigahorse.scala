@@ -19,6 +19,8 @@ package support.akkahttp
 
 import akka.actor.ActorSystem
 import akka.stream.{ Materializer, ActorMaterializer }
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 abstract class Gigahorse extends GigahorseSupport {
   /** Returns HttpClient. You must call `close` when you're done. */
@@ -33,7 +35,8 @@ abstract class Gigahorse extends GigahorseSupport {
         f(client)
       }
       finally {
-        system.terminate()
+        client.close()
+        Await.result(system.terminate(), Duration.Inf)
       }
     }
   def withHttp[A](f: HttpClient => A): A =

@@ -32,6 +32,7 @@ class AkkaHttpClientSpec extends BaseHttpClientSpec {
       complete {
         testCode(http)
       } lastly {
+        http.close
         system.shutdown()
       }
     }

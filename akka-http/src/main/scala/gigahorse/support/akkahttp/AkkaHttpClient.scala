@@ -18,22 +18,27 @@ package gigahorse
 package support.akkahttp
 
 import java.io.File
-import scala.concurrent.{ Future, Promise, ExecutionContext }
+import scala.concurrent.{ Future, Promise, ExecutionContext, Await }
+import scala.concurrent.duration.Duration
 import akka.actor.ActorSystem
 import akka.stream.Materializer
-import akka.http.scaladsl.{ Http => AkkaHttp }
+import akka.http.scaladsl.{ HttpExt, Http }
 import akka.http.scaladsl.model.{ HttpRequest, HttpResponse, Uri,
   StatusCodes, HttpMethod, HttpMethods, HttpHeader }
 import akka.http.scaladsl.model.ws.WebSocketRequest
 import DownloadHandler.asFile
 
 class AkkaHttpClient(config: Config, system: ActorSystem)(implicit fm: Materializer) extends HttpClient {
-  private val akkaHttp = AkkaHttp(system)
+  private val akkaHttp: HttpExt = Http(system)
 
   def underlying[A]: A = akkaHttp.asInstanceOf[A]
 
   /** Closes this client, and releases underlying resources. */
-  def close(): Unit = ()
+  def close(): Unit =
+    {
+      val x = akkaHttp.shutdownAllConnectionPools
+      Await.result(x, Duration.Inf)
+    }
 
   /** Runs the request and return a Future of FullResponse. Errors on non-OK response. */
   def run(request: Request): Future[FullResponse] = run(request, identity)
@@ -122,14 +127,17 @@ class AkkaHttpClient(config: Config, system: ActorSystem)(implicit fm: Materiali
     }
 
   private def buildHeaders(request: Request): List[HttpHeader] =
-    for {
-      (k, vs) <- request.headers.toList
-      v       <- vs.toList
-      x       <- HttpHeader.parse(k, v) match {
-        case HttpHeader.ParsingResult.Ok(header, _) => List(header)
-        case _                                      => Nil
-      }
-    } yield x
+    {
+      val headers0 = for {
+        (k, vs) <- request.headers.toList
+        v       <- vs.toList
+        x       <- HttpHeader.parse(k, v) match {
+          case HttpHeader.ParsingResult.Ok(header, _) => List(header)
+          case _                                      => Nil
+        }
+      } yield x
+      headers0
+    }
 
   private def buildUri(request: Request): Uri =
     {
