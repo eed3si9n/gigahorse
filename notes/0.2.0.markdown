@@ -3,7 +3,7 @@
 Gigahorse 0.2.0 abstracts over two HTTP backends.
 [@alexdupre][@alexdupre] contributed migration from AHC 1.9 to AHC 2.0, which is based on Netty 4 in [#12][12].
 
-There's now also an experimental Akka HTTP support. [#15][15] by [@eed3si9n][@eed3si9n]
+In addition, there's now an experimental Akka HTTP support. [#15][15] by [@eed3si9n][@eed3si9n]
 
 ### WebSocket support
 
