@@ -17,10 +17,17 @@
 package gigahorse
 package support.asynchttpclient
 
+import scala.concurrent.Future
+
 abstract class FunctionHandler[A](f: FullResponse => A) extends AhcCompletionHandler[A] {
   override def onCompleted(response: FullResponse): A = f(response)
 }
 
+abstract class StreamFunctionHandler[A](f: StreamResponse => Future[A]) extends AhcStreamHandler[A] {
+  override def onStream(response: StreamResponse): Future[A] = f(response)
+}
+
 object FunctionHandler {
   def apply[A](f: FullResponse => A): FunctionHandler[A] = new FunctionHandler[A](f) {}
+  def stream[A](f: StreamResponse => Future[A]): StreamFunctionHandler[A] = new StreamFunctionHandler[A](f) {}
 }

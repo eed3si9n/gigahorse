@@ -37,17 +37,29 @@ abstract class HttpClient extends AutoCloseable {
   /** Downloads the request to the file. Errors on non-OK response. */
   def download(request: Request, file: File): Future[File]
 
+  /** Runs the request and return a Future of FullResponse. */
+  def runStream(request: Request): Future[StreamResponse]
+
+  /** Runs the request and return a Future of A. */
+  def runStream[A](request: Request, f: StreamResponse => Future[A]): Future[A]
+
   /** Executes the request and return a Future of FullResponse. Does not error on non-OK response. */
-  def process(request: Request): Future[FullResponse]
+  def processFull(request: Request): Future[FullResponse]
 
   /** Executes the request and return a Future of A. Does not error on non-OK response. */
-  def process[A](request: Request, f: FullResponse => A): Future[A]
+  def processFull[A](request: Request, f: FullResponse => A): Future[A]
 
   /** Executes the request and return a Future of Either a FullResponse or a Throwable. Does not error on non-OK response. */
-  def process[A](request: Request, lifter: FutureLifter[A])(implicit ec: ExecutionContext): Future[Either[Throwable, A]]
+  def processFull[A](request: Request, lifter: FutureLifter[A])(implicit ec: ExecutionContext): Future[Either[Throwable, A]]
 
   /** Executes the request. Does not error on non-OK response. */
-  // def process[A](request: Request, handler: CompletionHandler[A]): Future[A]
+  // def processFull[A](request: Request, handler: CompletionHandler[A]): Future[A]
+
+  /** Executes the request and return a Future of StreamResponse. Does not error on non-OK response. */
+  def processStream(request: Request): Future[StreamResponse]
+
+  /** Executes the request and return a Future of A. Does not error on non-OK response. */
+  def processStream[A](request: Request, f: StreamResponse => Future[A]): Future[A]
 
   /** Open a websocket connection. */
   def websocket(request: Request)(handler: PartialFunction[WebSocketEvent, Unit]): Future[WebSocket]

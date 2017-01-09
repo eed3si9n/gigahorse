@@ -24,11 +24,14 @@ import java.nio.charset.Charset
 import scala.concurrent.{ Future, Promise, ExecutionContext }
 import org.asynchttpclient.{ Response => XResponse, Request => XRequest, Realm => XRealm, _ }
 import org.asynchttpclient.AsyncHandler.{ State => XState }
+import org.asynchttpclient.handler.StreamedAsyncHandler
 import org.asynchttpclient.proxy.{ ProxyServer => XProxyServer }
 import org.asynchttpclient.util.HttpUtils
 import org.asynchttpclient.Realm.{ AuthScheme => XAuthScheme }
 import io.netty.handler.codec.http.QueryStringDecoder
 import org.asynchttpclient.ws.WebSocketUpgradeHandler
+import org.reactivestreams.Publisher
+import DownloadHandler.asFile
 
 class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
   import AhcHttpClient._
@@ -43,44 +46,30 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
 
   /** Runs the request and return a Future of FullResponse. */
   def run(request: Request): Future[FullResponse] =
-    process(request, OkHandler[FullResponse](identity))
+    processFull(request, OkHandler[FullResponse](identity))
 
   /** Runs the request and return a Future of A. */
   def run[A](request: Request, f: FullResponse => A): Future[A] =
-    process(request, OkHandler[A](f))
+    processFull(request, OkHandler[A](f))
 
   /** Runs the request and return a Future of Either a FullResponse or a Throwable. */
   def run[A](request: Request, lifter: FutureLifter[A])(implicit ec: ExecutionContext): Future[Either[Throwable, A]] =
     lifter.run(run(request))
 
-  def download(request: Request, file: File): Future[File] =
-    process(request, new OkHandler[File](_ => ???) {
-      import java.io.FileOutputStream
-      val out = new FileOutputStream(file).getChannel
-      override def onBodyPartReceived(content: HttpResponseBodyPart): State = {
-        out.write(content.getBodyByteBuffer)
-        State.Continue
-      }
-      override def onCompleted(response: FullResponse) = {
-        out.close()
-        file
-      }
-    })
-
   /** Executes the request and return a Future of FullResponse. Does not error on non-OK response. */
-  def process(request: Request): Future[FullResponse] =
-    process(request, FunctionHandler[FullResponse](identity))
+  def processFull(request: Request): Future[FullResponse] =
+    processFull(request, FunctionHandler[FullResponse](identity))
 
   /** Executes the request and return a Future of A. Does not error on non-OK response. */
-  def process[A](request: Request, f: FullResponse => A): Future[A] =
-    process(request, FunctionHandler[A](f))
+  def processFull[A](request: Request, f: FullResponse => A): Future[A] =
+    processFull(request, FunctionHandler[A](f))
 
   /** Executes the request and return a Future of Either a Response or a Throwable. Does not error on non-OK response. */
-  def process[A](request: Request, lifter: FutureLifter[A])(implicit ec: ExecutionContext): Future[Either[Throwable, A]] =
-    lifter.run(process(request))
+  def processFull[A](request: Request, lifter: FutureLifter[A])(implicit ec: ExecutionContext): Future[Either[Throwable, A]] =
+    lifter.run(processFull(request))
 
   /** Executes the request. Does not error on non-OK response. */
-  def process[A](request: Request, handler: AhcCompletionHandler[A]): Future[A] =
+  def processFull[A](request: Request, handler: AhcCompletionHandler[A]): Future[A] =
     {
       val result = Promise[A]()
       val xrequest = buildRequest(request)
@@ -104,6 +93,49 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
         override def onThrowable(t: Throwable): Unit = {
           result.failure(t)
         }
+      })
+      result.future
+    }
+
+  /** Runs the request and return a Future of StreamResponse. */
+  def runStream(request: Request): Future[StreamResponse] =
+    processStream(request, OkHandler.stream[StreamResponse](Future.successful))
+
+  /** Runs the request and return a Future of A. */
+  def runStream[A](request: Request, f: StreamResponse => Future[A]): Future[A] =
+    processStream(request, OkHandler.stream[A](f))
+
+  def download(request: Request, file: File): Future[File] =
+    runStream(request, asFile(file))
+
+  /** Executes the request and return a Future of StreamResponse. Does not error on non-OK response. */
+  def processStream(request: Request): Future[StreamResponse] =
+    processStream(request, FunctionHandler.stream[StreamResponse](Future.successful))
+
+  /** Executes the request and return a Future of A. Does not error on non-OK response. */
+  def processStream[A](request: Request, f: StreamResponse => Future[A]): Future[A] =
+    processStream(request, FunctionHandler.stream[A](f))
+
+  /** Executes the request and return a Future of A. Does not error on non-OK response. */
+  def processStream[A](request: Request, handler: AhcStreamHandler[A]): Future[A] =
+    {
+      val result = Promise[A]()
+      val xrequest = buildRequest(request)
+      asyncHttpClient.executeRequest(xrequest, new StreamedAsyncHandler[XResponse]() {
+        override def onStatusReceived(status: HttpResponseStatus): XState = {
+          fromState(handler.onStatusReceived(status))
+        }
+        override def onHeadersReceived(headers: HttpResponseHeaders): XState = {
+          fromState(handler.onHeadersReceived(headers))
+        }
+        override def onStream(publisher: Publisher[HttpResponseBodyPart]): XState = {
+          val partialResponse = handler.builder.build()
+          result.completeWith(handler.onStream(new AhcStreamResponse(partialResponse, publisher)))
+          XState.CONTINUE
+        }
+        override def onBodyPartReceived(bodyPart: HttpResponseBodyPart): XState = XState.CONTINUE
+        override def onCompleted(): XResponse = ???
+        override def onThrowable(e: Throwable): Unit = ()
       })
       result.future
     }

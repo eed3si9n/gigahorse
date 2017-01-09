@@ -19,7 +19,7 @@ package support.asynchttpclient
 
 import org.asynchttpclient.{ Response => XResponse, _ }
 
-abstract class AhcCompletionHandler[A] extends CompletionHandler[A] {
+abstract class AhcCompletionHandler[A] extends CompletionHandler[A] with AhcHandler {
   val builder = new XResponse.ResponseBuilder
 
   def onBodyPartReceived(content: HttpResponseBodyPart): State = {

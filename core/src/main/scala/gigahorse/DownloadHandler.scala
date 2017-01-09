@@ -15,25 +15,21 @@
  */
 
 package gigahorse
-package support.asynchttpclient
 
-abstract class Gigahorse extends GigahorseSupport {
-  def withHttp[A](config: Config)(f: HttpClient => A): A =
+import java.nio.ByteBuffer
+import java.nio.charset.Charset
+import java.io.{ File, FileOutputStream }
+import scala.concurrent.Future
+
+object DownloadHandler {
+  /** Function from `StreamResponse` to `Future[File]` */
+  def asFile(file: File): StreamResponse => Future[File] = (response: StreamResponse) =>
     {
-      val client: HttpClient = http(config)
-      try {
-        f(client)
-      }
-      finally {
-        client.close()
-      }
+      val stream = response.byteBuffers
+      val out = new FileOutputStream(file).getChannel
+      stream.fold(file)((acc, bb) => {
+        out.write(bb)
+        acc
+      })
     }
-
-  def withHttp[A](f: HttpClient => A): A =
-    withHttp(config)(f)
-
-  /** Returns HttpClient. You must call `close` when you're done. */
-  def http(config: Config): HttpClient = new AhcHttpClient(config)
 }
-
-object Gigahorse extends Gigahorse

@@ -15,25 +15,24 @@
  */
 
 package gigahorse
-package support.asynchttpclient
 
-abstract class Gigahorse extends GigahorseSupport {
-  def withHttp[A](config: Config)(f: HttpClient => A): A =
-    {
-      val client: HttpClient = http(config)
-      try {
-        f(client)
-      }
-      finally {
-        client.close()
-      }
-    }
+import org.reactivestreams.Publisher
+import scala.concurrent.Future
 
-  def withHttp[A](f: HttpClient => A): A =
-    withHttp(config)(f)
+abstract class Stream[A] {
+  /**
+   * @return The underlying Stream object.
+   */
+  def underlying[A]
 
-  /** Returns HttpClient. You must call `close` when you're done. */
-  def http(config: Config): HttpClient = new AhcHttpClient(config)
+  def toPublisher: Publisher[A]
+
+  /** Runs f on each element received to the stream. */
+  def foreach(f: A => Unit): Future[Unit]
+
+  /** Runs f on each element received to the stream with its previous output. */
+  def fold[B](zero: B)(f: (B, A) => B): Future[B]
+
+  /** Similar to fold but uses first element as zero element. */
+  def reduce(f: (A, A) => A): Future[A]
 }
-
-object Gigahorse extends Gigahorse

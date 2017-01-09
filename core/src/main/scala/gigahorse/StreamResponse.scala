@@ -1,6 +1,5 @@
 /*
- * Original implementation (C) 2009-2016 Lightbend Inc. (https://www.lightbend.com).
- * Adapted and extended in 2016 by Eugene Yokota
+ * Copyright 2016 by Eugene Yokota
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,23 +18,23 @@ package gigahorse
 
 import java.nio.ByteBuffer
 
-/** Represents a completed response.
+/** Represents a stream response.
  */
-abstract class FullResponse {
+abstract class StreamResponse {
   /**
    * Return the current headers of the request being constructed
    */
   def allHeaders: Map[String, List[String]]
 
   /**
-   * The response body as String.
+   * The response body as Reactive Stream of ByteBuffers.
    */
-  def bodyAsString: String
+  def byteBuffers: Stream[ByteBuffer]
 
   /**
-   * The response body as a `ByteBuffer`.
+   * The response body as Reactive Stream of Newline delimited strings.
    */
-  def bodyAsByteBuffer: ByteBuffer
+  def newLineDelimited: Stream[String]
 
   /**
    * The response status code.

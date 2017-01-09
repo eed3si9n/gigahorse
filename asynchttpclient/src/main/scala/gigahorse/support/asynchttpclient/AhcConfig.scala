@@ -64,7 +64,7 @@ object AhcConfig {
 
       // websocket
 
-      builder.setWebSocketMaxFrameSize(config.webSocketMaxFrameSize)
+      builder.setWebSocketMaxFrameSize(config.webSocketMaxFrameSize.bytes.toInt)
 
       builder.build()
     }

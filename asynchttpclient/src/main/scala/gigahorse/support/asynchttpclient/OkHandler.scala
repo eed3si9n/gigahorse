@@ -17,10 +17,11 @@
 package gigahorse
 package support.asynchttpclient
 
-import org.asynchttpclient.{ Response => XResponse, _ }
+import org.asynchttpclient._
+import scala.concurrent.Future
 
-abstract class OkHandler[A](f: FullResponse => A) extends FunctionHandler[A](f) {
-  override def onStatusReceived(status: HttpResponseStatus): State = {
+trait OkHandler extends AhcHandler {
+  abstract override def onStatusReceived(status: HttpResponseStatus): State = {
     val code = status.getStatusCode
     if (code / 100 == 2) super.onStatusReceived(status)
     else throw StatusError(code)
@@ -28,5 +29,9 @@ abstract class OkHandler[A](f: FullResponse => A) extends FunctionHandler[A](f) 
 }
 
 object OkHandler {
-  def apply[A](f: FullResponse => A): OkHandler[A] = new OkHandler[A](f) {}
+  abstract class FullOkHandler[A](f: FullResponse => A) extends FunctionHandler[A](f) with OkHandler {}
+  abstract class StreamOkHandler[A](f: StreamResponse => Future[A]) extends StreamFunctionHandler[A](f) with OkHandler {}
+
+  def apply[A](f: FullResponse => A): FullOkHandler[A] = new FullOkHandler[A](f) {}
+  def stream[A](f: StreamResponse => Future[A]): StreamOkHandler[A] = new StreamOkHandler[A](f) {}
 }

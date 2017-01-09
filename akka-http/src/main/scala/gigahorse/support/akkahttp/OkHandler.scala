@@ -18,10 +18,10 @@ package gigahorse
 package support.akkahttp
 
 import akka.http.scaladsl.model.StatusCode
-import akka.http.scaladsl.model.HttpResponse
+import scala.concurrent.Future
 
-abstract class OkHandler[A](f: FullResponse => A) extends FunctionHandler[A](f) {
-  override def onStatusReceived(status: StatusCode): State =
+trait OkHandler[A] extends AkkaHttpCompletionHandler[A] {
+  abstract override def onStatusReceived(status: StatusCode): State =
     {
       if (status.isFailure) State.Abort
       else super.onStatusReceived(status)
@@ -29,6 +29,8 @@ abstract class OkHandler[A](f: FullResponse => A) extends FunctionHandler[A](f) 
 }
 
 object OkHandler {
-  def apply[A](f: FullResponse => A): OkHandler[A] =
-    new OkHandler[A](f) {}
+  def apply[A](f: FullResponse => A): FunctionHandler[A] =
+    new FunctionHandler[A](f) with OkHandler[A] {}
+  def stream[A](f: StreamResponse => Future[A]): StreamFunctionHandler[A] =
+    new StreamFunctionHandler[A](f) with OkHandler[A] {}
 }
