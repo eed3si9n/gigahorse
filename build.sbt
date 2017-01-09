@@ -1,11 +1,12 @@
 import Dependencies._
+import com.typesafe.sbt.pgp.PgpKeys.publishSigned
 
 lazy val root = (project in file(".")).
   aggregate(core, akkaHttp, asynchttpclient).
   dependsOn(core).
   settings(inThisBuild(List(
       organization := "com.eed3si9n",
-      scalaVersion := "2.11.8",
+      scalaVersion := "2.12.1",
       crossScalaVersions := scalaBoth,
       organizationName := "eed3si9n",
       organizationHomepage := Some(url("http://eed3si9n.com/")),
@@ -14,7 +15,7 @@ lazy val root = (project in file(".")).
       developers := List(
         Developer("eed3si9n", "Eugene Yokota", "@eed3si9n", url("https://github.com/eed3si9n"))
       ),
-      version := "0.2-SNAPSHOT",
+      version := "0.2.0",
       description := "An HTTP client for Scala with Async Http Client underneath.",
       licenses := Seq("Apache 2" -> new URL("http://www.apache.org/licenses/LICENSE-2.0.txt")),
       scalacOptions ++= Seq(
@@ -30,7 +31,8 @@ lazy val root = (project in file(".")).
     )),
     name := "gigahorse",
     publish := (),
-    publishLocal := ()
+    publishLocal := (),
+    publishSigned := ()
   )
 
 lazy val commonSettings = List(
@@ -57,8 +59,33 @@ lazy val commonTest = (project in file("common-test")).
   settings(
     libraryDependencies ++= Seq(scalatest),
     publish := (),
-    publishLocal := ()
+    publishLocal := (),
+    publishSigned := ()
   )
+
+// lazy val packageSite = taskKey[Unit]("package site")
+// lazy val doPackageSite = taskKey[File]("package site")
+// lazy val packageSitePath = settingKey[File]("path for the package")
+// lazy val docsProject = (project in file("docs-project")).
+//   dependsOn(asynchttpclient, akkaHttp).
+//   enablePlugins(PamfletPlugin).
+//   settings(
+//     sourceDirectory in (Pamflet, pf) := (baseDirectory.value).getParentFile / "docs",
+//     packageSitePath := target.value / "gigahorse.tar.gz",
+//     doPackageSite := {
+//       val out = packageSitePath.value
+//       val siteDir = (target in (Pamflet, pfWrite)).value
+//       val items = ((siteDir ** "*").get map { _.relativeTo(siteDir) }).flatten
+//       Process(s"""tar zcf ${ packageSitePath.value.getAbsolutePath } ${ items.mkString(" ") }""", Some(siteDir)).!
+//       out
+//     },
+//     packageSite := Def.sequential(clean, pfWrite, doPackageSite).value,
+//     aggregate in pfWrite := false,
+//     aggregate in pf := false,
+//     publish := (),
+//     publishLocal := (),
+//     publishSigned := ()
+//   )
 
 lazy val asynchttpclient = (project in file("asynchttpclient")).
   dependsOn(core, commonTest % Test).

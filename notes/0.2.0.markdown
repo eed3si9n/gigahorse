@@ -1,0 +1,37 @@
+### AHC 2.0 and (experimental) Akka HTTP backend
+
+Gigahorse 0.2.0 abstracts over two HTTP backends.
+[@alexdupre][@alexdupre] contributed migration from AHC 1.9 to AHC 2.0, which is based on Netty 4 in [#12][12].
+
+There's now also an experimental Akka HTTP support. [#15][15] by [@eed3si9n][@eed3si9n]
+
+### WebSocket support
+
+[@alexdupre][@alexdupre] also contributed WebSocket support.
+
+### Async processing with Reactive Stream
+
+Thanks to Lightbend implementing Reactive Stream on both Akka HTTP and AHC [#963][963], Gigahorse can abstract over both backends as Reactive Stream of byte or String stream.
+The stream processing is provided using `http.runStream(r, f)`.
+
+    import gigahorse._, support.akkahttp.Gigahorse
+    import scala.concurrent._, duration._
+
+    Gigahorse.withHttp(Gigahorse.config) { http =>
+      val r = Gigahorse.url("http://localhost:8000/README.markdown").get
+      val f = http.runStream(r, Gigahorse.asStringStream andThen { xs =>
+        xs.foreach { s => println(s) }
+      })
+      Await.result(f, 120.seconds)
+    }
+
+[#16][16] by [@eed3si9n][@eed3si9n]
+
+  [AHC]: https://github.com/AsyncHttpClient/async-http-client
+  [akkahttp]: http://doc.akka.io/docs/akka-http/current/scala.html
+  [@alexdupre]: https://github.com/alexdupre
+  [@eed3si9n]: https://github.com/eed3si9n
+  [12]: https://github.com/eed3si9n/gigahorse/pull/12
+  [15]: https://github.com/eed3si9n/gigahorse/pull/15
+  [16]: https://github.com/eed3si9n/gigahorse/pull/16
+  [963]: https://github.com/AsyncHttpClient/async-http-client/pull/963
