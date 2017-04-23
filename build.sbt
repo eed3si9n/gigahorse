@@ -1,5 +1,6 @@
 import Dependencies._
 import com.typesafe.sbt.pgp.PgpKeys.publishSigned
+import Shade._
 
 lazy val root = (project in file(".")).
   aggregate(core, akkaHttp, asynchttpclient).
@@ -48,7 +49,7 @@ lazy val core = (project in file("core")).
   settings(
     commonSettings,
     name := "gigahorse-core",
-    libraryDependencies ++= Seq(sslConfig, reactiveStreams, scalatest % Test),
+    libraryDependencies ++= Seq(sslConfig, reactiveStreams, slf4jApi, scalatest % Test),
     sourceManaged in (Compile, generateDatatypes) := (sourceDirectory in Compile).value / "scala",
     // You need this otherwise you get X is already defined as class.
     sources in Compile := (sources in Compile).value.toList.distinct
@@ -88,11 +89,10 @@ lazy val commonTest = (project in file("common-test")).
 //   )
 
 lazy val asynchttpclient = (project in file("asynchttpclient")).
-  dependsOn(core, commonTest % Test).
+  dependsOn(core, shadedAsyncHttpClient, commonTest % Test).
   settings(
     commonSettings,
-    name := "gigahorse-asynchttpclient",
-    libraryDependencies ++= Seq(ahc)
+    name := "gigahorse-asynchttpclient"
   )
 
 lazy val akkaHttp = (project in file("akka-http")).
@@ -102,4 +102,15 @@ lazy val akkaHttp = (project in file("akka-http")).
     name := "gigahorse-akka-http",
     libraryDependencies ++= Seq(akkaHttpCore, Dependencies.akkaHttp),
     dependencyOverrides += sslConfig
+  )
+
+lazy val shadedAsyncHttpClient = (project in file("shaded/asynchttpclient"))
+  .configs(ShadeSandbox)
+  .settings(commonSettings)
+  .settings(ahcShadeSettings)
+  .settings(
+    libraryDependencies ++= Seq(ahc % ShadeSandbox),
+    name := "shaded-asynchttpclient",
+    autoScalaLibrary := false,
+    crossPaths := false
   )

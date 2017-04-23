@@ -18,8 +18,7 @@
 package gigahorse
 package support.asynchttpclient
 
-import org.asynchttpclient._
-
+import shaded.ahc.org.asynchttpclient._
 import scala.concurrent.duration._
 import com.typesafe.sslconfig.ssl._
 import com.typesafe.sslconfig.util.NoopLogger
@@ -27,9 +26,9 @@ import javax.net.ssl._
 import java.security.KeyStore
 import java.security.cert.CertPathValidatorException
 
-import io.netty.handler.ssl.SslContextBuilder
-import io.netty.handler.ssl.util.InsecureTrustManagerFactory
-import org.asynchttpclient.netty.ssl.JsseSslEngineFactory
+import shaded.ahc.io.netty.handler.ssl.SslContextBuilder
+import shaded.ahc.io.netty.handler.ssl.util.InsecureTrustManagerFactory
+import shaded.ahc.org.asynchttpclient.netty.ssl.JsseSslEngineFactory
 
 object AhcConfig {
   import AhcHttpClient.buildRealm

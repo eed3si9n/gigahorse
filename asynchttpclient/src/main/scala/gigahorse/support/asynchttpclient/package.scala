@@ -18,5 +18,5 @@ package gigahorse
 package support
 
 package object asynchttpclient {
-  type AsyncHandler[A] = org.asynchttpclient.AsyncHandler[A]
+  type AsyncHandler[A] = shaded.ahc.org.asynchttpclient.AsyncHandler[A]
 }

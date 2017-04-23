@@ -17,7 +17,8 @@
 package gigahorse
 package support.asynchttpclient
 
-import org.asynchttpclient.{ Response => XResponse, _ }
+import shaded.ahc.org.asynchttpclient
+import asynchttpclient.{ Response => XResponse, _ }
 
 abstract class AhcCompletionHandler[A] extends CompletionHandler[A] with AhcHandler {
   val builder = new XResponse.ResponseBuilder
