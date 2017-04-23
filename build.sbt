@@ -3,11 +3,11 @@ import com.typesafe.sbt.pgp.PgpKeys.publishSigned
 import Shade._
 
 lazy val root = (project in file(".")).
-  aggregate(core, akkaHttp, asynchttpclient).
+  aggregate(core, asynchttpclient, okhttp, akkaHttp).
   dependsOn(core).
   settings(inThisBuild(List(
       organization := "com.eed3si9n",
-      scalaVersion := "2.12.1",
+      scalaVersion := "2.12.2",
       crossScalaVersions := scalaBoth,
       organizationName := "eed3si9n",
       organizationHomepage := Some(url("http://eed3si9n.com/")),
@@ -19,11 +19,11 @@ lazy val root = (project in file(".")).
       version := "0.2.0",
       description := "An HTTP client for Scala with Async Http Client underneath.",
       licenses := Seq("Apache 2" -> new URL("http://www.apache.org/licenses/LICENSE-2.0.txt")),
-      scalacOptions ++= Seq(
+      scalacOptions in Compile ++= Seq(
         "-deprecation", "-Ywarn-unused", "-Ywarn-unused-import"
       ),
-      scalacOptions := {
-        val old = scalacOptions.value
+      scalacOptions in Compile := {
+        val old = (scalacOptions in Compile).value
         scalaBinaryVersion.value match {
           case "2.12" => old
           case _      => old filterNot Set("-Xfatal-warnings", "-deprecation", "-Ywarn-unused", "-Ywarn-unused-import")
@@ -41,16 +41,18 @@ lazy val commonSettings = List(
     val nexus = "https://oss.sonatype.org/"
     if (isSnapshot.value) Some("snapshots" at nexus + "content/repositories/snapshots")
     else Some("releases" at nexus + "service/local/staging/deploy/maven2")
-  }
+  },
+  scalacOptions in (Compile, console) ~= (_ filterNot Set("-deprecation", "-Ywarn-unused", "-Ywarn-unused-import"))
 )
 
 lazy val core = (project in file("core")).
-  enablePlugins(DatatypePlugin).
+  enablePlugins(ContrabandPlugin).
   settings(
     commonSettings,
     name := "gigahorse-core",
     libraryDependencies ++= Seq(sslConfig, reactiveStreams, slf4jApi, scalatest % Test),
-    sourceManaged in (Compile, generateDatatypes) := (sourceDirectory in Compile).value / "scala",
+    managedSourceDirectories in Compile += (sourceDirectory in Compile).value / "contraband-scala",
+    sourceManaged in (Compile, generateContrabands) := (sourceDirectory in Compile).value / "contraband-scala",
     // You need this otherwise you get X is already defined as class.
     sources in Compile := (sources in Compile).value.toList.distinct
   )
@@ -87,6 +89,14 @@ lazy val commonTest = (project in file("common-test")).
 //     publishLocal := (),
 //     publishSigned := ()
 //   )
+
+lazy val okhttp = (project in file("okhttp")).
+  dependsOn(core, commonTest % Test).
+  settings(
+    commonSettings,
+    name := "gigahorse-okhttp",
+    libraryDependencies ++= Seq(Dependencies.okHttp)
+  )
 
 lazy val asynchttpclient = (project in file("asynchttpclient")).
   dependsOn(core, shadedAsyncHttpClient, commonTest % Test).

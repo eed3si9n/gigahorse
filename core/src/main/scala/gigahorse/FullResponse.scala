@@ -22,6 +22,10 @@ import java.nio.ByteBuffer
 /** Represents a completed response.
  */
 abstract class FullResponse {
+  def underlying[A]: A
+
+  def close(): Unit
+
   /**
    * Return the current headers of the request being constructed
    */

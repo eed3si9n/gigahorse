@@ -1,10 +1,10 @@
 /**
- * This code is generated using sbt-datatype.
+ * This code is generated using [[http://www.scala-sbt.org/contraband/ sbt-contraband]].
  */
 
 // DO NOT EDIT MANUALLY
 package gigahorse
-final class EncodedString(
+final class EncodedString private (
   val string: String,
   val charset: java.nio.charset.Charset) extends Serializable {
   
@@ -20,7 +20,7 @@ final class EncodedString(
   override def toString: String = {
     "EncodedString(" + string + ", " + charset + ")"
   }
-  private[this] def copy(string: String = string, charset: java.nio.charset.Charset = charset): EncodedString = {
+  protected[this] def copy(string: String = string, charset: java.nio.charset.Charset = charset): EncodedString = {
     new EncodedString(string, charset)
   }
   def withString(string: String): EncodedString = {
@@ -31,5 +31,6 @@ final class EncodedString(
   }
 }
 object EncodedString {
+  
   def apply(string: String, charset: java.nio.charset.Charset): EncodedString = new EncodedString(string, charset)
 }

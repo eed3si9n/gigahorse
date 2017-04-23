@@ -15,25 +15,12 @@
  */
 
 package gigahorse
-package support.asynchttpclient
+package support.okhttp
 
-abstract class Gigahorse extends GigahorseSupport {
-  def withHttp[A](config: Config)(f: ReactiveHttpClient => A): A =
-    {
-      val client: ReactiveHttpClient = http(config)
-      try {
-        f(client)
-      }
-      finally {
-        client.close()
-      }
-    }
+import okhttp3.Headers
 
-  def withHttp[A](f: ReactiveHttpClient => A): A =
-    withHttp(config)(f)
-
-  /** Returns HttpClient. You must call `close` when you're done. */
-  def http(config: Config): ReactiveHttpClient = new AhcHttpClient(config)
+abstract class OkhCompletionHandler[A] extends CompletionHandler[A] with OkhHandler {
+  def onStatusReceived(status: Int): Unit = ()
+  def onHeadersReceived(headers: Headers): Unit = ()
+  def onCompleted(response: FullResponse): A
 }
-
-object Gigahorse extends Gigahorse

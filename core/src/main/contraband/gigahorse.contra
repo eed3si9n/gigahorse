@@ -1,0 +1,108 @@
+package gigahorse
+@target(Scala)
+
+type Config {
+  ## The maximum time an `HttpClient` can wait when connecting to a remote host. (Default: 120s)
+  connectTimeout: scala.concurrent.duration.FiniteDuration! =
+    raw"ConfigDefaults.defaultConnectTimeout" @since("0.1.0")
+
+  ## The maximum time an `HttpClient` waits until the response is completed. (Default: 120s)
+  requestTimeout: scala.concurrent.duration.FiniteDuration! =
+    raw"ConfigDefaults.defaultRequestTimeout" @since("0.1.0")
+
+  ## The maximum time an `HttpClient` can stay idle. (Default: 120s)
+  readTimeout: scala.concurrent.duration.Duration! =
+    raw"ConfigDefaults.defaultReadTimeout" @since("0.1.0")
+
+  ## The maximum time an `HttpClient` waits until the stream is framed. (Default: 200ms)
+  frameTimeout: scala.concurrent.duration.FiniteDuration! =
+    raw"ConfigDefaults.defaultFrameTimeout" @since("0.1.0")
+
+  ## Is HTTP redirect enabled. (Default: `true`)
+  followRedirects: boolean! =
+    raw"ConfigDefaults.defaultFollowRedirects" @since("0.1.0")
+
+  ## The maximum number of redirects. (Default: 5)
+  maxRedirects: int! =
+    raw"ConfigDefaults.defaultMaxRedirects" @since("0.1.0")
+
+  ## Is HTTP compression enforced. (Default: `false`)
+  compressionEnforced: boolean! =
+    raw"ConfigDefaults.defaultCompressionEnforced" @since("0.1.0")
+
+  ## The USER_AGENT header value
+  userAgentOpt: String =
+    raw"ConfigDefaults.defaultUserAgentOpt" @since("0.1.0")
+
+  ## Set the authentication that will be used for all requests.
+  authOpt: Realm =
+    raw"ConfigDefaults.defaultAuthOpt" @since("0.1.0")
+
+  ## The SSL configuration.
+  ssl: com.typesafe.sslconfig.ssl.SSLConfigSettings! =
+    raw"ConfigDefaults.defaultSslConfig" @since("0.1.0")
+
+  ## The maximum number of times to retry a request if it fails. (Default: 5)
+  maxRequestRetry: int! =
+    raw"ConfigDefaults.defaultMaxRequestRetry" @since("0.1.0")
+
+  ## Whether raw URL should be used. (Default: false)
+  disableUrlEncoding: boolean! =
+    raw"ConfigDefaults.defaultDisableUrlEncoding" @since("0.1.0")
+
+  ## Sets whether `HttpClient` should use the default http.proxy* system properties
+  ## to obtain proxy information. (Default: `true`)
+  ##
+  ## This differs from `useProxySelector(boolean)`
+  ## in that HttpClient will use its own logic to handle the system properties,
+  ## potentially supporting other protocols that the the JDK ProxySelector doesn't.
+  ##
+  ## If useProxyProperties is set to `true` but `useProxySelector`
+  ## was also set to true, the latter is preferred.
+  ##
+  ## See http://download.oracle.com/javase/1.4.2/docs/guide/net/properties.html
+  useProxyProperties: boolean! =
+    raw"ConfigDefaults.defaultUseProxyProperties" @since("0.1.0")
+
+  ## Whether connection pooling should be used. (Default: `true`)
+  keepAlive: boolean! =
+    raw"ConfigDefaults.defaultKeepAlive" @since("0.1.0")
+
+  ## The time after which a connection that has been idle in the pool should be closed.
+  pooledConnectionIdleTimeout: scala.concurrent.duration.Duration! =
+    raw"ConfigDefaults.defaultPooledConnectionIdleTimeout" @since("0.1.0")
+
+  ## The maximum time that a connection should live for in the pool.
+  connectionTtl: scala.concurrent.duration.Duration! =
+    raw"ConfigDefaults.defaultConnectionTtl" @since("0.1.0")
+
+  ## The maximum total number of connections. -1 means no maximum.
+  maxConnections: int! =
+    raw"ConfigDefaults.defaultMaxConnections" @since("0.1.0")
+
+  ## The maximum number of connections to make per host. -1 means no maximum.
+  maxConnectionsPerHost: int! =
+    raw"ConfigDefaults.defaultMaxConnectionsPerHost" @since("0.1.0")
+
+
+  ## The maximum size of a stream fragment. (Default: 1M)
+  maxFrameSize: gigahorse.ConfigMemorySize! =
+    raw"ConfigDefaults.defaultMaxFrameSize" @since("0.1.0")
+
+  ## The maximum accepted size of a websocket message fragment. (Default: 1M)
+  webSocketMaxFrameSize: gigahorse.ConfigMemorySize! =
+    raw"ConfigDefaults.defaultWebSocketMaxFrameSize" @since("0.1.0")
+
+  ## The directory to be used for caching.
+  cacheDirectory: java.io.File =
+    raw"None" @since("0.1.0")
+
+  ## The maximum size of the cache.
+  maxCacheSize: gigahorse.ConfigMemorySize! =
+    raw"ConfigDefaults.defaultMaxCacheSize" @since("0.1.0")
+
+  #x def withUserAgent(userAgent: String): Config = copy(userAgentOpt = Some(userAgent))
+  #x def withAuth(auth: Realm): Config = copy(authOpt = Some(auth))
+  #x def withAuth(username: String, password: String): Config = copy(authOpt = Some(Realm(username = username, password = password)))
+  #x def withAuth(username: String, password: String, scheme: AuthScheme): Config = copy(authOpt = Some(Realm(username = username, password = password, scheme = scheme)))
+}

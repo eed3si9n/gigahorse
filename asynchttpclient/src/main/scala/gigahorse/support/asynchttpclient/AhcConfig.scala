@@ -75,16 +75,7 @@ object AhcConfig {
   def configureSsl(sslConfig: SSLConfigSettings, builder: DefaultAsyncHttpClientConfig.Builder): Unit =
     {
       // context!
-      val sslContext = if (sslConfig.default) {
-        // logger.info("buildSSLContext: ws.ssl.default is true, using default SSLContext")
-        validateDefaultTrustManager(sslConfig)
-        SSLContext.getDefault
-      } else {
-        // break out the static methods as much as we can...
-        val keyManagerFactory = buildKeyManagerFactory(sslConfig)
-        val trustManagerFactory = buildTrustManagerFactory(sslConfig)
-        new ConfigSSLContextBuilder(NoopLogger.factory(), sslConfig, keyManagerFactory, trustManagerFactory).build()
-      }
+      val (sslContext, _) = SSL.buildContext(sslConfig)
 
       // protocols!
       val defaultParams = sslContext.getDefaultSSLParameters
@@ -109,42 +100,6 @@ object AhcConfig {
         builder.setSslEngineFactory(new JsseSslEngineFactory(sslContext))
       }
     }
-
-  def validateDefaultTrustManager(sslConfig: SSLConfigSettings): Unit =
-    {
-      // If we are using a default SSL context, we can't filter out certificates with weak algorithms
-      // We ALSO don't have access to the trust manager from the SSLContext without doing horrible things
-      // with reflection.
-      //
-      // However, given that the default SSLContextImpl will call out to the TrustManagerFactory and any
-      // configuration with system properties will also apply with the factory, we can use the factory
-      // method to recreate the trust manager and validate the trust certificates that way.
-      //
-      // This is really a last ditch attempt to satisfy https://wiki.mozilla.org/CA:MD5and1024 on root certificates.
-      //
-      // http://grepcode.com/file/repository.grepcode.com/java/root/jdk/openjdk/7-b147/sun/security/ssl/SSLContextImpl.java#79
-
-      val tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm)
-      tmf.init(null.asInstanceOf[KeyStore])
-      val trustManager: X509TrustManager = tmf.getTrustManagers()(0).asInstanceOf[X509TrustManager]
-
-      val constraints = sslConfig.disabledKeyAlgorithms.map(a => AlgorithmConstraintsParser.parseAll(AlgorithmConstraintsParser.expression, a).get).toSet
-      val algorithmChecker = new AlgorithmChecker(NoopLogger.factory(), keyConstraints = constraints, signatureConstraints = Set())
-      for (cert <- trustManager.getAcceptedIssuers) {
-        try {
-          algorithmChecker.checkKeyAlgorithms(cert)
-        } catch {
-          case e: CertPathValidatorException =>
-            // logger.warn("You are using ws.ssl.default=true and have a weak certificate in your default trust store!  (You can modify ws.ssl.disabledKeyAlgorithms to remove this message.)", e)
-        }
-      }
-    }
-
-  def buildKeyManagerFactory(ssl: SSLConfigSettings): KeyManagerFactoryWrapper =
-    new DefaultKeyManagerFactoryWrapper(ssl.keyManagerConfig.algorithm)
-
-  def buildTrustManagerFactory(ssl: SSLConfigSettings): TrustManagerFactoryWrapper =
-    new DefaultTrustManagerFactoryWrapper(ssl.trustManagerConfig.algorithm)
 
   def configureProtocols(existingProtocols: Array[String], sslConfig: SSLConfigSettings): Array[String] =
     {

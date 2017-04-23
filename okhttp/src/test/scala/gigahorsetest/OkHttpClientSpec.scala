@@ -14,26 +14,21 @@
  * limitations under the License.
  */
 
-package gigahorse
-package support.asynchttpclient
+package gigahorsetest
 
-abstract class Gigahorse extends GigahorseSupport {
-  def withHttp[A](config: Config)(f: ReactiveHttpClient => A): A =
+import org.scalatest._
+import scala.concurrent.Future
+
+class OkHttpClientSpec extends BaseHttpClientSpec {
+  import gigahorse.support.okhttp.Gigahorse
+  // custom loan pattern
+  override def withHttp(testCode: gigahorse.HttpClient => Future[Assertion]): Future[Assertion] =
     {
-      val client: ReactiveHttpClient = http(config)
-      try {
-        f(client)
-      }
-      finally {
-        client.close()
+      val http = Gigahorse.http(Gigahorse.config)
+      complete {
+        testCode(http)
+      } lastly {
+        http.close()
       }
     }
-
-  def withHttp[A](f: ReactiveHttpClient => A): A =
-    withHttp(config)(f)
-
-  /** Returns HttpClient. You must call `close` when you're done. */
-  def http(config: Config): ReactiveHttpClient = new AhcHttpClient(config)
 }
-
-object Gigahorse extends Gigahorse

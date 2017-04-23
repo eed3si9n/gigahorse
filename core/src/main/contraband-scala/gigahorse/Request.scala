@@ -1,10 +1,10 @@
 /**
- * This code is generated using sbt-datatype.
+ * This code is generated using [[http://www.scala-sbt.org/contraband/ sbt-contraband]].
  */
 
 // DO NOT EDIT MANUALLY
 package gigahorse
-final class Request(
+final class Request private (
   /** The base URL for this request */
   val url: String,
   /** The method for this request. */
@@ -83,7 +83,7 @@ final class Request(
   def withRequestTimeout(requestTimeout: scala.concurrent.duration.Duration): Request = copy(requestTimeoutOpt = Some(requestTimeout))
   def withVirtualHost(virtualHost: String): Request = copy(virtualHostOpt = Some(virtualHost))
   def withProxyServer(proxyServer: ProxyServer): Request = copy(proxyServerOpt = Some(proxyServer))
-  def this(url: String) = this(url, HttpVerbs.GET, EmptyBody(), Map(), Map(), None, None, None, None, None, None)
+  private def this(url: String) = this(url, HttpVerbs.GET, EmptyBody(), Map(), Map(), None, None, None, None, None, None)
   
   override def equals(o: Any): Boolean = o match {
     case x: Request => (this.url == x.url) && (this.method == x.method) && (this.body == x.body) && (this.headers == x.headers) && (this.queryString == x.queryString) && (this.signatureOpt == x.signatureOpt) && (this.authOpt == x.authOpt) && (this.followRedirectsOpt == x.followRedirectsOpt) && (this.requestTimeoutOpt == x.requestTimeoutOpt) && (this.virtualHostOpt == x.virtualHostOpt) && (this.proxyServerOpt == x.proxyServerOpt)
@@ -95,7 +95,7 @@ final class Request(
   override def toString: String = {
     "Request(" + url + ", " + method + ", " + body + ", " + headers + ", " + queryString + ", " + signatureOpt + ", " + authOpt + ", " + followRedirectsOpt + ", " + requestTimeoutOpt + ", " + virtualHostOpt + ", " + proxyServerOpt + ")"
   }
-  private[this] def copy(url: String = url, method: String = method, body: Body = body, headers: Map[String, List[String]] = headers, queryString: Map[String, List[String]] = queryString, signatureOpt: Option[SignatureCalculator] = signatureOpt, authOpt: Option[Realm] = authOpt, followRedirectsOpt: Option[Boolean] = followRedirectsOpt, requestTimeoutOpt: Option[scala.concurrent.duration.Duration] = requestTimeoutOpt, virtualHostOpt: Option[String] = virtualHostOpt, proxyServerOpt: Option[ProxyServer] = proxyServerOpt): Request = {
+  protected[this] def copy(url: String = url, method: String = method, body: Body = body, headers: Map[String, List[String]] = headers, queryString: Map[String, List[String]] = queryString, signatureOpt: Option[SignatureCalculator] = signatureOpt, authOpt: Option[Realm] = authOpt, followRedirectsOpt: Option[Boolean] = followRedirectsOpt, requestTimeoutOpt: Option[scala.concurrent.duration.Duration] = requestTimeoutOpt, virtualHostOpt: Option[String] = virtualHostOpt, proxyServerOpt: Option[ProxyServer] = proxyServerOpt): Request = {
     new Request(url, method, body, headers, queryString, signatureOpt, authOpt, followRedirectsOpt, requestTimeoutOpt, virtualHostOpt, proxyServerOpt)
   }
   def withUrl(url: String): Request = {
@@ -116,23 +116,43 @@ final class Request(
   def withSignatureOpt(signatureOpt: Option[SignatureCalculator]): Request = {
     copy(signatureOpt = signatureOpt)
   }
+  def withSignatureOpt(signatureOpt: SignatureCalculator): Request = {
+    copy(signatureOpt = Option(signatureOpt))
+  }
   def withAuthOpt(authOpt: Option[Realm]): Request = {
     copy(authOpt = authOpt)
+  }
+  def withAuthOpt(authOpt: Realm): Request = {
+    copy(authOpt = Option(authOpt))
   }
   def withFollowRedirectsOpt(followRedirectsOpt: Option[Boolean]): Request = {
     copy(followRedirectsOpt = followRedirectsOpt)
   }
+  def withFollowRedirectsOpt(followRedirectsOpt: Boolean): Request = {
+    copy(followRedirectsOpt = Option(followRedirectsOpt))
+  }
   def withRequestTimeoutOpt(requestTimeoutOpt: Option[scala.concurrent.duration.Duration]): Request = {
     copy(requestTimeoutOpt = requestTimeoutOpt)
+  }
+  def withRequestTimeoutOpt(requestTimeoutOpt: scala.concurrent.duration.Duration): Request = {
+    copy(requestTimeoutOpt = Option(requestTimeoutOpt))
   }
   def withVirtualHostOpt(virtualHostOpt: Option[String]): Request = {
     copy(virtualHostOpt = virtualHostOpt)
   }
+  def withVirtualHostOpt(virtualHostOpt: String): Request = {
+    copy(virtualHostOpt = Option(virtualHostOpt))
+  }
   def withProxyServerOpt(proxyServerOpt: Option[ProxyServer]): Request = {
     copy(proxyServerOpt = proxyServerOpt)
   }
+  def withProxyServerOpt(proxyServerOpt: ProxyServer): Request = {
+    copy(proxyServerOpt = Option(proxyServerOpt))
+  }
 }
 object Request {
+  
   def apply(url: String): Request = new Request(url, HttpVerbs.GET, EmptyBody(), Map(), Map(), None, None, None, None, None, None)
   def apply(url: String, method: String, body: Body, headers: Map[String, List[String]], queryString: Map[String, List[String]], signatureOpt: Option[SignatureCalculator], authOpt: Option[Realm], followRedirectsOpt: Option[Boolean], requestTimeoutOpt: Option[scala.concurrent.duration.Duration], virtualHostOpt: Option[String], proxyServerOpt: Option[ProxyServer]): Request = new Request(url, method, body, headers, queryString, signatureOpt, authOpt, followRedirectsOpt, requestTimeoutOpt, virtualHostOpt, proxyServerOpt)
+  def apply(url: String, method: String, body: Body, headers: Map[String, List[String]], queryString: Map[String, List[String]], signatureOpt: SignatureCalculator, authOpt: Realm, followRedirectsOpt: Boolean, requestTimeoutOpt: scala.concurrent.duration.Duration, virtualHostOpt: String, proxyServerOpt: ProxyServer): Request = new Request(url, method, body, headers, queryString, Option(signatureOpt), Option(authOpt), Option(followRedirectsOpt), Option(requestTimeoutOpt), Option(virtualHostOpt), Option(proxyServerOpt))
 }

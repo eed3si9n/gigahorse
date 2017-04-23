@@ -28,7 +28,7 @@ import akka.http.scaladsl.model.{ HttpRequest, HttpResponse, Uri,
 import akka.http.scaladsl.model.ws.WebSocketRequest
 import DownloadHandler.asFile
 
-class AkkaHttpClient(config: Config, system: ActorSystem)(implicit fm: Materializer) extends HttpClient {
+class AkkaHttpClient(config: Config, system: ActorSystem)(implicit fm: Materializer) extends ReactiveHttpClient {
   private val akkaHttp: HttpExt = Http(system)
 
   def underlying[A]: A = akkaHttp.asInstanceOf[A]

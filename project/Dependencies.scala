@@ -12,4 +12,5 @@ object Dependencies {
   val akkaHttpCore = "com.typesafe.akka" %% "akka-http-core" % "10.0.1"
   val akkaHttp = "com.typesafe.akka" %% "akka-http" % "10.0.1"
   val sbtIo = "org.scala-sbt" %% "io" % "1.0.0-M7"
+  val okHttp = "com.squareup.okhttp3" % "okhttp" % "3.7.0"
 }

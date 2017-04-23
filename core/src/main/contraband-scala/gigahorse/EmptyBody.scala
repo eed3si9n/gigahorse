@@ -1,10 +1,10 @@
 /**
- * This code is generated using sbt-datatype.
+ * This code is generated using [[http://www.scala-sbt.org/contraband/ sbt-contraband]].
  */
 
 // DO NOT EDIT MANUALLY
 package gigahorse
-final class EmptyBody() extends gigahorse.Body() {
+final class EmptyBody private () extends gigahorse.Body() with Serializable {
 
 
 
@@ -18,11 +18,12 @@ override def hashCode: Int = {
 override def toString: String = {
   "EmptyBody()"
 }
-private[this] def copy(): EmptyBody = {
+protected[this] def copy(): EmptyBody = {
   new EmptyBody()
 }
 
 }
 object EmptyBody {
+  
   def apply(): EmptyBody = new EmptyBody()
 }
