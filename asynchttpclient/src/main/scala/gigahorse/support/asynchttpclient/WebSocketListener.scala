@@ -17,7 +17,7 @@
 package gigahorse
 package support.asynchttpclient
 
-import org.asynchttpclient.ws.{ WebSocketByteListener, WebSocketPingListener, WebSocketPongListener, WebSocketTextListener, WebSocket => XWebSocket, WebSocketListener => XWebSocketListener }
+import shaded.ahc.org.asynchttpclient.ws.{ WebSocketByteListener, WebSocketPingListener, WebSocketPongListener, WebSocketTextListener, WebSocket => XWebSocket, WebSocketListener => XWebSocketListener }
 
 import scala.concurrent.Promise
 import scala.util.{ Failure, Success }

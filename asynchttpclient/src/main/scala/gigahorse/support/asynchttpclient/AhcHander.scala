@@ -17,7 +17,8 @@
 package gigahorse
 package support.asynchttpclient
 
-import org.asynchttpclient._
+import shaded.ahc.org.asynchttpclient
+import asynchttpclient._
 
 trait AhcHandler {
   def onStatusReceived(status: HttpResponseStatus): State

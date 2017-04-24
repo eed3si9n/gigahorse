@@ -20,9 +20,9 @@ package support.asynchttpclient
 
 import scala.collection.JavaConverters._
 import org.reactivestreams.{ Publisher, Subscription, Subscriber }
-import org.asynchttpclient.{ Response => XResponse }
+import shaded.ahc.org.asynchttpclient.{ Response => XResponse }
 import scala.collection.immutable.TreeMap
-import org.asynchttpclient.HttpResponseBodyPart
+import shaded.ahc.org.asynchttpclient.HttpResponseBodyPart
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
 

@@ -17,7 +17,7 @@
 package gigahorse
 package support.asynchttpclient
 
-import org.asynchttpclient._
+import shaded.ahc.org.asynchttpclient._
 import scala.concurrent.Future
 
 trait OkHandler extends AhcHandler {

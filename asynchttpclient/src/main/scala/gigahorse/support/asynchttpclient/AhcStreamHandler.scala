@@ -18,7 +18,7 @@ package gigahorse
 package support.asynchttpclient
 
 import scala.concurrent.Future
-import org.asynchttpclient.{ Response => XResponse, _ }
+import shaded.ahc.org.asynchttpclient.{ Response => XResponse, _ }
 
 abstract class AhcStreamHandler[A] extends AhcHandler {
   val builder = new XResponse.ResponseBuilder

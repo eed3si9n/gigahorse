@@ -22,14 +22,14 @@ import scala.collection.JavaConverters._
 import java.io.{ File, UnsupportedEncodingException }
 import java.nio.charset.Charset
 import scala.concurrent.{ Future, Promise, ExecutionContext }
-import org.asynchttpclient.{ Response => XResponse, Request => XRequest, Realm => XRealm, _ }
-import org.asynchttpclient.AsyncHandler.{ State => XState }
-import org.asynchttpclient.handler.StreamedAsyncHandler
-import org.asynchttpclient.proxy.{ ProxyServer => XProxyServer }
-import org.asynchttpclient.util.HttpUtils
-import org.asynchttpclient.Realm.{ AuthScheme => XAuthScheme }
-import io.netty.handler.codec.http.QueryStringDecoder
-import org.asynchttpclient.ws.WebSocketUpgradeHandler
+import shaded.ahc.org.asynchttpclient.{ Response => XResponse, Request => XRequest, Realm => XRealm, _ }
+import shaded.ahc.org.asynchttpclient.AsyncHandler.{ State => XState }
+import shaded.ahc.org.asynchttpclient.handler.StreamedAsyncHandler
+import shaded.ahc.org.asynchttpclient.proxy.{ ProxyServer => XProxyServer }
+import shaded.ahc.org.asynchttpclient.util.HttpUtils
+import shaded.ahc.org.asynchttpclient.Realm.{ AuthScheme => XAuthScheme }
+import shaded.ahc.io.netty.handler.codec.http.QueryStringDecoder
+import shaded.ahc.org.asynchttpclient.ws.WebSocketUpgradeHandler
 import org.reactivestreams.Publisher
 import DownloadHandler.asFile
 
@@ -194,7 +194,7 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
     val (builderWithBody, updatedHeaders) = body match {
       case b: EmptyBody => (builder, request.headers)
       case b: FileBody =>
-        import org.asynchttpclient.request.body.generator.FileBodyGenerator
+        import shaded.ahc.org.asynchttpclient.request.body.generator.FileBodyGenerator
         val bodyGenerator = new FileBodyGenerator(b.file)
         builder.setBody(bodyGenerator)
         (builder, request.headers)
@@ -250,7 +250,7 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
 
     // Set the signature calculator.
     signatureOpt.map {
-      case signatureCalculator: org.asynchttpclient.SignatureCalculator =>
+      case signatureCalculator: shaded.ahc.org.asynchttpclient.SignatureCalculator =>
         builderWithBody.setSignatureCalculator(signatureCalculator)
       case _ =>
         throw new IllegalStateException("Unknown signature calculator found: use a class that implements SignatureCalculator")
@@ -276,7 +276,7 @@ object AhcHttpClient {
 
   def buildRealm(auth: Realm): XRealm =
     {
-      import org.asynchttpclient.uri.Uri
+      import shaded.ahc.org.asynchttpclient.uri.Uri
       val builder = new XRealm.Builder(auth.username, auth.password)
       builder.setScheme(auth.scheme match {
         case AuthScheme.Digest   => XAuthScheme.DIGEST
