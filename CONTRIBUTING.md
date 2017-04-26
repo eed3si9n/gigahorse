@@ -1,27 +1,14 @@
 
 ```
+$ jenv shell 1.7
 $ sbt
-clean
-++ 2.10.6
-core/publishSigned
-okhttp/publishSigned
+release-jdk7
 exit
 ```
 
-
 ```
+$ jenv shell 1.8
 $ sbt
-clean
-++ 2.12.2
-core/publishSigned
-okhttp/publishSigned
-asynchttpclient/publishSigned
-shadedAsyncHttpClient/publishSigned
-akkaHttp/publishSigned
-++ 2.11.11
-core/publishSigned
-okhttp/publishSigned
-asynchttpclient/publishSigned
-akkaHttp/publishSigned
+release-jdk8
 exit
 ```
