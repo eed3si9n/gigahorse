@@ -49,11 +49,11 @@ object Shade {
     def apply(tempDir: File, path: String, files: Seq[File]): Either[String, Seq[(File, String)]] = {
       import scala.collection.JavaConverters._
       val file = MergeStrategy.createMergeTarget(tempDir, path)
-      val lines = java.nio.file.Files.readAllLines(files.head.toPath).asScala
+      val lines = IO.readLines(files.head)
       lines.foreach { line =>
         // In AsyncHttpClientConfigDefaults.java, the shading renames the resource keys
         // so we have to manually tweak the resource file to match.
-        val shadedline = line.replace("org.asynchttpclient", s"$shadePrefix.org.asynchttpclient")
+        val shadedline = line.replaceAllLiterally("org.asynchttpclient", s"$shadePrefix.org.asynchttpclient")
         IO.append(file, shadedline)
         IO.append(file, IO.Newline.getBytes(IO.defaultCharset))
       }
