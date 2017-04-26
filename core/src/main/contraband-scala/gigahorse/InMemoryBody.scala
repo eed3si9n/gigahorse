@@ -1,11 +1,11 @@
 /**
- * This code is generated using sbt-datatype.
+ * This code is generated using [[http://www.scala-sbt.org/contraband/ sbt-contraband]].
  */
 
 // DO NOT EDIT MANUALLY
 package gigahorse
-final class InMemoryBody(
-  val bytes: Array[Byte]) extends gigahorse.Body() {
+final class InMemoryBody private (
+  val bytes: Array[Byte]) extends gigahorse.Body() with Serializable {
   
   
   
@@ -19,7 +19,7 @@ final class InMemoryBody(
   override def toString: String = {
     "InMemoryBody(" + bytes + ")"
   }
-  private[this] def copy(bytes: Array[Byte] = bytes): InMemoryBody = {
+  protected[this] def copy(bytes: Array[Byte] = bytes): InMemoryBody = {
     new InMemoryBody(bytes)
   }
   def withBytes(bytes: Array[Byte]): InMemoryBody = {
@@ -27,5 +27,6 @@ final class InMemoryBody(
   }
 }
 object InMemoryBody {
+  
   def apply(bytes: Array[Byte]): InMemoryBody = new InMemoryBody(bytes)
 }

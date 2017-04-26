@@ -28,6 +28,11 @@ class AkkaHttpFullResponse(akkaHttpResponse: HttpResponse, entity: HttpEntity.St
    */
   def underlying[A] = entity.asInstanceOf[A]
 
+  def close(): Unit =
+    {
+      akkaHttpResponse.discardEntityBytes(fm)
+    }
+
   /**
    * @return The underlying response object.
    */

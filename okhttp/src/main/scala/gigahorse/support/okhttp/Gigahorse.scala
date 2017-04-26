@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 by Eugene Yokota
+ * Copyright 2017 by Eugene Yokota
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,32 +15,25 @@
  */
 
 package gigahorse
-package support.akkahttp
-
-import akka.actor.ActorSystem
-import akka.stream.{ Materializer, ActorMaterializer }
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
+package support.okhttp
 
 abstract class Gigahorse extends GigahorseSupport {
-  /** Returns HttpClient. You must call `close` when you're done. */
-  def http(config: Config, system: ActorSystem)(implicit fm: Materializer): ReactiveHttpClient = new AkkaHttpClient(config, system)
-
-  def withHttp[A](config: Config)(f: ReactiveHttpClient => A): A =
+  def withHttp[A](config: Config)(f: HttpClient => A): A =
     {
-      implicit val system = ActorSystem("gigahorse-akka-http")
-      implicit val materializer = ActorMaterializer()
-      val client: ReactiveHttpClient = http(config, system)
+      val client: HttpClient = http(config)
       try {
         f(client)
       }
       finally {
         client.close()
-        Await.result(system.terminate(), Duration.Inf)
       }
     }
-  def withHttp[A](f: ReactiveHttpClient => A): A =
+
+  def withHttp[A](f: HttpClient => A): A =
     withHttp(config)(f)
+
+  /** Returns HttpClient. Calling close is optional. */
+  def http(config: Config): HttpClient = new OkhClient(config)
 }
 
 object Gigahorse extends Gigahorse

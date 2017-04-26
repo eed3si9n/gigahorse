@@ -17,6 +17,7 @@
 
 package gigahorse
 
+import java.io.File
 import java.nio.charset.Charset
 import java.net.URI
 import com.typesafe.config.{ Config => XConfig }
@@ -38,6 +39,9 @@ object ConfigParser {
       val authOpt =
         if (config.hasPath("auth")) Some(parseRealm(config.getConfig("auth")))
         else defaultAuthOpt
+      val cacheOpt =
+        if (config.hasPath("cacheDirectory")) Some(new File(config.getString("cacheDirectory")))
+        else None
       Config(
         connectTimeout        = config.getFiniteDuration("connectTimeout", defaultConnectTimeout),
         requestTimeout        = config.getFiniteDuration("requestTimeout", defaultRequestTimeout),
@@ -58,7 +62,9 @@ object ConfigParser {
         maxConnections        = config.getInt("maxConnections", defaultMaxConnections),
         maxConnectionsPerHost = config.getInt("maxConnectionsPerHost", defaultMaxConnectionsPerHost),
         maxFrameSize          = config.getMemorySize("maxFrameSize", defaultMaxFrameSize),
-        webSocketMaxFrameSize = config.getMemorySize("webSocketMaxFrameSize", defaultWebSocketMaxFrameSize)
+        webSocketMaxFrameSize = config.getMemorySize("webSocketMaxFrameSize", defaultWebSocketMaxFrameSize),
+        cacheDirectory        = cacheOpt,
+        maxCacheSize          = config.getMemorySize("maxCacheSize", defaultMaxCacheSize)
       )
     }
 
@@ -116,6 +122,7 @@ object ConfigDefaults {
   val defaultMaxConnectionsPerHost = -1
   val defaultMaxFrameSize          = ConfigMemorySize(1024 * 1024)
   val defaultWebSocketMaxFrameSize = ConfigMemorySize(1024 * 1024)
+  val defaultMaxCacheSize          = ConfigMemorySize(100 * 1024 * 1024)
 }
 
 class RichXConfig(config: XConfig) {

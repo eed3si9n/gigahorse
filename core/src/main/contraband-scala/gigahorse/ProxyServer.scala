@@ -1,5 +1,5 @@
 /**
- * This code is generated using sbt-datatype.
+ * This code is generated using [[http://www.scala-sbt.org/contraband/ sbt-contraband]].
  */
 
 // DO NOT EDIT MANUALLY
@@ -11,7 +11,7 @@ abstract class ProxyServer(
   val port: Int,
   /** The secured port of the proxy server. */
   val securedPort: Option[Int],
-  /**  The realm of the proxy server. */
+  /** The realm of the proxy server. */
   val authOpt: Option[Realm],
   val nonProxyHosts: List[String]) extends Serializable {
   
@@ -28,4 +28,7 @@ abstract class ProxyServer(
   override def toString: String = {
     "ProxyServer(" + host + ", " + port + ", " + securedPort + ", " + authOpt + ", " + nonProxyHosts + ")"
   }
+}
+object ProxyServer {
+  
 }

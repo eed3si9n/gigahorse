@@ -1,11 +1,11 @@
 /**
- * This code is generated using sbt-datatype.
+ * This code is generated using [[http://www.scala-sbt.org/contraband/ sbt-contraband]].
  */
 
 // DO NOT EDIT MANUALLY
 package gigahorse
-final class FileBody(
-  val file: java.io.File) extends gigahorse.Body() {
+final class FileBody private (
+  val file: java.io.File) extends gigahorse.Body() with Serializable {
   
   
   
@@ -19,7 +19,7 @@ final class FileBody(
   override def toString: String = {
     "FileBody(" + file + ")"
   }
-  private[this] def copy(file: java.io.File = file): FileBody = {
+  protected[this] def copy(file: java.io.File = file): FileBody = {
     new FileBody(file)
   }
   def withFile(file: java.io.File): FileBody = {
@@ -27,5 +27,6 @@ final class FileBody(
   }
 }
 object FileBody {
+  
   def apply(file: java.io.File): FileBody = new FileBody(file)
 }

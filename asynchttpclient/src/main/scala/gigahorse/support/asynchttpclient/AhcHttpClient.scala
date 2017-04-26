@@ -33,7 +33,7 @@ import shaded.ahc.org.asynchttpclient.ws.WebSocketUpgradeHandler
 import org.reactivestreams.Publisher
 import DownloadHandler.asFile
 
-class AhcHttpClient(config: AsyncHttpClientConfig) extends HttpClient {
+class AhcHttpClient(config: AsyncHttpClientConfig) extends ReactiveHttpClient {
   import AhcHttpClient._
   private val asyncHttpClient = new DefaultAsyncHttpClient(config)
   def underlying[A]: A = asyncHttpClient.asInstanceOf[A]

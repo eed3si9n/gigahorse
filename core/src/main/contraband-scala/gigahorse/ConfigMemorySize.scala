@@ -1,10 +1,10 @@
 /**
- * This code is generated using sbt-datatype.
+ * This code is generated using [[http://www.scala-sbt.org/contraband/ sbt-contraband]].
  */
 
 // DO NOT EDIT MANUALLY
 package gigahorse
-final class ConfigMemorySize(
+final class ConfigMemorySize private (
   val bytes: Long) extends Serializable {
   
   
@@ -19,7 +19,7 @@ final class ConfigMemorySize(
   override def toString: String = {
     "ConfigMemorySize(" + bytes + ")"
   }
-  private[this] def copy(bytes: Long = bytes): ConfigMemorySize = {
+  protected[this] def copy(bytes: Long = bytes): ConfigMemorySize = {
     new ConfigMemorySize(bytes)
   }
   def withBytes(bytes: Long): ConfigMemorySize = {
@@ -27,5 +27,6 @@ final class ConfigMemorySize(
   }
 }
 object ConfigMemorySize {
+  
   def apply(bytes: Long): ConfigMemorySize = new ConfigMemorySize(bytes)
 }
