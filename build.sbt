@@ -93,7 +93,7 @@ lazy val commonTest = (project in file("common-test")).
 // lazy val doPackageSite = taskKey[File]("package site")
 // lazy val packageSitePath = settingKey[File]("path for the package")
 // lazy val docsProject = (project in file("docs-project")).
-//   dependsOn(asynchttpclient, akkaHttp).
+//   dependsOn(asynchttpclient, akkaHttp, okhttp).
 //   enablePlugins(PamfletPlugin).
 //   settings(
 //     sourceDirectory in (Pamflet, pf) := (baseDirectory.value).getParentFile / "docs",

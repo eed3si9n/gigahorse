@@ -10,8 +10,10 @@ out: concepts.html
 ### Gigahorse
 
 `Gigahorse`　は、色々便利なものを作るためのヘルパーオブジェクトだ。
-AHC をバックエンドに使う場合は、`gigahorse.support.asynchttpclient.Gigahorse`。
-Akka HTTP をバックエンドに使う場合は、`gigahorse.support.akkahttp.Gigahorse`。
+
+- OkHttp をバックエンドに使う場合は、`gigahorse.support.okhttp.Gigahorse`。
+- AHC をバックエンドに使う場合は、`gigahorse.support.asynchttpclient.Gigahorse`。
+- Akka HTTP をバックエンドに使う場合は、`gigahorse.support.akkahttp.Gigahorse`。
 
 ### HttpClient
 
@@ -20,7 +22,15 @@ Akka HTTP をバックエンドに使う場合は、`gigahorse.support.akkahttp.
 これに無頓着だと、プログラムはリソース枯渇に陥る可能性がある。
 
 `HttpClient` を作るには 2つの方法がある。
-第一は loan パターン `Gigahorse.withHttp(config) { ... }` を使うことだ:
+第一の方法としては、`Gigahorse.http(Gigahourse.config)` を使って
+`HttpClient` を作ることだ。AHC を使ってこの方法を取った場合、**必ずクライアントを閉じる**必要がある。
+
+```console
+scala> val http = Gigahorse.http(Gigahorse.config)
+scala> http.close() // must call close()
+```
+
+第二の方法は loan パターン `Gigahorse.withHttp(config) { ... }` を使うことだ:
 
 ```console:new
 scala> import gigahorse._, support.asynchttpclient.Gigahorse
@@ -32,14 +42,6 @@ scala> Gigahorse.withHttp(Gigahorse.config) { http =>
 これは、`HttpClient` を閉じることを保証するけども、短所としては
 全ての HTTP 処理が完了する前に閉じてしまう可能性があるので、
 中で全ての `Future` をブロックさせる必要がある。
-
-第二の方法としては、`Gigahorse.http(Gigahourse.config)` を使って
-`HttpClient` を作ることだ。この方法を取った場合は**必ずクライアントを閉じる**必要がある。
-
-```console
-scala> val http = Gigahorse.http(Gigahorse.config)
-scala> http.close() // must call close()
-```
 
 ### Config
 
@@ -99,6 +101,9 @@ scala> Gigahorse.withHttp(Gigahorse.config) { http =>
          Await.result(f, 120.seconds)
        }
 ```
+
+**注意**: OkHttp もしくは Akka HTTP を用いてレスポンスのボディーを消費しない場合は、
+リソースを解放するために `close()` メソッドを呼び出す必要がある。
 
 ### Future
 

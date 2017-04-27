@@ -10,8 +10,10 @@ Basic concepts
 ### Gigahorse
 
 `Gigahorse` is a helper object to create many useful things.
-For AHC backend, use `gigahorse.support.asynchttpclient.Gigahorse`.
-For Akka HTTP backend, `gigahorse.support.akkahttp.Gigahorse`.
+
+- For OkHttp backend, use `gigahorse.support.okhttp.Gigahorse`.
+- For AHC backend, use `gigahorse.support.asynchttpclient.Gigahorse`.
+- For Akka HTTP backend, `gigahorse.support.akkahttp.Gigahorse`.
 
 ### HttpClient
 
@@ -20,7 +22,15 @@ When it's used it will spawn many threads, so the lifetime of an `HttpClient`
 must be managed with care. Otherwise your program will run out of resources.
 
 There are two ways of creating an `HttpClient`.
-First is using the loan pattern `Gigahorse.withHttp(config) { ... }`:
+First is creating using `Gigahorse.http(Gigahourse.config)`.
+If you use this with AHC, **you must close** the client yourself:
+
+```console
+scala> val http = Gigahorse.http(Gigahorse.config)
+scala> http.close() // must call close()
+```
+
+Second way is using the loan pattern `Gigahorse.withHttp(config) { ... }`:
 
 ```console:new
 scala> import gigahorse._, support.asynchttpclient.Gigahorse
@@ -32,14 +42,6 @@ scala> Gigahorse.withHttp(Gigahorse.config) { http =>
 This will guarantee to close the `HttpClient`, but the drawback
 is that it could close prematurely before HTTP process is done,
 so you would have to block inside to wait for all the futures.
-
-The second way is creating using `Gigahorse.http(Gigahourse.config)`.
-If you use this, **you must close** the client yourself:
-
-```console
-scala> val http = Gigahorse.http(Gigahorse.config)
-scala> http.close() // must call close()
-```
 
 ### Config
 
@@ -101,6 +103,9 @@ scala> Gigahorse.withHttp(Gigahorse.config) { http =>
          Await.result(f, 120.seconds)
        }
 ```
+
+**Note**: Using OkHttp or Akka HTTP, if you don't consume the response body,
+you must call `close()` method on the `FullResponse` to let go of the resource.
 
 ### Future
 

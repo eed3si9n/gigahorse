@@ -8,7 +8,7 @@ Request 値の構築
 `Request` 値の構築を構築するには `Gigahorse.url(...)` 関数を呼び出す:
 
 ```console:new
-scala> import gigahorse._, support.asynchttpclient.Gigahorse
+scala> import gigahorse._, support.okhttp.Gigahorse
 scala> val url = "http://api.duckduckgo.com"
 scala> val r = Gigahorse.url(url)
 ```
