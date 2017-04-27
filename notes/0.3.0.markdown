@@ -1,0 +1,9 @@
+### Square OkHttp support
+
+Gigahorse 0.3.0 adds Square OkHttp support.
+
+Gigahorse-OkHttp is availble for Scala 2.10, 2.11, and 2.12.
+
+### Shaded AHC 2.0
+
+Gigahorse now shades AHC 2.0.
