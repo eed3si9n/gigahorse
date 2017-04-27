@@ -82,7 +82,8 @@ lazy val core = (project in file("core")).
 lazy val commonTest = (project in file("common-test")).
   dependsOn(core).
   settings(
-    libraryDependencies ++= Seq(scalatest),
+    libraryDependencies ++= Seq(scalatest,
+      ufDirectives, ufFilter, ufJetty, ufScalatest),
     publish := (),
     publishLocal := (),
     publishSigned := ()

@@ -17,13 +17,23 @@
 package gigahorsetest
 
 import org.scalatest._
-import scala.util.{ Failure, Success }
+import scala.util.Success
 import scala.concurrent._
 import scala.concurrent.duration._
 import java.io.File
 import gigahorse.{ HeaderNames, WebSocketEvent }
+import unfiltered.scalatest.Hosted
+import unfiltered.jetty.Server
 
-abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers {
+abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers
+  with Hosted {
+
+  def testUrl: String = host.url.toString
+  def getServer = setup(Server.http(port))
+  def setup: Server => Server = {
+    _.filter(new TestPlan)
+  }
+
   // custom loan pattern
   def withHttp(testCode: gigahorse.HttpClient => Future[Assertion]): Future[Assertion]
   private[this] val Gigahorse = gigahorse.GigahorseSupport
@@ -73,6 +83,15 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers {
       }
     }
 
+  "http.run(r.withAuth(\"***\", \"***\"), Gigahorse.asString)" should "retrieve a resource as String" in
+    withHttp { http =>
+      val r = Gigahorse.url(s"${testUrl}auth")
+      val f = http.run(r.withAuth("admin", "***"), Gigahorse.asString)
+      f map { s =>
+        assert(s contains "auth ok")
+      }
+    }
+
   "http.websocket(r)" should "open a websocket connection and exchange messages" in
     withHttp { http =>
       import WebSocketEvent._
@@ -108,7 +127,7 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers {
 
   it should "retrieve a resource and convert to Left given 500" in
     withHttp { http =>
-      val r = Gigahorse.url("http://getstatuscode.com/500")
+      val r = Gigahorse.url(s"${testUrl}500")
       val f = http.run(r, Gigahorse.asEither)
       f map { either =>
         assert(either.left.get.toString contains "Unexpected status: 500")
@@ -129,7 +148,7 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers {
 
   "http.processFull(r)" should "preserve an error response" in
     withHttp { http =>
-      val r = Gigahorse.url("http://getstatuscode.com/500")
+      val r = Gigahorse.url(s"${testUrl}500")
       for {
         res  <- http.processFull(r)
       } yield assert(res.bodyAsString contains "500 HTTP Status Code")
@@ -137,7 +156,7 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers {
 
   "http.processFull(r, Gigahorse.asEither)" should "preserve an error response and convert to Right given 404" in
     withHttp { http =>
-      val r = Gigahorse.url("http://getstatuscode.com/404")
+      val r = Gigahorse.url(s"${testUrl}404")
       val f = http.processFull(r, Gigahorse.asEither)
       f map { either =>
         assert(either.right.get.bodyAsString contains "404 HTTP Status Code")

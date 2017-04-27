@@ -28,11 +28,15 @@ class AkkaHttpClientSpec extends BaseHttpClientSpec {
       import gigahorse.support.akkahttp.Gigahorse
       implicit val system = ActorSystem("gigahorse-akka-http")
       implicit val materializer = ActorMaterializer()
+      val server = getServer
+      server.start
       val http: gigahorse.HttpClient = Gigahorse.http(Gigahorse.config, system)
       complete {
         testCode(http)
       } lastly {
         http.close
+        server.stop()
+        server.destroy()
         system.shutdown()
       }
     }
