@@ -24,11 +24,15 @@ class OkHttpClientSpec extends BaseHttpClientSpec {
   // custom loan pattern
   override def withHttp(testCode: gigahorse.HttpClient => Future[Assertion]): Future[Assertion] =
     {
+      val server = getServer
+      server.start
       val http = Gigahorse.http(Gigahorse.config)
       complete {
         testCode(http)
       } lastly {
         http.close()
+        server.stop()
+        server.destroy()
       }
     }
 }

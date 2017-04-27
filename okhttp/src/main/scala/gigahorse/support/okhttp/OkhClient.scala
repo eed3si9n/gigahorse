@@ -19,7 +19,7 @@ package support.okhttp
 
 import java.io.{ IOException, File }
 import okhttp3.{ OkHttpClient => XOkHttpClient, Request => XRequest, Response => XResponse }
-import okhttp3.{ HttpUrl, RequestBody, MediaType, Call, Callback, Cache }
+import okhttp3.{ HttpUrl, RequestBody, MediaType, Call, Callback, Cache, Authenticator, Route, Credentials }
 import scala.concurrent.{ Promise, Future, ExecutionContext }
 import scala.util.control.NonFatal
 import okio.Okio
@@ -30,17 +30,18 @@ import java.security.SecureRandom
 class OkhClient(config: Config) extends HttpClient {
   private type HB = HttpUrl.Builder
   private type RB = XRequest.Builder
-  private val client: XOkHttpClient = buildClient
+  private type CB = XOkHttpClient.Builder
+  private val client0: XOkHttpClient = buildClient
 
-  def underlying[A]: A = client.asInstanceOf[A]
+  def underlying[A]: A = client0.asInstanceOf[A]
 
   // According to http://square.github.io/okhttp/3.x/okhttp/okhttp3/OkHttpClient.html
   // shutdown isn't necessary
   def close(): Unit = {
     // This is provided in case we do need to clean up threads etc.
-    client.dispatcher.executorService.shutdown
-    client.connectionPool.evictAll
-    Option(client.cache) foreach { _.close }
+    client0.dispatcher.executorService.shutdown
+    client0.connectionPool.evictAll
+    Option(client0.cache) foreach { _.close }
   }
 
   /** Runs the request and return a Future of FullResponse. */
@@ -51,7 +52,8 @@ class OkhClient(config: Config) extends HttpClient {
   def run[A](request: Request, f: FullResponse => A): Future[A] =
     processFull(request, OkHandler[A](f))
 
-  def buildRequest(request: Request): XRequest =
+  // This creates an XRequest object, and potentially an XOkHttpClient with some overrides
+  def buildRequest(request: Request): (XRequest, XOkHttpClient) =
     {
       import request._
 
@@ -107,7 +109,13 @@ class OkhClient(config: Config) extends HttpClient {
 
       val b0 = new XRequest.Builder()
       val builder = (b0 /: requestfs) { case (b, f) => f(b) }
-      builder.build()
+      val result = builder.build()
+
+      val client = authOpt match {
+        case Some(_) => buildClient(client0.newBuilder, authOpt)
+        case None    => client0
+      }
+      (result, client)
     }
 
   /** Runs the request and return a Future of Either a FullResponse or a Throwable. */
@@ -148,7 +156,7 @@ class OkhClient(config: Config) extends HttpClient {
   def processFull[A](request: Request, handler: OkhCompletionHandler[A]): Future[A] =
     {
       val result = Promise[A]()
-      val r = buildRequest(request)
+      val (r, client) = buildRequest(request)
       client.newCall(r).enqueue(new Callback {
         def onResponse(call: Call, res: XResponse): Unit =
           try {
@@ -169,7 +177,7 @@ class OkhClient(config: Config) extends HttpClient {
   def processStream[A](request: Request, handler: OkhStreamHandler[A]): Future[A] =
     {
       val result = Promise[A]()
-      val r = buildRequest(request)
+      val (r, client) = buildRequest(request)
       client.newCall(r).enqueue(new Callback {
         def onResponse(call: Call, res: XResponse): Unit =
           try {
@@ -189,7 +197,7 @@ class OkhClient(config: Config) extends HttpClient {
   def websocket(request: Request)(handler: PartialFunction[WebSocketEvent, Unit]): Future[WebSocket] =
     {
       val result = Promise[WebSocket]()
-      val xrequest = buildRequest(request)
+      val (xrequest, client) = buildRequest(request)
       val listener = new OkhWebSocketListener(handler, result)
       client.newWebSocket(xrequest, listener)
       result.future
@@ -197,20 +205,56 @@ class OkhClient(config: Config) extends HttpClient {
 
   def buildClient: XOkHttpClient =
     {
-      import java.util.concurrent.TimeUnit
-      val b0 = new XOkHttpClient.Builder()
-      val b1 = b0
-        .connectTimeout(config.connectTimeout.toMillis, TimeUnit.MILLISECONDS)
-        .readTimeout(config.readTimeout.toMillis, TimeUnit.MILLISECONDS)
-        .writeTimeout(config.readTimeout.toMillis, TimeUnit.MILLISECONDS)
-        .followRedirects(config.followRedirects)
-      config.cacheDirectory match {
-        case Some(dir) => b1.cache(new Cache(dir, config.maxCacheSize.bytes))
-        case None      => b1
-      }
+      buildClient(new XOkHttpClient.Builder(), config.authOpt)
+    }
 
-      val result = configureSsl(config.ssl, b1).build()
+  def buildClient(b0: CB, authOpt: Option[Realm]): XOkHttpClient =
+    {
+      import java.util.concurrent.TimeUnit
+      val clientfs: List[CB => CB] = List[CB => CB](
+        { case b: CB => b.connectTimeout(config.connectTimeout.toMillis, TimeUnit.MILLISECONDS) },
+        { case b: CB => b.readTimeout(config.readTimeout.toMillis, TimeUnit.MILLISECONDS) },
+        { case b: CB => b.writeTimeout(config.readTimeout.toMillis, TimeUnit.MILLISECONDS) },
+        { case b: CB => b.followRedirects(config.followRedirects) }
+      ) :::
+      (config.cacheDirectory match {
+        case Some(dir) =>
+          List[CB => CB]({ case b: CB => b.cache(new Cache(dir, config.maxCacheSize.bytes)) })
+        case None      => Nil
+      }) :::
+      (authOpt match {
+        case Some(auth) =>
+          List[CB => CB]({ case b: CB => b.authenticator(buildAuthenticator(auth)) })
+        case None       => Nil
+      })
+      val b1 = (b0 /: clientfs) { case (b, f) => f(b) }
+      val b2 = configureSsl(config.ssl, b1)
+      val result = b2.build()
       result
+    }
+
+  def buildAuthenticator(auth: Realm): Authenticator =
+    new Authenticator {
+      override def authenticate(route: Route, response: XResponse): XRequest =
+        {
+          if (responseCount(response) >= 3) {
+              return null; // If we've failed 3 times, give up.
+          }
+          val credential = auth.scheme match {
+            case AuthScheme.Basic => Credentials.basic(auth.username, auth.password)
+            case _                => sys.error(s"Unsupported scheme: ${auth.scheme}")
+          }
+          response.request.newBuilder.header("Authorization", credential).build
+        }
+      private def responseCount(response: XResponse): Int =
+        {
+          def doResponseCount(x: XResponse, n: Int): Int =
+            Option(x.priorResponse) match {
+              case Some(p) => doResponseCount(p, n + 1)
+              case None    => n
+            }
+          doResponseCount(response, 1)
+        }
     }
 
   def configureSsl(sslConfig: SSLConfigSettings, b1: XOkHttpClient.Builder): XOkHttpClient.Builder =

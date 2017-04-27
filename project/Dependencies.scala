@@ -15,4 +15,9 @@ object Dependencies {
   val akkaHttp = "com.typesafe.akka" %% "akka-http" % akkaHttpVersion
   val sbtIo = "org.scala-sbt" %% "io" % "1.0.0-M7"
   val okHttp = "com.squareup.okhttp3" % "okhttp" % "3.7.0"
+  val unfilteredVersion = "0.9.1"
+  val ufDirectives = "ws.unfiltered" %% "unfiltered-directives" % unfilteredVersion
+  val ufFilter = "ws.unfiltered" %% "unfiltered-filter" % unfilteredVersion
+  val ufJetty = "ws.unfiltered" %% "unfiltered-jetty" % unfilteredVersion
+  val ufScalatest = "ws.unfiltered" %% "unfiltered-scalatest" % unfilteredVersion
 }

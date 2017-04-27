@@ -33,7 +33,29 @@ lazy val root = (project in file(".")).
     name := "gigahorse",
     publish := (),
     publishLocal := (),
-    publishSigned := ()
+    publishSigned := (),
+    commands += Command.command("release-jdk7") { state =>
+      "clean" ::
+        "++ 2.10.6" ::
+        "core/publishSigned" ::
+        "okhttp/publishSigned" ::
+        state
+    },
+    commands += Command.command("release-jdk8") { state =>
+      "clean" ::
+        "++ 2.12.2" ::
+        "core/publishSigned" ::
+        "okhttp/publishSigned" ::
+        "asynchttpclient/publishSigned" ::
+        "shadedAsyncHttpClient/publishSigned" ::
+        "akkaHttp/publishSigned" ::
+        "++ 2.11.11" ::
+        "core/publishSigned" ::
+        "okhttp/publishSigned" ::
+        "asynchttpclient/publishSigned" ::
+        "akkaHttp/publishSigned" ::
+        state
+    }
   )
 
 lazy val commonSettings = List(
@@ -60,7 +82,8 @@ lazy val core = (project in file("core")).
 lazy val commonTest = (project in file("common-test")).
   dependsOn(core).
   settings(
-    libraryDependencies ++= Seq(scalatest),
+    libraryDependencies ++= Seq(scalatest,
+      ufDirectives, ufFilter, ufJetty, ufScalatest),
     publish := (),
     publishLocal := (),
     publishSigned := ()

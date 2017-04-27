@@ -128,6 +128,16 @@ class AkkaHttpClient(config: Config, system: ActorSystem)(implicit fm: Materiali
 
   private def buildHeaders(request: Request): List[HttpHeader] =
     {
+      import akka.http.scaladsl.model.headers.{ Authorization, BasicHttpCredentials }
+      val authHeaders = (request.authOpt orElse config.authOpt) match {
+        case Some(auth) =>
+          auth.scheme match {
+            case AuthScheme.Basic =>
+              List(Authorization(BasicHttpCredentials(auth.username, auth.password)))
+            case _                => sys.error(s"Unsupported scheme: ${auth.scheme}")
+          }
+        case None       => Nil
+      }
       val headers0 = for {
         (k, vs) <- request.headers.toList
         v       <- vs.toList
@@ -136,7 +146,7 @@ class AkkaHttpClient(config: Config, system: ActorSystem)(implicit fm: Materiali
           case _                                      => Nil
         }
       } yield x
-      headers0
+      headers0 ::: authHeaders
     }
 
   private def buildUri(request: Request): Uri =
