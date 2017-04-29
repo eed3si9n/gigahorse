@@ -37,7 +37,10 @@ class TestPlan extends Plan {
       }
     // form
     case POST(Path("/form")) & Params(params) =>
-      Ok ~> ResponseString(params("arg1").head)
+      params.get("arg1") match {
+        case Some(Seq(x)) => Ok ~> ResponseString(x)
+        case _            => BadRequest ~> ResponseString("args1 is not found!")
+      }
     case GET(Path(p)) =>
       println(p)
       Ok ~> ResponseString("foo")
