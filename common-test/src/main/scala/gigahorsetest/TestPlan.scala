@@ -28,12 +28,16 @@ class TestPlan extends Plan {
       InternalServerError ~> ResponseString("500 HTTP Status Code")
     case GET(Path(Seg("404" :: Nil))) =>
       NotFound ~> ResponseString("404 HTTP Status Code")
+    // test basic auth
     case r @ GET(Path(Seg("auth" :: Nil))) =>
       r match {
         case BasicAuth(u, p) if(verify(u, p)) =>
           Ok ~> ResponseString("auth ok")
         case _ => Fail
       }
+    // form
+    case POST(Path("/form")) & Params(params) =>
+      Ok ~> ResponseString(params("arg1").head)
     case GET(Path(p)) =>
       println(p)
       Ok ~> ResponseString("foo")

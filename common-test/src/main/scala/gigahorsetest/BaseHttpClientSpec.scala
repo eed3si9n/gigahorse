@@ -92,6 +92,15 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers
       }
     }
 
+  "http.run(r.post(Map(\"inputString\" -> List(\"{}\"))), f)" should "post url-form-encoded data" in
+    withHttp { http =>
+      val r = Gigahorse.url(s"${testUrl}form")
+      val f = http.run(r.post(Map("arg1" -> List("{}"))), Gigahorse.asString)
+      f map { s =>
+        assert(s === "{}")
+      }
+    }
+
   "http.websocket(r)" should "open a websocket connection and exchange messages" in
     withHttp { http =>
       import WebSocketEvent._
