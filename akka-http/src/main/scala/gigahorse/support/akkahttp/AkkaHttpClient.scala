@@ -24,8 +24,10 @@ import akka.actor.ActorSystem
 import akka.stream.Materializer
 import akka.http.scaladsl.{ HttpExt, Http }
 import akka.http.scaladsl.model.{ HttpRequest, HttpResponse, Uri,
-  StatusCodes, HttpMethod, HttpMethods, HttpHeader }
+  StatusCodes, HttpMethod, HttpMethods, HttpHeader, RequestEntity,
+  HttpEntity, ContentType, MediaType }
 import akka.http.scaladsl.model.ws.WebSocketRequest
+import akka.util.ByteString
 import DownloadHandler.asFile
 
 class AkkaHttpClient(config: Config, system: ActorSystem)(implicit fm: Materializer) extends ReactiveHttpClient {
@@ -109,7 +111,8 @@ class AkkaHttpClient(config: Config, system: ActorSystem)(implicit fm: Materiali
   def buildRequest(request: Request): HttpRequest =
     HttpRequest(method = buildMethod(request),
       uri = buildUri(request),
-      headers = buildHeaders(request))
+      headers = buildHeaders(request),
+      entity = buildEntity(request))
 
   def buildWsRequest(request: Request): WebSocketRequest =
     WebSocketRequest(uri = buildUri(request),
@@ -158,6 +161,18 @@ class AkkaHttpClient(config: Config, system: ActorSystem)(implicit fm: Materiali
         value <- values
       } yield (key, value)
       Uri(url).withQuery(Uri.Query(qs))
+    }
+
+  private def buildEntity(request: Request): RequestEntity =
+    request.body match {
+      case _: EmptyBody => HttpEntity.Empty
+      case b: FileBody => ??? // https://gist.github.com/jrudolph/08d0d28e1eddcd64dbd0
+      case b: InMemoryBody =>
+        val ct = ContentType.parse(request.contentType.getOrElse("text/plain; charset=utf-8")) match {
+          case Right(x) => x
+          case Left(xs) => sys.error(xs.toString)
+        }
+        HttpEntity.Strict(ct, ByteString(b.bytes))
     }
 
   /** Open a websocket connection. */
