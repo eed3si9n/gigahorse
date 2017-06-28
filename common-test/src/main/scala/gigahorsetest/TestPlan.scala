@@ -41,6 +41,19 @@ class TestPlan extends Plan {
         case Some(Seq(x)) => Ok ~> ResponseString(x)
         case _            => BadRequest ~> ResponseString("args1 is not found!")
       }
+    // sign
+    case r @ GET(Path("/sign")) =>
+      val h = r.headers("X-Signature")
+      if (h.hasNext)
+        Ok ~> ResponseString(s"${h.next()}:${r.parameterValues("query").mkString}")
+      else
+        BadRequest ~> ResponseString("X-Signature header is not found!")
+    case r @ POST(Path("/sign")) =>
+      val h = r.headers("X-Signature")
+      if (h.hasNext)
+        Ok ~> ResponseString(s"${h.next()}:${r.parameterValues("query").mkString}:${r.parameterValues("content").mkString}")
+      else
+        BadRequest ~> ResponseString("X-Signature header is not found!")
     case GET(Path(p)) =>
       println(p)
       Ok ~> ResponseString("foo")

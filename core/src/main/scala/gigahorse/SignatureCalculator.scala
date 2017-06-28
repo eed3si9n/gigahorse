@@ -17,4 +17,6 @@
 
 package gigahorse
 
-abstract class SignatureCalculator
+trait SignatureCalculator {
+  def sign(url: String, contentType: Option[String], content: Array[Byte]): (String, String)
+}

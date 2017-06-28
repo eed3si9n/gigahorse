@@ -18,17 +18,17 @@ package gigahorse
 package support.akkahttp
 
 import java.io.File
-import scala.concurrent.{ Future, Promise, ExecutionContext, Await }
+
+import scala.concurrent.{Await, ExecutionContext, Future, Promise}
 import scala.concurrent.duration.Duration
 import akka.actor.ActorSystem
 import akka.stream.Materializer
-import akka.http.scaladsl.{ HttpExt, Http }
-import akka.http.scaladsl.model.{ HttpRequest, HttpResponse, Uri,
-  StatusCodes, HttpMethod, HttpMethods, HttpHeader, RequestEntity,
-  HttpEntity, ContentType, MediaType }
+import akka.http.scaladsl.{Http, HttpExt}
+import akka.http.scaladsl.model.{ContentType, HttpEntity, HttpHeader, HttpMethod, HttpMethods, HttpRequest, HttpResponse, MediaType, RequestEntity, StatusCodes, Uri}
 import akka.http.scaladsl.model.ws.WebSocketRequest
 import akka.util.ByteString
 import DownloadHandler.asFile
+import akka.http.scaladsl.model.HttpHeader.ParsingResult.Ok
 
 class AkkaHttpClient(config: Config, system: ActorSystem)(implicit fm: Materializer) extends ReactiveHttpClient {
   private val akkaHttp: HttpExt = Http(system)
@@ -108,11 +108,25 @@ class AkkaHttpClient(config: Config, system: ActorSystem)(implicit fm: Materiali
       } yield result
     }
 
-  def buildRequest(request: Request): HttpRequest =
-    HttpRequest(method = buildMethod(request),
+  def buildRequest(request: Request): HttpRequest = {
+    val httpReq = HttpRequest(method = buildMethod(request),
       uri = buildUri(request),
       headers = buildHeaders(request),
       entity = buildEntity(request))
+    request.signatureOpt match {
+      case Some(signatureCalculator) =>
+        val body = request.body match {
+          case b: InMemoryBody => b.bytes
+          case _ => Array.emptyByteArray
+        }
+        val (name, value) = signatureCalculator.sign(httpReq.uri.toString(), request.contentType, body)
+        HttpHeader.parse(name, value) match {
+          case Ok(header, _) => httpReq.withHeaders(header)
+          case _ => sys.error(s"Invalid header: ${name} = ${value}")
+        }
+      case None => httpReq
+    }
+  }
 
   def buildWsRequest(request: Request): WebSocketRequest =
     WebSocketRequest(uri = buildUri(request),

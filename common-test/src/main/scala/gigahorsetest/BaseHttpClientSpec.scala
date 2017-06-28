@@ -17,11 +17,13 @@
 package gigahorsetest
 
 import org.scalatest._
+
 import scala.util.Success
 import scala.concurrent._
 import scala.concurrent.duration._
 import java.io.File
-import gigahorse.{ HeaderNames, WebSocketEvent }
+
+import gigahorse.{HeaderNames, SignatureCalculator, WebSocketEvent}
 import unfiltered.scalatest.Hosted
 import unfiltered.jetty.Server
 
@@ -98,6 +100,34 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers
       val f = http.run(r.post(Map("arg1" -> List("{}"))), Gigahorse.asString)
       f map { s =>
         assert(s === "{}")
+      }
+    }
+
+  "http.run(r.get.withSignatureOpt(...), Gigahorse.asString)" should "add a signature header" in
+    withHttp { http =>
+      val r = Gigahorse.url(s"${testUrl}sign").
+        addQueryString("query" -> "param1")
+      val sc = new SignatureCalculator {
+        override def sign(url: String, contentType: Option[String], content: Array[Byte]): (String, String) =
+          ("X-Signature", s"$url:${new String(content, "UTF-8")}:${contentType.getOrElse("")}")
+      }
+      val f = http.run(r.withSignatureOpt(sc).get, Gigahorse.asString)
+      f map { s =>
+        assert(s == s"${testUrl}sign?query=param1:::param1")
+      }
+    }
+
+  "http.run(r.post.withSignatureOpt(...), Gigahorse.asString)" should "add a signature header and keep content" in
+    withHttp { http =>
+      val r = Gigahorse.url(s"${testUrl}sign").
+        addQueryString("query" -> "param1")
+      val sc = new SignatureCalculator {
+        override def sign(url: String, contentType: Option[String], content: Array[Byte]): (String, String) =
+          ("X-Signature", s"$url:${new String(content, "UTF-8")}:${contentType.getOrElse("")}")
+      }
+      val f = http.run(r.withSignatureOpt(sc).post(Map("content" -> List("param2"))), Gigahorse.asString)
+      f map { s =>
+        assert(s == s"${testUrl}sign?query=param1:content=param2:application/x-www-form-urlencoded:param1:param2")
       }
     }
 

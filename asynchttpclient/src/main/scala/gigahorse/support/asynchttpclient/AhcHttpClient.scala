@@ -22,7 +22,7 @@ import scala.collection.JavaConverters._
 import java.io.{ File, UnsupportedEncodingException }
 import java.nio.charset.Charset
 import scala.concurrent.{ Future, Promise, ExecutionContext }
-import shaded.ahc.org.asynchttpclient.{ Response => XResponse, Request => XRequest, Realm => XRealm, _ }
+import shaded.ahc.org.asynchttpclient.{ Response => XResponse, Request => XRequest, Realm => XRealm, SignatureCalculator => XSignatureCalculator, _ }
 import shaded.ahc.org.asynchttpclient.AsyncHandler.{ State => XState }
 import shaded.ahc.org.asynchttpclient.handler.StreamedAsyncHandler
 import shaded.ahc.org.asynchttpclient.proxy.{ ProxyServer => XProxyServer }
@@ -199,45 +199,8 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends ReactiveHttpClient {
         builder.setBody(bodyGenerator)
         (builder, request.headers)
       case b: InMemoryBody =>
-        val ct: String = contentType.getOrElse("text/plain")
-
-        val h = try {
-          // Only parse out the form body if we are doing the signature calculation.
-          if (ct.contains(ContentTypes.FORM) && signatureOpt.isDefined) {
-            // If we are taking responsibility for setting the request body, we should block any
-            // externally defined Content-Length field (see #5221 for the details)
-            val filteredHeaders = request.headers.filterNot { case (k, v) => k.equalsIgnoreCase(HeaderNames.CONTENT_LENGTH) }
-
-            // extract the content type and the charset
-            val charset =
-              Option(HttpUtils.parseCharset(ct)).getOrElse {
-                // NingWSRequest modifies headers to include the charset, but this fails tests in Scala.
-                //val contentTypeList = Seq(ct + "; charset=utf-8")
-                //possiblyModifiedHeaders = this.headers.updated(HeaderNames.CONTENT_TYPE, contentTypeList)
-                Charset.forName("utf-8")
-              }
-
-            // Get the string body given the given charset...
-            val stringBody = new String(b.bytes, charset)
-            // The Ning signature calculator uses request.getFormParams() for calculation,
-            // so we have to parse it out and add it rather than using setBody.
-
-            val params = for {
-              (key, values) <- new QueryStringDecoder("/?" + stringBody, charset).parameters.asScala.toList // FormUrlEncodedParser.parse(stringBody).toSeq
-              value <- values.asScala.toList
-            } yield new Param(key, value)
-            builder.setFormParams(params.asJava)
-            filteredHeaders
-          } else {
-            builder.setBody(b.bytes)
-            request.headers
-          }
-        } catch {
-          case e: UnsupportedEncodingException =>
-            throw new RuntimeException(e)
-        }
-
-        (builder, h)
+        builder.setBody(b.bytes)
+        (builder, request.headers)
       // case StreamedBody(bytes) =>
       //  (builder, request.headers)
     }
@@ -249,11 +212,13 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends ReactiveHttpClient {
     } builder.addHeader(header._1, value)
 
     // Set the signature calculator.
-    signatureOpt.map {
-      case signatureCalculator: shaded.ahc.org.asynchttpclient.SignatureCalculator =>
-        builderWithBody.setSignatureCalculator(signatureCalculator)
-      case _ =>
-        throw new IllegalStateException("Unknown signature calculator found: use a class that implements SignatureCalculator")
+    signatureOpt.foreach { signatureCalculator =>
+      builderWithBody.setSignatureCalculator(new XSignatureCalculator {
+        override def calculateAndAddSignature(request: XRequest, requestBuilder: RequestBuilderBase[_]): Unit = {
+          val (name, value) = signatureCalculator.sign(request.getUrl, Option(request.getHeaders.get(HeaderNames.CONTENT_TYPE)), Option(request.getByteData).getOrElse(Array.emptyByteArray))
+          requestBuilder.addHeader(name, value)
+        }
+      })
     }
     builderWithBody.build()
   }
