@@ -17,14 +17,16 @@
 package gigahorse
 package support.okhttp
 
-import java.io.{ IOException, File }
-import okhttp3.{ OkHttpClient => XOkHttpClient, Request => XRequest, Response => XResponse }
-import okhttp3.{ HttpUrl, RequestBody, MediaType, Call, Callback, Cache, Authenticator, Route, Credentials }
-import scala.concurrent.{ Promise, Future, ExecutionContext }
+import java.io.{ByteArrayOutputStream, File, IOException}
+
+import okhttp3.{OkHttpClient => XOkHttpClient, Request => XRequest, Response => XResponse}
+import okhttp3.{Authenticator, Cache, Call, Callback, Credentials, HttpUrl, Interceptor, MediaType, RequestBody, Route}
+
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.control.NonFatal
 import okio.Okio
 import com.typesafe.sslconfig.ssl._
-import javax.net.ssl.{ X509TrustManager, SSLContext, TrustManager }
+import javax.net.ssl.{SSLContext, TrustManager, X509TrustManager}
 import java.security.SecureRandom
 
 class OkhClient(config: Config) extends HttpClient {
@@ -111,10 +113,10 @@ class OkhClient(config: Config) extends HttpClient {
       val builder = (b0 /: requestfs) { case (b, f) => f(b) }
       val result = builder.build()
 
-      val client = authOpt match {
-        case Some(_) => buildClient(client0.newBuilder, authOpt)
-        case None    => client0
-      }
+      val client = if (authOpt.isDefined || signatureOpt.isDefined)
+        buildClient(client0.newBuilder, authOpt, signatureOpt)
+      else
+        client0
       (result, client)
     }
 
@@ -205,10 +207,10 @@ class OkhClient(config: Config) extends HttpClient {
 
   def buildClient: XOkHttpClient =
     {
-      buildClient(new XOkHttpClient.Builder(), config.authOpt)
+      buildClient(new XOkHttpClient.Builder(), config.authOpt, None)
     }
 
-  def buildClient(b0: CB, authOpt: Option[Realm]): XOkHttpClient =
+  def buildClient(b0: CB, authOpt: Option[Realm], signatureOpt: Option[SignatureCalculator]): XOkHttpClient =
     {
       import java.util.concurrent.TimeUnit
       val clientfs: List[CB => CB] = List[CB => CB](
@@ -229,7 +231,12 @@ class OkhClient(config: Config) extends HttpClient {
       })
       val b1 = (b0 /: clientfs) { case (b, f) => f(b) }
       val b2 = configureSsl(config.ssl, b1)
-      val result = b2.build()
+      val b3 = signatureOpt match {
+        case Some(signatureCalculator) =>
+          configureSignatureCalculator(signatureCalculator, b2)
+        case None => b2
+      }
+      val result = b3.build()
       result
     }
 
@@ -283,5 +290,26 @@ class OkhClient(config: Config) extends HttpClient {
           else b2
         b3
       }
+    }
+
+  def configureSignatureCalculator(signatureCalculator: SignatureCalculator, b1: XOkHttpClient.Builder): XOkHttpClient.Builder =
+    {
+      b1.addNetworkInterceptor(new Interceptor {
+        override def intercept(chain: Interceptor.Chain): XResponse = {
+          val request = chain.request()
+          val (contentType, content) = Option(request.body()) match {
+            case Some(body) =>
+              val baos = new ByteArrayOutputStream()
+              val sink = Okio.buffer(Okio.sink(baos))
+              body.writeTo(sink)
+              sink.flush()
+              (Option(body.contentType()).map(_.toString), baos.toByteArray)
+            case None => (None, Array.emptyByteArray)
+          }
+          val (name, value) = signatureCalculator.sign(request.url().toString, contentType, content)
+          val signedRequest = request.newBuilder.header(name, value).method(request.method, request.body).build
+          chain.proceed(signedRequest)
+        }
+      })
     }
 }
