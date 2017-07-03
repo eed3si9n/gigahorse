@@ -1,0 +1,11 @@
+### SignatureCalculator
+
+Gigahorse 0.3.1 expands the `SignatureCalculator` to be a generic/common way to add a signature http header derived from url and content.
+
+#26 by @alexdupre
+
+### Form support for Akka HTTP binding
+
+This also adds form support for Akka HTTP binding.
+
+#25 by @eed3si9n
