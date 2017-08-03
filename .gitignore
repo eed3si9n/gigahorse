@@ -2,3 +2,8 @@ project/pf.sbt
 pf.sbt
 
 rsync.sh
+/.idea/
+/target/
+/*/target/
+/project/project/target/
+/shaded/asynchttpclient/target/
