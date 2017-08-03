@@ -74,6 +74,7 @@ lazy val core = (project in file("core")).
     name := "gigahorse-core",
     libraryDependencies ++= Seq(sslConfig, reactiveStreams, slf4jApi, scalatest % Test),
     managedSourceDirectories in Compile += (sourceDirectory in Compile).value / "contraband-scala",
+    unmanagedSourceDirectories in Compile += (sourceDirectory in Compile).value / "contraband-scala",
     sourceManaged in (Compile, generateContrabands) := (sourceDirectory in Compile).value / "contraband-scala",
     // You need this otherwise you get X is already defined as class.
     sources in Compile := (sources in Compile).value.toList.distinct
