@@ -43,7 +43,7 @@ lazy val root = (project in file(".")).
     },
     commands += Command.command("release-jdk8") { state =>
       "clean" ::
-        "++ 2.12.2" ::
+        "++ 2.12.3" ::
         "core/publishSigned" ::
         "okhttp/publishSigned" ::
         "asynchttpclient/publishSigned" ::
