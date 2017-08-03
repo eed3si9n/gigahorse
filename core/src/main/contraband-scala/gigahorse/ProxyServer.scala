@@ -23,7 +23,7 @@ abstract class ProxyServer(
     case _ => false
   }
   override def hashCode: Int = {
-    37 * (37 * (37 * (37 * (37 * (17 + host.##) + port.##) + securedPort.##) + authOpt.##) + nonProxyHosts.##)
+    37 * (37 * (37 * (37 * (37 * (37 * (17 + "gigahorse.ProxyServer".##) + host.##) + port.##) + securedPort.##) + authOpt.##) + nonProxyHosts.##)
   }
   override def toString: String = {
     "ProxyServer(" + host + ", " + port + ", " + securedPort + ", " + authOpt + ", " + nonProxyHosts + ")"

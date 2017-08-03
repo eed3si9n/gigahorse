@@ -13,7 +13,7 @@ override def equals(o: Any): Boolean = o match {
   case _ => false
 }
 override def hashCode: Int = {
-  17
+  37 * (17 + "gigahorse.EmptyBody".##)
 }
 override def toString: String = {
   "EmptyBody()"

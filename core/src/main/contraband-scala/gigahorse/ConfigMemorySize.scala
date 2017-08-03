@@ -14,7 +14,7 @@ final class ConfigMemorySize private (
     case _ => false
   }
   override def hashCode: Int = {
-    37 * (17 + bytes.##)
+    37 * (37 * (17 + "gigahorse.ConfigMemorySize".##) + bytes.##)
   }
   override def toString: String = {
     "ConfigMemorySize(" + bytes + ")"

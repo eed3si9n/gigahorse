@@ -14,7 +14,7 @@ final class FileBody private (
     case _ => false
   }
   override def hashCode: Int = {
-    37 * (17 + file.##)
+    37 * (37 * (17 + "gigahorse.FileBody".##) + file.##)
   }
   override def toString: String = {
     "FileBody(" + file + ")"
