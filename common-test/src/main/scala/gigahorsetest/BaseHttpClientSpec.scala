@@ -25,7 +25,7 @@ import java.io.File
 
 import gigahorse.{HeaderNames, SignatureCalculator, WebSocketEvent}
 import unfiltered.scalatest.Hosted
-import unfiltered.jetty.Server
+import unfiltered.netty.Server
 
 abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers
   with Hosted {
@@ -33,7 +33,7 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers
   def testUrl: String = host.url.toString
   def getServer = setup(Server.http(port))
   def setup: Server => Server = {
-    _.filter(new TestPlan)
+    _.handler(TestPlan.testPlan)
   }
 
   // custom loan pattern
