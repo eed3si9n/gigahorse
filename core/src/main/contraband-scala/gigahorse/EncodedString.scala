@@ -15,7 +15,7 @@ final class EncodedString private (
     case _ => false
   }
   override def hashCode: Int = {
-    37 * (37 * (17 + string.##) + charset.##)
+    37 * (37 * (37 * (17 + "gigahorse.EncodedString".##) + string.##) + charset.##)
   }
   override def toString: String = {
     "EncodedString(" + string + ", " + charset + ")"

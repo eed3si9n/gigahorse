@@ -47,7 +47,7 @@ final class Realm private (
     case _ => false
   }
   override def hashCode: Int = {
-    37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + username.##) + password.##) + scheme.##) + usePreemptiveAuth.##) + realmNameOpt.##) + nonceOpt.##) + algorithmOpt.##) + responseOpt.##) + opaqueOpt.##) + qopOpt.##) + ncOpt.##) + uriOpt.##) + methodNameOpt.##) + charsetOpt.##) + ntlmDomainOpt.##) + ntlmHostOpt.##) + useAbsoluteURI.##) + omitQuery.##)
+    37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + "gigahorse.Realm".##) + username.##) + password.##) + scheme.##) + usePreemptiveAuth.##) + realmNameOpt.##) + nonceOpt.##) + algorithmOpt.##) + responseOpt.##) + opaqueOpt.##) + qopOpt.##) + ncOpt.##) + uriOpt.##) + methodNameOpt.##) + charsetOpt.##) + ntlmDomainOpt.##) + ntlmHostOpt.##) + useAbsoluteURI.##) + omitQuery.##)
   }
   override def toString: String = {
     "Realm(" + username + ", " + password + ", " + scheme + ", " + usePreemptiveAuth + ", " + realmNameOpt + ", " + nonceOpt + ", " + algorithmOpt + ", " + responseOpt + ", " + opaqueOpt + ", " + qopOpt + ", " + ncOpt + ", " + uriOpt + ", " + methodNameOpt + ", " + charsetOpt + ", " + ntlmDomainOpt + ", " + ntlmHostOpt + ", " + useAbsoluteURI + ", " + omitQuery + ")"

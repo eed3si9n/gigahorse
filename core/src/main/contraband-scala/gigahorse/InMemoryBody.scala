@@ -14,7 +14,7 @@ final class InMemoryBody private (
     case _ => false
   }
   override def hashCode: Int = {
-    37 * (17 + bytes.##)
+    37 * (37 * (17 + "gigahorse.InMemoryBody".##) + bytes.##)
   }
   override def toString: String = {
     "InMemoryBody(" + bytes + ")"

@@ -90,7 +90,7 @@ final class Request private (
     case _ => false
   }
   override def hashCode: Int = {
-    37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + url.##) + method.##) + body.##) + headers.##) + queryString.##) + signatureOpt.##) + authOpt.##) + followRedirectsOpt.##) + requestTimeoutOpt.##) + virtualHostOpt.##) + proxyServerOpt.##)
+    37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + "gigahorse.Request".##) + url.##) + method.##) + body.##) + headers.##) + queryString.##) + signatureOpt.##) + authOpt.##) + followRedirectsOpt.##) + requestTimeoutOpt.##) + virtualHostOpt.##) + proxyServerOpt.##)
   }
   override def toString: String = {
     "Request(" + url + ", " + method + ", " + body + ", " + headers + ", " + queryString + ", " + signatureOpt + ", " + authOpt + ", " + followRedirectsOpt + ", " + requestTimeoutOpt + ", " + virtualHostOpt + ", " + proxyServerOpt + ")"
