@@ -30,11 +30,15 @@ class AkkaHttpClientSpec extends BaseHttpClientSpec {
       implicit val materializer = ActorMaterializer()
       val server = getServer
       server.start
+      val wsServer = getWsServer
+      wsServer.start
       val http: gigahorse.HttpClient = Gigahorse.http(Gigahorse.config, system)
       complete {
         testCode(http)
       } lastly {
         http.close
+        wsServer.stop()
+        wsServer.destroy()
         server.stop()
         server.destroy()
         system.shutdown()

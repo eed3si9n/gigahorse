@@ -64,7 +64,9 @@ lazy val commonSettings = List(
     if (isSnapshot.value) Some("snapshots" at nexus + "content/repositories/snapshots")
     else Some("releases" at nexus + "service/local/staging/deploy/maven2")
   },
-  scalacOptions in (Compile, console) ~= (_ filterNot Set("-deprecation", "-Ywarn-unused", "-Ywarn-unused-import"))
+  scalacOptions in (Compile, console) ~= (_ filterNot Set("-deprecation", "-Ywarn-unused", "-Ywarn-unused-import")),
+  fork in Test := true,
+  javaOptions in Compile += "-Xmx2G"
 )
 
 lazy val core = (project in file("core")).
@@ -84,7 +86,7 @@ lazy val commonTest = (project in file("common-test")).
   dependsOn(core).
   settings(
     libraryDependencies ++= Seq(scalatest,
-      ufDirectives, ufFilter, ufJetty, ufScalatest),
+      ufDirectives, ufFilter, ufWebsockets, ufScalatest),
     publish := (),
     publishLocal := (),
     publishSigned := ()

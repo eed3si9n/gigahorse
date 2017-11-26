@@ -35,6 +35,12 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers
   def setup: Server => Server = {
     _.handler(TestPlan.testPlan)
   }
+  val wsPort = unfiltered.util.Port.any
+  def wsTestUrl: String = s"ws://localhost:$wsPort"
+  def getWsServer = wsSetup(Server.local(wsPort))
+  def wsSetup: Server => Server = {
+    _.handler(WsTestPlan.testPlan)
+  }
 
   // custom loan pattern
   def withHttp(testCode: gigahorse.HttpClient => Future[Assertion]): Future[Assertion]
@@ -134,7 +140,7 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers
   "http.websocket(r)" should "open a websocket connection and exchange messages" in
     withHttp { http =>
       import WebSocketEvent._
-      val r = Gigahorse.url("ws://echo.websocket.org").get
+      val r = Gigahorse.url(wsTestUrl).get
       val p = Promise[String]()
       val m = "Hello World!"
       val h: PartialFunction[WebSocketEvent, Unit] = {
