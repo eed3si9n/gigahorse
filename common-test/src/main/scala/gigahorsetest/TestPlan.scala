@@ -18,12 +18,12 @@ package gigahorsetest
 
 import unfiltered.request._
 import unfiltered.response._
-import unfiltered.filter.Plan
+import unfiltered.netty.cycle.Planify
 
-class TestPlan extends Plan {
+object TestPlan {
   val Fail = Unauthorized ~> WWWAuthenticate("""Basic realm="/"""")
 
-  def intent = {
+  def testPlan = Planify {
     case GET(Path(Seg("500" :: Nil))) =>
       InternalServerError ~> ResponseString("500 HTTP Status Code")
     case GET(Path(Seg("404" :: Nil))) =>
@@ -61,4 +61,3 @@ class TestPlan extends Plan {
 
   def verify(login: String, password: String): Boolean = login == "admin"
 }
-

@@ -25,7 +25,7 @@ import java.io.File
 
 import gigahorse.{HeaderNames, SignatureCalculator, WebSocketEvent}
 import unfiltered.scalatest.Hosted
-import unfiltered.jetty.Server
+import unfiltered.netty.Server
 
 abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers
   with Hosted {
@@ -33,7 +33,13 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers
   def testUrl: String = host.url.toString
   def getServer = setup(Server.http(port))
   def setup: Server => Server = {
-    _.filter(new TestPlan)
+    _.handler(TestPlan.testPlan)
+  }
+  val wsPort = unfiltered.util.Port.any
+  def wsTestUrl: String = s"ws://localhost:$wsPort"
+  def getWsServer = wsSetup(Server.local(wsPort))
+  def wsSetup: Server => Server = {
+    _.handler(WsTestPlan.testPlan)
   }
 
   // custom loan pattern
@@ -134,7 +140,7 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers
   "http.websocket(r)" should "open a websocket connection and exchange messages" in
     withHttp { http =>
       import WebSocketEvent._
-      val r = Gigahorse.url("ws://echo.websocket.org").get
+      val r = Gigahorse.url(wsTestUrl).get
       val p = Promise[String]()
       val m = "Hello World!"
       val h: PartialFunction[WebSocketEvent, Unit] = {
