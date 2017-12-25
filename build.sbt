@@ -31,9 +31,9 @@ lazy val root = (project in file(".")).
       }
     )),
     name := "gigahorse",
-    publish := (),
-    publishLocal := (),
-    publishSigned := (),
+    publish := {},
+    publishLocal := {},
+    publishSigned := {},
     commands += Command.command("release-jdk7") { state =>
       "clean" ::
         "++ 2.10.6" ::
@@ -87,9 +87,9 @@ lazy val commonTest = (project in file("common-test")).
   settings(
     libraryDependencies ++= Seq(scalatest,
       ufDirectives, ufFilter, ufWebsockets, ufScalatest),
-    publish := (),
-    publishLocal := (),
-    publishSigned := ()
+    publish := {},
+    publishLocal := {},
+    publishSigned := {}
   )
 
 // lazy val packageSite = taskKey[Unit]("package site")

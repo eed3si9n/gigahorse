@@ -10,7 +10,7 @@ abstract class Body() extends Serializable {
 
 
 override def equals(o: Any): Boolean = o match {
-  case x: Body => true
+  case _: Body => true
   case _ => false
 }
 override def hashCode: Int = {
