@@ -9,7 +9,7 @@ final class EmptyBody private () extends gigahorse.Body() with Serializable {
 
 
 override def equals(o: Any): Boolean = o match {
-  case x: EmptyBody => true
+  case _: EmptyBody => true
   case _ => false
 }
 override def hashCode: Int = {
