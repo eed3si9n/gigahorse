@@ -86,10 +86,12 @@ class FoldSubscriber[A, B](zero: B, f: (B, A) => B, close: () => Unit) extends S
 
   def onComplete(): Unit =
     {
+      close()
       result.success(holder)
     }
   def onError(e: Throwable): Unit =
     {
+      close()
       result.failure(e)
     }
   def onNext(a: A): Unit =
