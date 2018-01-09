@@ -36,9 +36,9 @@ class AhcStream[A](publisher: Publisher[A]) extends Stream[A] {
     }
 
   /** Runs f on each element received to the stream with its previous output. */
-  def fold[B](zero: B)(f: (B, A) => B): Future[B] =
+  def foldResource[B](zero: B)(f: (B, A) => B, close: () => Unit): Future[B] =
     {
-      val subscriber = new FoldSubscriber[A, B](zero, f)
+      val subscriber = new FoldSubscriber[A, B](zero, f, close)
       publisher.subscribe(subscriber)
       subscriber.value
     }
@@ -79,7 +79,7 @@ class ForEachSubscriber[A](f: A => Unit) extends Subscriber[A] {
   def value: Future[Unit] = result.future
 }
 
-class FoldSubscriber[A, B](zero: B, f: (B, A) => B) extends Subscriber[A] {
+class FoldSubscriber[A, B](zero: B, f: (B, A) => B, close: () => Unit) extends Subscriber[A] {
   val subscription = new AtomicReference[Subscription]
   val result = Promise[B]()
   private var holder: B = zero
