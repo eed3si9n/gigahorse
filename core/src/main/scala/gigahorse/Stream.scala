@@ -31,8 +31,7 @@ abstract class Stream[A] {
   def foreach(f: A => Unit): Future[Unit]
 
   /** Runs f on each element received to the stream with its previous output. */
-  final def fold[B](zero: B)(f: (B, A) => B): Future[B] =
-    foldResource(zero)(f, () => ())
+  def fold[B](zero: B)(f: (B, A) => B): Future[B]
 
   /** Runs f on each element received to the stream with its previous output and close resource */
   def foldResource[B](zero: B)(f: (B, A) => B, close: () => Unit): Future[B]

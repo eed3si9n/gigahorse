@@ -36,6 +36,10 @@ class AhcStream[A](publisher: Publisher[A]) extends Stream[A] {
     }
 
   /** Runs f on each element received to the stream with its previous output. */
+  def fold[B](zero: B)(f: (B, A) => B): Future[B] =
+    foldResource(zero)(f, () => ())
+
+  /** Runs f on each element received to the stream with its previous output and does closing operation . */
   def foldResource[B](zero: B)(f: (B, A) => B, close: () => Unit): Future[B] =
     {
       val subscriber = new FoldSubscriber[A, B](zero, f, close)

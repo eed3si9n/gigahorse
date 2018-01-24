@@ -40,7 +40,11 @@ class AkkaHttpStream[A](source: Source[A, Any])(implicit fm: Materializer, ec: E
   def toPublisher: Publisher[A] =
     source.runWith(Sink.asPublisher(false))
 
-  /** Runs f on each element received to the stream with its previous output and close resource */
+  /** Runs f on each element received to the stream with its previous output. */
+  def fold[B](zero: B)(f: (B, A) => B): Future[B] =
+    foldResource(zero)(f, () => ())
+
+  /** Runs f on each element received to the stream with its previous output and does closing operation . */
   def foldResource[B](zero: B)(f: (B, A) => B, close: () => Unit): Future[B] =
     source.fold(zero)(f).map { b =>
       close()
