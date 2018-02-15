@@ -104,10 +104,10 @@ class DelimitedPublisher(xpublisher: Publisher[HttpResponseBodyPart],
     def onNext(p: HttpResponseBodyPart): Unit = {
       buffer = buffer ++ p.getBodyPartBytes.toVector
       var delimPos = buffer.indexOf(delimiter)
-      if (delimPos <= 0) {
+      if (delimPos < 0) {
         subscription.request(1)
       } else {
-        while (delimPos > 0) {
+        while (delimPos >= 0) {
           val chunk = buffer.take(delimPos)
           buffer = buffer.drop(delimPos + 1)
           s.onNext(new String(chunk.toArray, charset))
