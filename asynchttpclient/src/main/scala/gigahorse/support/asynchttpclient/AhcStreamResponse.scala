@@ -90,6 +90,7 @@ class DelimitedPublisher(xpublisher: Publisher[HttpResponseBodyPart],
       xpublisher.subscribe(new SubscriberAdapter(s))
     }
   class SubscriberAdapter(s: Subscriber[_ >: String]) extends Subscriber[HttpResponseBodyPart] {
+    var subscription: Subscription = null
     var buffer: Vector[Byte] = Vector()
     def onComplete(): Unit =
       {
@@ -103,13 +104,20 @@ class DelimitedPublisher(xpublisher: Publisher[HttpResponseBodyPart],
     def onNext(p: HttpResponseBodyPart): Unit = {
       buffer = buffer ++ p.getBodyPartBytes.toVector
       var delimPos = buffer.indexOf(delimiter)
-      while (delimPos > 0) {
-        val chunk = buffer.take(delimPos)
-        buffer = buffer.drop(delimPos + 1)
-        s.onNext(new String(chunk.toArray, charset))
-        delimPos = buffer.indexOf(delimiter)
+      if (delimPos <= 0) {
+        subscription.request(1)
+      } else {
+        while (delimPos > 0) {
+          val chunk = buffer.take(delimPos)
+          buffer = buffer.drop(delimPos + 1)
+          s.onNext(new String(chunk.toArray, charset))
+          delimPos = buffer.indexOf(delimiter)
+        }
       }
     }
-    def onSubscribe(x: Subscription): Unit = s.onSubscribe(x)
+    def onSubscribe(x: Subscription): Unit = {
+      subscription = x
+      s.onSubscribe(x)
+    }
   }
 }
