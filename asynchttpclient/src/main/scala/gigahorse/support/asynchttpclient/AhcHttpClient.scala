@@ -135,7 +135,9 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends ReactiveHttpClient {
         }
         override def onBodyPartReceived(bodyPart: HttpResponseBodyPart): XState = XState.CONTINUE
         override def onCompleted(): XResponse = ???
-        override def onThrowable(e: Throwable): Unit = ()
+        override def onThrowable(t: Throwable): Unit = {
+          result.failure(t)
+        }
       })
       result.future
     }
