@@ -39,7 +39,7 @@ object Shade {
       // cut ties with Runtime
       mainClass in assembly := mainClass.value,
       // cut ties with Runtime
-      test in assembly := ()
+      test in assembly := {}
     )) ++ Seq(
       packageBin in Compile := (assembly in ShadeSandbox).value,
       exportJars := true
