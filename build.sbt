@@ -36,20 +36,20 @@ lazy val root = (project in file(".")).
     publishSigned := {},
     commands += Command.command("release-jdk7") { state =>
       "clean" ::
-        "++ 2.10.6" ::
+        s"++ ${scala210}" ::
         "core/publishSigned" ::
         "okhttp/publishSigned" ::
         state
     },
     commands += Command.command("release-jdk8") { state =>
       "clean" ::
-        "++ 2.12.3" ::
+        s"++ ${scala212}" ::
         "core/publishSigned" ::
         "okhttp/publishSigned" ::
         "asynchttpclient/publishSigned" ::
         "shadedAsyncHttpClient/publishSigned" ::
         "akkaHttp/publishSigned" ::
-        "++ 2.11.11" ::
+        s"++ ${scala211}" ::
         "core/publishSigned" ::
         "okhttp/publishSigned" ::
         "asynchttpclient/publishSigned" ::
