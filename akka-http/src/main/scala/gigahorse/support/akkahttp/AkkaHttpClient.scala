@@ -24,7 +24,7 @@ import scala.concurrent.duration.Duration
 import akka.actor.ActorSystem
 import akka.stream.Materializer
 import akka.http.scaladsl.{Http, HttpExt}
-import akka.http.scaladsl.model.{ContentType, HttpEntity, HttpHeader, HttpMethod, HttpMethods, HttpRequest, HttpResponse, MediaType, RequestEntity, StatusCodes, Uri}
+import akka.http.scaladsl.model.{ContentType, HttpEntity, HttpHeader, HttpMethod, HttpMethods, HttpRequest, HttpResponse, RequestEntity, StatusCodes, Uri}
 import akka.http.scaladsl.model.ws.WebSocketRequest
 import akka.util.ByteString
 import DownloadHandler.asFile

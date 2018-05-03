@@ -18,8 +18,8 @@ package gigahorsetest
 
 import org.scalatest._
 import scala.concurrent.Future
-import akka.actor.{ Actor, ActorSystem }
-import akka.stream.{ Materializer, ActorMaterializer }
+import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
 
 class AkkaHttpClientSpec extends BaseHttpClientSpec {
   // custom loan pattern

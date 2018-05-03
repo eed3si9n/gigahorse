@@ -16,8 +16,6 @@
 
 package gigahorse
 
-import java.nio.ByteBuffer
-import java.nio.charset.Charset
 import java.io.{ File, FileOutputStream }
 import scala.concurrent.Future
 
