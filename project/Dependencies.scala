@@ -3,7 +3,7 @@ import sbt._
 object Dependencies {
   val scala210 = "2.10.7"
   val scala211 = "2.11.12"
-  val scala212 = "2.12.4"
+  val scala212 = "2.12.6"
   val slf4jApi = "org.slf4j" % "slf4j-api" % "1.7.25"
   val scalaBoth = Seq(scala211, scala212)
   val ahc = "org.asynchttpclient" % "async-http-client" % "2.0.33"
