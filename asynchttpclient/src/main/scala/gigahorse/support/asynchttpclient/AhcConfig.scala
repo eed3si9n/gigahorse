@@ -21,10 +21,6 @@ package support.asynchttpclient
 import shaded.ahc.org.asynchttpclient._
 import scala.concurrent.duration._
 import com.typesafe.sslconfig.ssl._
-import com.typesafe.sslconfig.util.NoopLogger
-import javax.net.ssl._
-import java.security.KeyStore
-import java.security.cert.CertPathValidatorException
 
 import shaded.ahc.io.netty.handler.ssl.SslContextBuilder
 import shaded.ahc.io.netty.handler.ssl.util.InsecureTrustManagerFactory

@@ -18,7 +18,7 @@ package gigahorse
 
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
-import java.io.{ File, FileOutputStream }
+import java.io.File
 import scala.concurrent.Future
 
 /** Common interface for Gigahorse backends.

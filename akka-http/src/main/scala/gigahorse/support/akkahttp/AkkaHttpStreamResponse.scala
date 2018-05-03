@@ -19,13 +19,12 @@ package gigahorse
 package support.akkahttp
 
 import java.nio.ByteBuffer
-import org.reactivestreams.Publisher
 import scala.concurrent.ExecutionContext
 import scala.collection.immutable.TreeMap
 import akka.util.ByteString
 import akka.http.scaladsl.model._
 import akka.stream.Materializer
-import akka.stream.scaladsl.{ Sink, Source, Framing }
+import akka.stream.scaladsl.{ Source, Framing }
 
 /** Represents a stream response.
  */

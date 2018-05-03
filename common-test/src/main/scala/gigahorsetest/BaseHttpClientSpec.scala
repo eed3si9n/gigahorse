@@ -20,7 +20,6 @@ import org.scalatest._
 
 import scala.util.Success
 import scala.concurrent._
-import scala.concurrent.duration._
 import java.io.File
 
 import gigahorse.{HeaderNames, SignatureCalculator, WebSocketEvent}
