@@ -97,10 +97,10 @@ scala> Gigahorse.withHttp(Gigahorse.config) { http =>
 res0: String = {"id":64110679,"name":"gigahorse","full_name":"eed3si9n/giga
 ```
 
-### JSON databinding using sbt-datatype
+### JSON databinding using contraband
 
 Next we would like to provide a parser for the returned JSON value.
-You could either manually define case classes and JSON codecs, or use JSON data binding feature in sbt-datatype.
+You could either manually define case classes and JSON codecs, or use JSON data binding feature in contraband.
 This will generate both the datatype and the codec from a schema that looks like this:
 
 ```
@@ -144,7 +144,7 @@ and the full codec `CustomJsonProtocol` that puts all the formats together.
 
 ```scala
 /**
- * This code is generated using sbt-datatype.
+ * This code is generated using [[http://www.scala-sbt.org/contraband/ sbt-contraband]].
  */
 
 // DO NOT EDIT MANUALLY
