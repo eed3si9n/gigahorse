@@ -96,10 +96,10 @@ scala> Gigahorse.withHttp(Gigahorse.config) { http =>
 res0: String = {"id":64110679,"name":"gigahorse","full_name":"eed3si9n/giga
 ```
 
-### sbt-datatype を用いた JSON データバインディング
+### contraband を用いた JSON データバインディング
 
 次に、返された JSON 値のためのパーサーを提供したい。
-手書きで case class と JSON コーデックを定義してもいいけども、sbt-datatype の JSON データバインディング機能を使ってみよう。
+手書きで case class と JSON コーデックを定義してもいいけども、contraband の JSON データバインディング機能を使ってみよう。
 これは、以下のようなスキーマからデータ型とコーデックの両方を自動生成する:
 
 ```
@@ -142,7 +142,7 @@ res0: String = {"id":64110679,"name":"gigahorse","full_name":"eed3si9n/giga
 
 ```scala
 /**
- * This code is generated using sbt-datatype.
+ * This code is generated using [[http://www.scala-sbt.org/contraband/ sbt-contraband]].
  */
 
 // DO NOT EDIT MANUALLY
