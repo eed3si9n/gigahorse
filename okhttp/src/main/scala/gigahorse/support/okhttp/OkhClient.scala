@@ -74,7 +74,7 @@ class OkhClient(config: Config) extends HttpClient {
                 (key, values) <- queryString.toList
                 value <- values
               } yield ({ case b: HB => b.addQueryParameter(key, value) }: HB => HB)
-            val builder = (b0 /: urlfs) { case (b, f) => f(b) }
+            val builder = urlfs.foldLeft(b0){ (b, f) => f(b) }
             builder.build
         }
 
@@ -110,7 +110,7 @@ class OkhClient(config: Config) extends HttpClient {
         }) ++ headerfs
 
       val b0 = new XRequest.Builder()
-      val builder = (b0 /: requestfs) { case (b, f) => f(b) }
+      val builder = requestfs.foldLeft(b0){ (b, f) => f(b) }
       val result = builder.build()
 
       val client = if (authOpt.isDefined || signatureOpt.isDefined)
@@ -229,7 +229,7 @@ class OkhClient(config: Config) extends HttpClient {
           List[CB => CB]({ case b: CB => b.authenticator(buildAuthenticator(auth)) })
         case None       => Nil
       })
-      val b1 = (b0 /: clientfs) { case (b, f) => f(b) }
+      val b1 = clientfs.foldLeft(b0){ (b, f) => f(b) }
       val b2 = configureSsl(config.ssl, b1)
       val b3 = signatureOpt match {
         case Some(signatureCalculator) =>
