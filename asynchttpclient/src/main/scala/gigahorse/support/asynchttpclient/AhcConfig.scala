@@ -65,7 +65,7 @@ object AhcConfig {
     }
 
   def toMillis(duration: Duration): Int =
-    if (duration.isFinite()) duration.toMillis.toInt
+    if (duration.isFinite) duration.toMillis.toInt
     else -1
 
   def configureSsl(sslConfig: SSLConfigSettings, builder: DefaultAsyncHttpClientConfig.Builder): Unit =
