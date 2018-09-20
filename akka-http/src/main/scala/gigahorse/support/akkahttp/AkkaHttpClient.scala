@@ -207,7 +207,7 @@ class AkkaHttpClient(config: Config, system: ActorSystem)(implicit fm: Materiali
       // completes or fails when the connection succeeds or fails
       // and closed is a Future[Done] representing the stream completion from above
       val (upgradeResponse, _) = akkaHttp.singleWebSocketRequest(xrequest, flow)
-      val connected = upgradeResponse.map { upgrade =>
+      val _ = upgradeResponse.map { upgrade =>
         // just like a regular http request we can access response status which is available via upgrade.response.status
         // status code 101 (Switching Protocols) indicates that server support WebSockets
         if (upgrade.response.status == StatusCodes.SwitchingProtocols) {

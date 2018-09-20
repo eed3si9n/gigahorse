@@ -27,7 +27,7 @@ class AkkaHttpStream[A](source: Source[A, Any])(implicit fm: Materializer, ec: E
   /**
    * @return The underlying Stream object.
    */
-  def underlying[A] = source.asInstanceOf[A]
+  def underlying[B] = source.asInstanceOf[B]
 
   /** Runs f on each element received to the stream. */
   def foreach(f: A => Unit): Future[Unit] =

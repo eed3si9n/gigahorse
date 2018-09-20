@@ -20,7 +20,7 @@ final class EncodedString private (
   override def toString: String = {
     "EncodedString(" + string + ", " + charset + ")"
   }
-  protected[this] def copy(string: String = string, charset: java.nio.charset.Charset = charset): EncodedString = {
+  private[this] def copy(string: String = string, charset: java.nio.charset.Charset = charset): EncodedString = {
     new EncodedString(string, charset)
   }
   def withString(string: String): EncodedString = {

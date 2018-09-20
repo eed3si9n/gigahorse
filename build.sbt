@@ -2,38 +2,27 @@ import Dependencies._
 import com.typesafe.sbt.pgp.PgpKeys.publishSigned
 import Shade._
 
+ThisBuild / organization := "com.eed3si9n"
+ThisBuild / scalaVersion := scala212
+ThisBuild / crossScalaVersions := Vector(scala212, scala211, scala210)
+ThisBuild / organizationName := "eed3si9n"
+ThisBuild / organizationHomepage := Some(url("http://eed3si9n.com/"))
+ThisBuild / homepage := Some(url("https://github.com/eed3si9n/gigahorse"))
+ThisBuild / scmInfo := Some(ScmInfo(url("https://github.com/eed3si9n/gigahorse"), "git@github.com:eed3si9n/gigahorse.git"))
+ThisBuild / developers := List(
+  Developer("eed3si9n", "Eugene Yokota", "@eed3si9n", url("https://github.com/eed3si9n"))
+)
+ThisBuild / version := "0.3.1-SNAPSHOT"
+ThisBuild / description := "An HTTP client for Scala with Async Http Client underneath."
+ThisBuild / licenses := Seq("Apache 2" -> new URL("http://www.apache.org/licenses/LICENSE-2.0.txt"))
+
 lazy val root = (project in file(".")).
   aggregate(core, asynchttpclient, shadedAsyncHttpClient, okhttp, akkaHttp).
   dependsOn(core).
-  settings(inThisBuild(List(
-      organization := "com.eed3si9n",
-      scalaVersion := scala212,
-      crossScalaVersions := Vector(scala212, scala211, scala210),
-      organizationName := "eed3si9n",
-      organizationHomepage := Some(url("http://eed3si9n.com/")),
-      homepage := Some(url("https://github.com/eed3si9n/gigahorse")),
-      scmInfo := Some(ScmInfo(url("https://github.com/eed3si9n/gigahorse"), "git@github.com:eed3si9n/gigahorse.git")),
-      developers := List(
-        Developer("eed3si9n", "Eugene Yokota", "@eed3si9n", url("https://github.com/eed3si9n"))
-      ),
-      version := "0.3.1-SNAPSHOT",
-      description := "An HTTP client for Scala with Async Http Client underneath.",
-      licenses := Seq("Apache 2" -> new URL("http://www.apache.org/licenses/LICENSE-2.0.txt")),
-      scalacOptions in Compile ++= Seq(
-        "-deprecation", "-Ywarn-unused", "-Ywarn-unused-import"
-      ),
-      scalacOptions in Compile := {
-        val old = (scalacOptions in Compile).value
-        scalaBinaryVersion.value match {
-          case "2.12" => old
-          case _      => old filterNot Set("-Xfatal-warnings", "-deprecation", "-Ywarn-unused", "-Ywarn-unused-import")
-        }
-      }
-    )),
+  settings(
     name := "gigahorse",
-    publish := {},
-    publishLocal := {},
-    publishSigned := {},
+    publish / skip := true,
+    crossScalaVersions := Nil,
     commands += Command.command("release-jdk7") { state =>
       "clean" ::
         s"++ ${scala210}" ::
@@ -64,7 +53,23 @@ lazy val commonSettings = List(
     if (isSnapshot.value) Some("snapshots" at nexus + "content/repositories/snapshots")
     else Some("releases" at nexus + "service/local/staging/deploy/maven2")
   },
-  scalacOptions in (Compile, console) ~= (_ filterNot Set("-deprecation", "-Ywarn-unused", "-Ywarn-unused-import")),
+  scalacOptions ++= Seq(
+    "-encoding", "utf8",
+    "-deprecation",
+    "-unchecked",
+    "-Xlint",
+    "-feature",
+    "-language:existentials",
+    "-language:experimental.macros",
+    "-language:higherKinds",
+    "-language:implicitConversions"
+  ),
+  scalacOptions ++= (scalaVersion.value match {
+    case VersionNumber(Seq(2, 12, _*), _, _) =>
+      List("-Xfatal-warnings")
+    case _ => Nil
+  }),
+  scalacOptions in (Compile, console) --= Seq("-deprecation", "-Xfatal-warnings", "-Xlint"),
   fork in Test := true,
   javaOptions in Compile += "-Xmx2G"
 )
@@ -75,6 +80,11 @@ lazy val core = (project in file("core")).
     commonSettings,
     name := "gigahorse-core",
     libraryDependencies ++= Seq(sslConfig, reactiveStreams, slf4jApi, scalatest % Test),
+    Compile / scalacOptions ++= (scalaVersion.value match {
+      case VersionNumber(Seq(2, 12, _*), _, _) =>
+        List("-Ywarn-unused:-locals,-explicits,-privates")
+      case _ => Nil
+    }),
     managedSourceDirectories in Compile += (sourceDirectory in Compile).value / "contraband-scala",
     unmanagedSourceDirectories in Compile += (sourceDirectory in Compile).value / "contraband-scala",
     sourceManaged in (Compile, generateContrabands) := (sourceDirectory in Compile).value / "contraband-scala",

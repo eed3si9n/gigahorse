@@ -19,7 +19,7 @@ final class InMemoryBody private (
   override def toString: String = {
     "InMemoryBody(" + bytes + ")"
   }
-  protected[this] def copy(bytes: Array[Byte] = bytes): InMemoryBody = {
+  private[this] def copy(bytes: Array[Byte] = bytes): InMemoryBody = {
     new InMemoryBody(bytes)
   }
   def withBytes(bytes: Array[Byte]): InMemoryBody = {

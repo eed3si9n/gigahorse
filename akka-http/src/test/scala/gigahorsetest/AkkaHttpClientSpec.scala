@@ -41,7 +41,7 @@ class AkkaHttpClientSpec extends BaseHttpClientSpec {
         wsServer.destroy()
         server.stop()
         server.destroy()
-        system.shutdown()
+        system.terminate()
       }
     }
 }
