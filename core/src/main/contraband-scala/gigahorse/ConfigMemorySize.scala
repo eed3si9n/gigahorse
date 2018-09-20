@@ -19,7 +19,7 @@ final class ConfigMemorySize private (
   override def toString: String = {
     "ConfigMemorySize(" + bytes + ")"
   }
-  protected[this] def copy(bytes: Long = bytes): ConfigMemorySize = {
+  private[this] def copy(bytes: Long = bytes): ConfigMemorySize = {
     new ConfigMemorySize(bytes)
   }
   def withBytes(bytes: Long): ConfigMemorySize = {

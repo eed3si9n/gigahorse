@@ -19,7 +19,7 @@ final class FileBody private (
   override def toString: String = {
     "FileBody(" + file + ")"
   }
-  protected[this] def copy(file: java.io.File = file): FileBody = {
+  private[this] def copy(file: java.io.File = file): FileBody = {
     new FileBody(file)
   }
   def withFile(file: java.io.File): FileBody = {

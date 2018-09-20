@@ -4,14 +4,16 @@
 
 // DO NOT EDIT MANUALLY
 package gigahorse
+/**
+ * @param username The user name.
+ * @param password The password.
+ * @param scheme The scheme for this authentication.
+ * @param usePreemptiveAuth Whether preemptive authentication is enabled. (Default: true)
+ */
 final class Realm private (
-  /** The user name. */
   val username: String,
-  /** The password. */
   val password: String,
-  /** The scheme for this authentication. */
   val scheme: AuthScheme,
-  /** Whether preemptive authentication is enabled. (Default: true) */
   val usePreemptiveAuth: Boolean,
   val realmNameOpt: Option[String],
   val nonceOpt: Option[String],
@@ -52,7 +54,7 @@ final class Realm private (
   override def toString: String = {
     "Realm(" + username + ", " + password + ", " + scheme + ", " + usePreemptiveAuth + ", " + realmNameOpt + ", " + nonceOpt + ", " + algorithmOpt + ", " + responseOpt + ", " + opaqueOpt + ", " + qopOpt + ", " + ncOpt + ", " + uriOpt + ", " + methodNameOpt + ", " + charsetOpt + ", " + ntlmDomainOpt + ", " + ntlmHostOpt + ", " + useAbsoluteURI + ", " + omitQuery + ")"
   }
-  protected[this] def copy(username: String = username, password: String = password, scheme: AuthScheme = scheme, usePreemptiveAuth: Boolean = usePreemptiveAuth, realmNameOpt: Option[String] = realmNameOpt, nonceOpt: Option[String] = nonceOpt, algorithmOpt: Option[String] = algorithmOpt, responseOpt: Option[String] = responseOpt, opaqueOpt: Option[String] = opaqueOpt, qopOpt: Option[String] = qopOpt, ncOpt: Option[String] = ncOpt, uriOpt: Option[java.net.URI] = uriOpt, methodNameOpt: Option[String] = methodNameOpt, charsetOpt: Option[java.nio.charset.Charset] = charsetOpt, ntlmDomainOpt: Option[String] = ntlmDomainOpt, ntlmHostOpt: Option[String] = ntlmHostOpt, useAbsoluteURI: Boolean = useAbsoluteURI, omitQuery: Boolean = omitQuery): Realm = {
+  private[this] def copy(username: String = username, password: String = password, scheme: AuthScheme = scheme, usePreemptiveAuth: Boolean = usePreemptiveAuth, realmNameOpt: Option[String] = realmNameOpt, nonceOpt: Option[String] = nonceOpt, algorithmOpt: Option[String] = algorithmOpt, responseOpt: Option[String] = responseOpt, opaqueOpt: Option[String] = opaqueOpt, qopOpt: Option[String] = qopOpt, ncOpt: Option[String] = ncOpt, uriOpt: Option[java.net.URI] = uriOpt, methodNameOpt: Option[String] = methodNameOpt, charsetOpt: Option[java.nio.charset.Charset] = charsetOpt, ntlmDomainOpt: Option[String] = ntlmDomainOpt, ntlmHostOpt: Option[String] = ntlmHostOpt, useAbsoluteURI: Boolean = useAbsoluteURI, omitQuery: Boolean = omitQuery): Realm = {
     new Realm(username, password, scheme, usePreemptiveAuth, realmNameOpt, nonceOpt, algorithmOpt, responseOpt, opaqueOpt, qopOpt, ncOpt, uriOpt, methodNameOpt, charsetOpt, ntlmDomainOpt, ntlmHostOpt, useAbsoluteURI, omitQuery)
   }
   def withUsername(username: String): Realm = {
@@ -148,8 +150,8 @@ final class Realm private (
 }
 object Realm {
   
-  def apply(username: String, password: String): Realm = new Realm(username, password, AuthScheme.Basic, true, None, None, None, None, None, None, None, None, None, None, None, None, false, false)
-  def apply(username: String, password: String, scheme: AuthScheme): Realm = new Realm(username, password, scheme, true, None, None, None, None, None, None, None, None, None, None, None, None, false, false)
+  def apply(username: String, password: String): Realm = new Realm(username, password)
+  def apply(username: String, password: String, scheme: AuthScheme): Realm = new Realm(username, password, scheme)
   def apply(username: String, password: String, scheme: AuthScheme, usePreemptiveAuth: Boolean, realmNameOpt: Option[String], nonceOpt: Option[String], algorithmOpt: Option[String], responseOpt: Option[String], opaqueOpt: Option[String], qopOpt: Option[String], ncOpt: Option[String], uriOpt: Option[java.net.URI], methodNameOpt: Option[String], charsetOpt: Option[java.nio.charset.Charset], ntlmDomainOpt: Option[String], ntlmHostOpt: Option[String], useAbsoluteURI: Boolean, omitQuery: Boolean): Realm = new Realm(username, password, scheme, usePreemptiveAuth, realmNameOpt, nonceOpt, algorithmOpt, responseOpt, opaqueOpt, qopOpt, ncOpt, uriOpt, methodNameOpt, charsetOpt, ntlmDomainOpt, ntlmHostOpt, useAbsoluteURI, omitQuery)
   def apply(username: String, password: String, scheme: AuthScheme, usePreemptiveAuth: Boolean, realmNameOpt: String, nonceOpt: String, algorithmOpt: String, responseOpt: String, opaqueOpt: String, qopOpt: String, ncOpt: String, uriOpt: java.net.URI, methodNameOpt: String, charsetOpt: java.nio.charset.Charset, ntlmDomainOpt: String, ntlmHostOpt: String, useAbsoluteURI: Boolean, omitQuery: Boolean): Realm = new Realm(username, password, scheme, usePreemptiveAuth, Option(realmNameOpt), Option(nonceOpt), Option(algorithmOpt), Option(responseOpt), Option(opaqueOpt), Option(qopOpt), Option(ncOpt), Option(uriOpt), Option(methodNameOpt), Option(charsetOpt), Option(ntlmDomainOpt), Option(ntlmHostOpt), useAbsoluteURI, omitQuery)
 }

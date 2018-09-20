@@ -18,7 +18,7 @@ override def hashCode: Int = {
 override def toString: String = {
   "EmptyBody()"
 }
-protected[this] def copy(): EmptyBody = {
+private[this] def copy(): EmptyBody = {
   new EmptyBody()
 }
 

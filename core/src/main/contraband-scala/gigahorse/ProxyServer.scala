@@ -5,13 +5,9 @@
 // DO NOT EDIT MANUALLY
 package gigahorse
 abstract class ProxyServer(
-  /** The hostname of the proxy server. */
   val host: String,
-  /** The port of the proxy server. */
   val port: Int,
-  /** The secured port of the proxy server. */
   val securedPort: Option[Int],
-  /** The realm of the proxy server. */
   val authOpt: Option[Realm],
   val nonProxyHosts: List[String]) extends Serializable {
   

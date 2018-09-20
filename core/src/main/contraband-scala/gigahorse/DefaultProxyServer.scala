@@ -4,6 +4,12 @@
 
 // DO NOT EDIT MANUALLY
 package gigahorse
+/**
+ * @param host The hostname of the proxy server.
+ * @param port The port of the proxy server.
+ * @param securedPort The secured port of the proxy server.
+ * @param authOpt The realm of the proxy server.
+ */
 final class DefaultProxyServer private (
   host: String,
   port: Int,
@@ -25,7 +31,7 @@ final class DefaultProxyServer private (
   override def toString: String = {
     "DefaultProxyServer(" + host + ", " + port + ", " + securedPort + ", " + authOpt + ", " + nonProxyHosts + ")"
   }
-  protected[this] def copy(host: String = host, port: Int = port, securedPort: Option[Int] = securedPort, authOpt: Option[Realm] = authOpt, nonProxyHosts: List[String] = nonProxyHosts): DefaultProxyServer = {
+  private[this] def copy(host: String = host, port: Int = port, securedPort: Option[Int] = securedPort, authOpt: Option[Realm] = authOpt, nonProxyHosts: List[String] = nonProxyHosts): DefaultProxyServer = {
     new DefaultProxyServer(host, port, securedPort, authOpt, nonProxyHosts)
   }
   def withHost(host: String): DefaultProxyServer = {
@@ -52,8 +58,8 @@ final class DefaultProxyServer private (
 }
 object DefaultProxyServer {
   
-  def apply(host: String, port: Int, securedPort: Option[Int]): DefaultProxyServer = new DefaultProxyServer(host, port, securedPort, None, List())
-  def apply(host: String, port: Int, securedPort: Int): DefaultProxyServer = new DefaultProxyServer(host, port, Option(securedPort), None, List())
+  def apply(host: String, port: Int, securedPort: Option[Int]): DefaultProxyServer = new DefaultProxyServer(host, port, securedPort)
+  def apply(host: String, port: Int, securedPort: Int): DefaultProxyServer = new DefaultProxyServer(host, port, Option(securedPort))
   def apply(host: String, port: Int, securedPort: Option[Int], authOpt: Option[Realm], nonProxyHosts: List[String]): DefaultProxyServer = new DefaultProxyServer(host, port, securedPort, authOpt, nonProxyHosts)
   def apply(host: String, port: Int, securedPort: Int, authOpt: Realm, nonProxyHosts: List[String]): DefaultProxyServer = new DefaultProxyServer(host, port, Option(securedPort), Option(authOpt), nonProxyHosts)
 }
