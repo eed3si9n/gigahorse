@@ -17,7 +17,9 @@
 package gigahorse
 
 import java.io.{ File, FileOutputStream }
+
 import scala.concurrent.Future
+import scala.util.Try
 
 object DownloadHandler {
   /** Function from `StreamResponse` to `Future[File]` */
@@ -25,9 +27,9 @@ object DownloadHandler {
     {
       val stream = response.byteBuffers
       val out = new FileOutputStream(file).getChannel
-      stream.fold(file)((acc, bb) => {
+      stream.foldResource(file)((acc, bb) => {
         out.write(bb)
         acc
-      })
+      }, () => Try(out.close()))
     }
 }

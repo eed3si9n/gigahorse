@@ -34,13 +34,20 @@ class AkkaHttpStream[A](source: Source[A, Any])(implicit fm: Materializer, ec: E
     source.runForeach(f).map( _ => ())
 
   /** Runs f on each element received to the stream with its previous output. */
-  def fold[B](zero: B)(f: (B, A) => B): Future[B] =
-    source.runFold(zero)(f)
-
-  /** Runs f on each element received to the stream with its previous output. */
   def reduce(f: (A, A) => A): Future[A] =
     source.runReduce(f)
 
   def toPublisher: Publisher[A] =
     source.runWith(Sink.asPublisher(false))
+
+  /** Runs f on each element received to the stream with its previous output. */
+  def fold[B](zero: B)(f: (B, A) => B): Future[B] =
+    foldResource(zero)(f, () => ())
+
+  /** Runs f on each element received to the stream with its previous output and does closing operation . */
+  def foldResource[B](zero: B)(f: (B, A) => B, close: () => Unit): Future[B] =
+    source.fold(zero)(f).map { b =>
+      close()
+      b
+    }.runWith(Sink.head)
 }

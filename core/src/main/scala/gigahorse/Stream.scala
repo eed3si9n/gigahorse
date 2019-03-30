@@ -33,6 +33,9 @@ abstract class Stream[A] {
   /** Runs f on each element received to the stream with its previous output. */
   def fold[B](zero: B)(f: (B, A) => B): Future[B]
 
+  /** Runs f on each element received to the stream with its previous output and close resource */
+  def foldResource[B](zero: B)(f: (B, A) => B, close: () => Unit): Future[B]
+
   /** Similar to fold but uses first element as zero element. */
   def reduce(f: (A, A) => A): Future[A]
 }
