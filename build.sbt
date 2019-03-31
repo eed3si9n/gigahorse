@@ -64,20 +64,24 @@ lazy val commonSettings = List(
     "-language:higherKinds",
     "-language:implicitConversions"
   ),
+  scalacOptions in (Compile, console) --= Seq("-deprecation", "-Xfatal-warnings", "-Xlint"),
+  fork in Test := true,
+  javaOptions in Compile += "-Xmx2G"
+)
+
+lazy val fatalWarnings: Seq[Setting[_]] = List(
   scalacOptions ++= (scalaVersion.value match {
     case VersionNumber(Seq(2, 12, _*), _, _) =>
       List("-Xfatal-warnings")
     case _ => Nil
   }),
-  scalacOptions in (Compile, console) --= Seq("-deprecation", "-Xfatal-warnings", "-Xlint"),
-  fork in Test := true,
-  javaOptions in Compile += "-Xmx2G"
 )
 
 lazy val core = (project in file("core")).
   enablePlugins(ContrabandPlugin).
   settings(
     commonSettings,
+    fatalWarnings,
     name := "gigahorse-core",
     libraryDependencies ++= Seq(sslConfig, reactiveStreams, slf4jApi, scalatest % Test),
     Compile / scalacOptions ++= (scalaVersion.value match {
@@ -130,6 +134,7 @@ lazy val okhttp = (project in file("okhttp")).
   dependsOn(core, commonTest % Test).
   settings(
     commonSettings,
+    fatalWarnings,
     name := "gigahorse-okhttp",
     crossScalaVersions := Vector(scala212, scala211, scala210),
     libraryDependencies ++= Seq(Dependencies.okHttp)
@@ -139,6 +144,7 @@ lazy val asynchttpclient = (project in file("asynchttpclient")).
   dependsOn(core, shadedAsyncHttpClient, commonTest % Test).
   settings(
     commonSettings,
+    fatalWarnings,
     crossScalaVersions := Vector(scala212, scala211),
     name := "gigahorse-asynchttpclient"
   )
@@ -149,7 +155,7 @@ lazy val akkaHttp = (project in file("akka-http")).
     commonSettings,
     crossScalaVersions := Vector(scala212, scala211),
     name := "gigahorse-akka-http",
-    libraryDependencies ++= Seq(akkaHttpCore, Dependencies.akkaHttp),
+    libraryDependencies ++= Seq(akkaHttpCore, Dependencies.akkaHttp, akkaStream),
     dependencyOverrides += sslConfig
   )
 
