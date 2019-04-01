@@ -51,7 +51,7 @@ abstract class Stream[A] {
   /**
    * @return The underlying Stream object.
    */
-  def underlying[A]
+  def underlying[B]: B
 
   def toPublisher: Publisher[A]
 

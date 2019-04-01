@@ -25,7 +25,7 @@ class AhcStream[A](publisher: Publisher[A]) extends Stream[A] {
   /**
    * @return The underlying Stream object.
    */
-  def underlying[B] = publisher.asInstanceOf[B]
+  override def underlying[B]: B = publisher.asInstanceOf[B]
 
   /** Runs f on each element received to the stream. */
   def foreach(f: A => Unit): Future[Unit] =
