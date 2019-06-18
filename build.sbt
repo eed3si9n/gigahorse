@@ -4,7 +4,7 @@ import Shade._
 
 ThisBuild / organization := "com.eed3si9n"
 ThisBuild / scalaVersion := scala212
-ThisBuild / crossScalaVersions := Vector(scala212, scala211, scala210)
+ThisBuild / crossScalaVersions := Vector(scala212, scala213, scala211)
 ThisBuild / organizationName := "eed3si9n"
 ThisBuild / organizationHomepage := Some(url("http://eed3si9n.com/"))
 ThisBuild / homepage := Some(url("https://github.com/eed3si9n/gigahorse"))
@@ -25,10 +25,13 @@ lazy val root = (project in file(".")).
     crossScalaVersions := Nil,
     commands += Command.command("release") { state =>
       "clean" ::
-        s"++ ${scala210}!" ::
+        s"++ ${scala212}!" ::
         "core/publishSigned" ::
         "okhttp/publishSigned" ::
-        s"++ ${scala212}!" ::
+        "asynchttpclient/publishSigned" ::
+        "shadedAsyncHttpClient/publishSigned" ::
+        "akkaHttp/publishSigned" ::
+        s"++ ${scala213}!" ::
         "core/publishSigned" ::
         "okhttp/publishSigned" ::
         "asynchttpclient/publishSigned" ::
@@ -132,7 +135,7 @@ lazy val okhttp = (project in file("okhttp")).
     commonSettings,
     fatalWarnings,
     name := "gigahorse-okhttp",
-    crossScalaVersions := Vector(scala212, scala211, scala210),
+    crossScalaVersions := Vector(scala212, scala213, scala211),
     libraryDependencies ++= Seq(Dependencies.okHttp)
   )
 
@@ -141,7 +144,7 @@ lazy val asynchttpclient = (project in file("asynchttpclient")).
   settings(
     commonSettings,
     fatalWarnings,
-    crossScalaVersions := Vector(scala212, scala211),
+    crossScalaVersions := Vector(scala212, scala213, scala211),
     name := "gigahorse-asynchttpclient"
   )
 
@@ -149,7 +152,7 @@ lazy val akkaHttp = (project in file("akka-http")).
   dependsOn(core, commonTest % Test).
   settings(
     commonSettings,
-    crossScalaVersions := Vector(scala212, scala211),
+    crossScalaVersions := Vector(scala212, scala213, scala211),
     name := "gigahorse-akka-http",
     libraryDependencies ++= Seq(akkaHttpCore, Dependencies.akkaHttp, akkaStream),
     dependencyOverrides += sslConfig
@@ -160,7 +163,7 @@ lazy val shadedAsyncHttpClient = (project in file("shaded/asynchttpclient"))
   .settings(commonSettings)
   .settings(ahcShadeSettings)
   .settings(
-    crossScalaVersions := Vector(scala212),
+    crossScalaVersions := Vector(scala212, scala213),
     libraryDependencies ++= Seq(ahc % ShadeSandbox),
     name := "shaded-asynchttpclient",
     autoScalaLibrary := false,
