@@ -23,7 +23,7 @@ Gigahorse プラグインは以下のものを提供する:
 まずは `Request` を返すメソッドを 1つ持つ `RequestBuilder` を定義する:
 
 ```console:new
-scala> import gigahorse._, support.asynchttpclient.Gigahorse
+scala> import gigahorse._, support.okhttp.Gigahorse
 scala> import scala.concurrent._, duration._
 scala> :paste
 abstract class RequestBuilder {
@@ -89,7 +89,10 @@ object Github {
 scala> val client = Github.noAuthClient
 client: NoAuthClient = NoAuthClient()
 
-scala> Gigahorse.withHttp(Gigahorse.config) { http =>
+scala> val http = Gigahorse.http(Gigahorse.config)
+http: gigahorse.HttpClient = gigahorse.support.okhttp.OkhClient@182ab1c0
+
+scala> {
          val f = http.run(client(Github.repo("eed3si9n", "gigahorse")), Gigahorse.asString andThen (_.take(60)) )
          Await.result(f, 120.seconds)
        }

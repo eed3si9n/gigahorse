@@ -12,11 +12,12 @@ to process the content by chunks as we receive them.
 A file can be downloaded using `http.download` method:
 
 ```console:new
-scala> import gigahorse._, support.asynchttpclient.Gigahorse
+scala> import gigahorse._, support.okhttp.Gigahorse
 scala> import scala.concurrent._, duration._
 scala> import ExecutionContext.Implicits._
 scala> import java.io.File
-scala> Gigahorse.withHttp(Gigahorse.config) { http =>
+scala> val http = Gigahorse.http(Gigahorse.config)
+scala> {
          val file = new File(new File("target"), "Google_2015_logo.svg")
          val r = Gigahorse.url("https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg")
          val f = http.download(r, file)

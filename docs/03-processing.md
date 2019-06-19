@@ -28,14 +28,14 @@ In addition to passing in a function, a `Future` can easily be post-processed
 by mapping inside it.
 
 ```console:new
-scala> import gigahorse._, support.asynchttpclient.Gigahorse
+scala> import gigahorse._, support.okhttp.Gigahorse
 scala> import scala.concurrent._, duration._
 scala> import ExecutionContext.Implicits._
-scala> Gigahorse.withHttp(Gigahorse.config) { http =>
-         val r = Gigahorse.url("http://api.duckduckgo.com").get.
+scala> val http = Gigahorse.http(Gigahorse.config)
+scala> {
+         val r = Gigahorse.url("https://api.duckduckgo.com").get.
            addQueryString(
-             "q" -> "1 + 1",
-             "format" -> "json"
+             "q" -> "1 + 1"
            )
          val f0: Future[FullResponse] = http.run(r, identity)
          val f: Future[String] = f0 map { Gigahorse.asString andThen (_.take(60)) }
@@ -57,7 +57,7 @@ There's a convenient website called <http://getstatuscode.com/>
 that can emulate HTTP statuses. Here's what happens when we await on a failed Future.
 
 ```console:error
-scala> Gigahorse.withHttp(Gigahorse.config) { http =>
+scala> {
          val r = Gigahorse.url("http://getstatuscode.com/500")
          val f = http.run(r, Gigahorse.asString)
          Await.result(f, 120.seconds)
@@ -68,7 +68,7 @@ Gigahorse provides a mechanism called `Gigahorse.asEither` to
 lift the inner `A` value to `Either[Throwable, A]` as follows:
 
 ```console
-scala> Gigahorse.withHttp(Gigahorse.config) { http =>
+scala> {
          val r = Gigahorse.url("http://getstatuscode.com/500")
          val f = http.run(r, Gigahorse.asEither)
          Await.result(f, 120.seconds)
@@ -78,7 +78,7 @@ scala> Gigahorse.withHttp(Gigahorse.config) { http =>
 `asEither` can be mapped over as a right-biased `Either`.
 
 ```console
-scala> Gigahorse.withHttp(Gigahorse.config) { http =>
+scala> {
          val r = Gigahorse.url("http://getstatuscode.com/200")
          val f = http.run(r, Gigahorse.asEither map {
            Gigahorse.asString andThen (_.take(60)) })
@@ -92,7 +92,7 @@ If you do not wish to throw an error on non-2XX responses, and for example
 read the body text of a 500 response, use `processFull` method.
 
 ```console
-scala> Gigahorse.withHttp(Gigahorse.config) { http =>
+scala> {
          val r = Gigahorse.url("http://getstatuscode.com/500")
          val f = http.processFull(r, Gigahorse.asString andThen (_.take(60)))
          Await.result(f, 120.seconds)

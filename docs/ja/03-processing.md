@@ -27,14 +27,14 @@ Gigahorse は、`Future[String]` を返すために `Gigahorse.asString` とい�
 関数を渡すのに加え、中の値を map することで簡単に `Future` を後付けで処理することができる。
 
 ```console:new
-scala> import gigahorse._, support.asynchttpclient.Gigahorse
+scala> import gigahorse._, support.okhttp.Gigahorse
 scala> import scala.concurrent._, duration._
 scala> import ExecutionContext.Implicits._
-scala> Gigahorse.withHttp(Gigahorse.config) { http =>
-         val r = Gigahorse.url("http://api.duckduckgo.com").get.
+scala> val http = Gigahorse.http(Gigahorse.config)
+scala> {
+         val r = Gigahorse.url("https://api.duckduckgo.com").get.
            addQueryString(
-             "q" -> "1 + 1",
-             "format" -> "json"
+             "q" -> "1 + 1"
            )
          val f0: Future[FullResponse] = http.run(r, identity)
          val f: Future[String] = f0 map { Gigahorse.asString andThen (_.take(60)) }
@@ -56,7 +56,7 @@ scala> Gigahorse.withHttp(Gigahorse.config) { http =>
 任意の HTTP ステータスを返すことができる。失敗した `Future` に対してブロックするとどうなるかをみてみよう。
 
 ```console:error
-scala> Gigahorse.withHttp(Gigahorse.config) { http =>
+scala> {
          val r = Gigahorse.url("http://getstatuscode.com/500")
          val f = http.run(r, Gigahorse.asString)
          Await.result(f, 120.seconds)
@@ -66,7 +66,7 @@ scala> Gigahorse.withHttp(Gigahorse.config) { http =>
  `Gigahorse.asEither` という機構を使って `A` を `Either[Throwable, A]` に持ち上げることができる。
 
 ```console
-scala> Gigahorse.withHttp(Gigahorse.config) { http =>
+scala> {
          val r = Gigahorse.url("http://getstatuscode.com/500")
          val f = http.run(r, Gigahorse.asEither)
          Await.result(f, 120.seconds)
@@ -76,7 +76,7 @@ scala> Gigahorse.withHttp(Gigahorse.config) { http =>
 `asEither` は右バイアスのかかった `Either` として `map` することもできる。
 
 ```console
-scala> Gigahorse.withHttp(Gigahorse.config) { http =>
+scala> {
          val r = Gigahorse.url("http://getstatuscode.com/200")
          val f = http.run(r, Gigahorse.asEither map {
            Gigahorse.asString andThen (_.take(60)) })
@@ -90,7 +90,7 @@ non-2XX レスポンスでエラーを投げたくなくて、例えば 500 レ�
 読み込みたい場合は `processFull` メソッドを使う。
 
 ```console
-scala> Gigahorse.withHttp(Gigahorse.config) { http =>
+scala> {
          val r = Gigahorse.url("http://getstatuscode.com/500")
          val f = http.processFull(r, Gigahorse.asString andThen (_.take(60)))
          Await.result(f, 120.seconds)

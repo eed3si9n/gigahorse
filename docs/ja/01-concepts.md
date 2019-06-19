@@ -26,17 +26,18 @@ out: concepts.html
 `HttpClient` を作ることだ。AHC を使ってこの方法を取った場合、**必ずクライアントを閉じる**必要がある。
 
 ```console
+scala> import gigahorse._, support.okhttp.Gigahorse
 scala> val http = Gigahorse.http(Gigahorse.config)
 scala> http.close() // must call close()
 ```
 
 第二の方法は loan パターン `Gigahorse.withHttp(config) { ... }` を使うことだ:
 
-```console:new
-scala> import gigahorse._, support.asynchttpclient.Gigahorse
-scala> Gigahorse.withHttp(Gigahorse.config) { http =>
-         // do something
-       }
+```scala
+import gigahorse._, support.okhttp.Gigahorse
+Gigahorse.withHttp(Gigahorse.config) { http =>
+  // do something
+}
 ```
 
 これは、`HttpClient` を閉じることを保証するけども、短所としては
@@ -61,7 +62,7 @@ scala> Gigahorse.config
 リクエストを構築するには、`Gigahorse.url(...)` 関数を呼ぶ:
 
 ```console
-scala> val r = Gigahorse.url("http://api.duckduckgo.com").get.
+scala> val r = Gigahorse.url("https://api.duckduckgo.com").get.
          addQueryString(
            "q" -> "1 + 1",
            "format" -> "json"
@@ -90,16 +91,16 @@ abstract class HttpClient extends AutoCloseable {
 さらに、これはただの関数なので `andThen` を使って他の関数と合成することができる:
 
 ```console
+scala> import gigahorse._, support.okhttp.Gigahorse
 scala> import scala.concurrent._, duration._
-scala> Gigahorse.withHttp(Gigahorse.config) { http =>
-         val r = Gigahorse.url("http://api.duckduckgo.com").get.
-           addQueryString(
-             "q" -> "1 + 1",
-             "format" -> "json"
-           )
-         val f = http.run(r, Gigahorse.asString andThen {_.take(60)})
-         Await.result(f, 120.seconds)
-       }
+scala> val http = Gigahorse.http(Gigahorse.config)
+scala> val r = Gigahorse.url("https://api.duckduckgo.com").get.
+         addQueryString(
+           "q" -> "1 + 1"
+         )
+scala> val f = http.run(r, Gigahorse.asString andThen {_.take(60)})
+scala> Await.result(f, 120.seconds)
+scala> http.close()
 ```
 
 **注意**: OkHttp もしくは Akka HTTP を用いてレスポンスのボディーを消費しない場合は、

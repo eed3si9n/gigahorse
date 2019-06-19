@@ -9,7 +9,7 @@ To construct a `Request` value, call `Gigahorse.url(...)` function:
 
 ```console:new
 scala> import gigahorse._, support.asynchttpclient.Gigahorse
-scala> val url = "http://api.duckduckgo.com"
+scala> val url = "https://api.duckduckgo.com"
 scala> val r = Gigahorse.url(url)
 ```
 

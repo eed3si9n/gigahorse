@@ -26,17 +26,18 @@ First is creating using `Gigahorse.http(Gigahourse.config)`.
 If you use this with AHC, **you must close** the client yourself:
 
 ```console
+scala> import gigahorse._, support.okhttp.Gigahorse
 scala> val http = Gigahorse.http(Gigahorse.config)
 scala> http.close() // must call close()
 ```
 
 Second way is using the loan pattern `Gigahorse.withHttp(config) { ... }`:
 
-```console:new
-scala> import gigahorse._, support.asynchttpclient.Gigahorse
-scala> Gigahorse.withHttp(Gigahorse.config) { http =>
-         // do something
-       }
+```scala
+import gigahorse._, support.okhttp.Gigahorse
+Gigahorse.withHttp(Gigahorse.config) { http =>
+  // do something
+}
 ```
 
 This will guarantee to close the `HttpClient`, but the drawback
@@ -61,7 +62,7 @@ Unlike `HttpClient` this is relativey cheap to create and keep around.
 To construct a request, call `Gigahorse.url(...)` function:
 
 ```console
-scala> val r = Gigahorse.url("http://api.duckduckgo.com").get.
+scala> val r = Gigahorse.url("https://api.duckduckgo.com").get.
          addQueryString(
            "q" -> "1 + 1",
            "format" -> "json"
@@ -92,16 +93,16 @@ Since this is a plain function, you can compose it with some other function
 using `andThen`:
 
 ```console
+scala> import gigahorse._, support.okhttp.Gigahorse
 scala> import scala.concurrent._, duration._
-scala> Gigahorse.withHttp(Gigahorse.config) { http =>
-         val r = Gigahorse.url("http://api.duckduckgo.com").get.
-           addQueryString(
-             "q" -> "1 + 1",
-             "format" -> "json"
-           )
-         val f = http.run(r, Gigahorse.asString andThen {_.take(60)})
-         Await.result(f, 120.seconds)
-       }
+scala> val http = Gigahorse.http(Gigahorse.config)
+scala> val r = Gigahorse.url("https://api.duckduckgo.com").get.
+         addQueryString(
+           "q" -> "1 + 1"
+         )
+scala> val f = http.run(r, Gigahorse.asString andThen {_.take(60)})
+scala> Await.result(f, 120.seconds)
+scala> http.close()
 ```
 
 **Note**: Using OkHttp or Akka HTTP, if you don't consume the response body,
