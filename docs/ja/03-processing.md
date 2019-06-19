@@ -26,20 +26,19 @@ Gigahorse は、`Future[String]` を返すために `Gigahorse.asString` とい�
 
 関数を渡すのに加え、中の値を map することで簡単に `Future` を後付けで処理することができる。
 
-```console:new
-scala> import gigahorse._, support.okhttp.Gigahorse
-scala> import scala.concurrent._, duration._
-scala> import ExecutionContext.Implicits._
-scala> val http = Gigahorse.http(Gigahorse.config)
-scala> {
-         val r = Gigahorse.url("https://api.duckduckgo.com").get.
-           addQueryString(
-             "q" -> "1 + 1"
-           )
-         val f0: Future[FullResponse] = http.run(r, identity)
-         val f: Future[String] = f0 map { Gigahorse.asString andThen (_.take(60)) }
-         Await.result(f, 120.seconds)
-       }
+```scala
+import gigahorse._, support.okhttp.Gigahorse
+import scala.concurrent._, duration._
+import ExecutionContext.Implicits._
+val http = Gigahorse.http(Gigahorse.config)
+
+val r = Gigahorse.url("https://api.duckduckgo.com").get.
+  addQueryString(
+    "q" -> "1 + 1"
+  )
+val f0: Future[FullResponse] = http.run(r, identity)
+val f: Future[String] = f0 map { Gigahorse.asString andThen (_.take(60)) }
+Await.result(f, 120.seconds)
 ```
 
 `Future` に対して何らかの演算を行うときは、implicit な実行コンテキストが必要となる。
@@ -55,33 +54,27 @@ scala> {
 <http://getstatuscode.com/> という便利なウェブサイトがあって、これは
 任意の HTTP ステータスを返すことができる。失敗した `Future` に対してブロックするとどうなるかをみてみよう。
 
-```console:error
-scala> {
-         val r = Gigahorse.url("http://getstatuscode.com/500")
-         val f = http.run(r, Gigahorse.asString)
-         Await.result(f, 120.seconds)
-       }
+```scala
+val r = Gigahorse.url("http://getstatuscode.com/500")
+val f = http.run(r, Gigahorse.asString)
+Await.result(f, 120.seconds)
 ```
 
  `Gigahorse.asEither` という機構を使って `A` を `Either[Throwable, A]` に持ち上げることができる。
 
-```console
-scala> {
-         val r = Gigahorse.url("http://getstatuscode.com/500")
-         val f = http.run(r, Gigahorse.asEither)
-         Await.result(f, 120.seconds)
-       }
+```scala
+val r = Gigahorse.url("http://getstatuscode.com/500")
+val f = http.run(r, Gigahorse.asEither)
+Await.result(f, 120.seconds)
 ```
 
 `asEither` は右バイアスのかかった `Either` として `map` することもできる。
 
-```console
-scala> {
-         val r = Gigahorse.url("http://getstatuscode.com/200")
-         val f = http.run(r, Gigahorse.asEither map {
-           Gigahorse.asString andThen (_.take(60)) })
-         Await.result(f, 120.seconds)
-       }
+```scala
+val r = Gigahorse.url("http://getstatuscode.com/200")
+val f = http.run(r, Gigahorse.asEither map {
+          Gigahorse.asString andThen (_.take(60)) })
+Await.result(f, 120.seconds)
 ```
 
 ### http.processFull(r, f)
@@ -89,10 +82,8 @@ scala> {
 non-2XX レスポンスでエラーを投げたくなくて、例えば 500 レスポンスのボディーテキストを
 読み込みたい場合は `processFull` メソッドを使う。
 
-```console
-scala> {
-         val r = Gigahorse.url("http://getstatuscode.com/500")
-         val f = http.processFull(r, Gigahorse.asString andThen (_.take(60)))
-         Await.result(f, 120.seconds)
-       }
+```scala
+val r = Gigahorse.url("http://getstatuscode.com/500")
+val f = http.processFull(r, Gigahorse.asString andThen (_.take(60)))
+Await.result(f, 120.seconds)
 ```
