@@ -4,7 +4,7 @@ object Dependencies {
   val scala211 = "2.11.12"
   val scala212 = "2.12.8"
   val scala213 = "2.13.0"
-  val slf4jApi = "org.slf4j" % "slf4j-api" % "1.7.26"
+  val slf4jApi = "org.slf4j" % "slf4j-api" % "1.7.27"
   val ahc = "org.asynchttpclient" % "async-http-client" % "2.0.39"
   val scalatest = "org.scalatest" %% "scalatest" % "3.0.8"
   val sslConfig = "com.typesafe" %% "ssl-config-core" % "0.4.0"
