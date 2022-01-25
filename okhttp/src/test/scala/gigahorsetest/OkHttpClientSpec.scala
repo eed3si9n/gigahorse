@@ -25,9 +25,9 @@ class OkHttpClientSpec extends BaseHttpClientSpec {
   override def withHttp(testCode: gigahorse.HttpClient => Future[Assertion]): Future[Assertion] =
     {
       val server = getServer
-      server.start
+      server.start()
       val wsServer = getWsServer
-      wsServer.start
+      wsServer.start()
       val http = Gigahorse.http(Gigahorse.config)
       complete {
         testCode(http)

@@ -82,9 +82,7 @@ object AhcConfig {
 
       // ciphers!
       val defaultCiphers = defaultParams.getCipherSuites
-      val cipherSuites = configureCipherSuites(defaultCiphers, sslConfig)
-      defaultParams.setCipherSuites(cipherSuites)
-      builder.setEnabledCipherSuites(cipherSuites)
+      builder.setEnabledCipherSuites(defaultCiphers)
 
       builder.setAcceptAnyCertificate(sslConfig.loose.acceptAnyCertificate)
 
@@ -110,36 +108,6 @@ object AhcConfig {
           Protocols.recommendedProtocols.filter(existingProtocols.contains).toArray
       }
 
-      if (!sslConfig.loose.allowWeakProtocols) {
-        val deprecatedProtocols = Protocols.deprecatedProtocols
-        for (deprecatedProtocol <- deprecatedProtocols) {
-          if (definedProtocols.contains(deprecatedProtocol)) {
-            throw new IllegalStateException(s"Weak protocol $deprecatedProtocol found in ws.ssl.protocols!")
-          }
-        }
-      }
       definedProtocols
-    }
-
-  def configureCipherSuites(existingCiphers: Array[String], sslConfig: SSLConfigSettings): Array[String] =
-    {
-      val definedCiphers = sslConfig.enabledCipherSuites match {
-        case Some(configuredCiphers) =>
-          // If we are given a specific list of ciphers, return it in that order.
-          configuredCiphers.filter(existingCiphers.contains(_)).toArray
-
-        case None =>
-          Ciphers.recommendedCiphers.filter(existingCiphers.contains(_)).toArray
-      }
-
-      if (!sslConfig.loose.allowWeakCiphers) {
-        val deprecatedCiphers = Ciphers.deprecatedCiphers
-        for (deprecatedCipher <- deprecatedCiphers) {
-          if (definedCiphers.contains(deprecatedCipher)) {
-            throw new IllegalStateException(s"Weak cipher $deprecatedCipher found in ws.ssl.ciphers!")
-          }
-        }
-      }
-      definedCiphers
     }
 }

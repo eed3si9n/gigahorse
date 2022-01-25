@@ -29,7 +29,7 @@ class OkhFullResponse(okhResponse: XResponse) extends FullResponse {
    */
   override def underlying[A] = okhResponse.asInstanceOf[A]
 
-  override def close: Unit = okhResponse.close()
+  override def close(): Unit = okhResponse.close()
 
   /**
    * The response body as a `ByteBuffer`.
