@@ -125,7 +125,7 @@ class OkhClient(config: Config) extends HttpClient {
     lifter.run(run(request))
 
   def download(request: Request, file: File): Future[File] =
-    processStream(request, OkHandler.stream { res: FullResponse =>
+    processStream(request, OkHandler.stream { (res: FullResponse) =>
       Future.successful {
         val from = res.underlying[XResponse].body.source
         val to = Okio.buffer(Okio.sink(file))

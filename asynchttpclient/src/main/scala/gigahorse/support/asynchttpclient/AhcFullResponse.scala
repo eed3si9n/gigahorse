@@ -31,7 +31,7 @@ class AhcFullResponse(ahcResponse: XResponse) extends FullResponse {
    */
   def underlying[A] = ahcResponse.asInstanceOf[A]
 
-  def close: Unit = ()
+  def close(): Unit = ()
 
   /**
    * The response body as a `ByteBuffer`.

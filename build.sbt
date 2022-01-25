@@ -4,7 +4,7 @@ import Shade._
 
 ThisBuild / organization := "com.eed3si9n"
 ThisBuild / scalaVersion := scala212
-ThisBuild / crossScalaVersions := Vector(scala212, scala213, scala211)
+ThisBuild / crossScalaVersions := Vector(scala212, scala213, scala3)
 ThisBuild / organizationName := "eed3si9n"
 ThisBuild / organizationHomepage := Some(url("http://eed3si9n.com/"))
 ThisBuild / homepage := Some(url("https://github.com/eed3si9n/gigahorse"))
@@ -62,9 +62,9 @@ lazy val commonSettings = List(
     "-language:higherKinds",
     "-language:implicitConversions"
   ),
-  scalacOptions in (Compile, console) --= Seq("-deprecation", "-Xfatal-warnings", "-Xlint"),
-  fork in Test := true,
-  javaOptions in Compile += "-Xmx2G"
+  Compile / console / scalacOptions --= Seq("-deprecation", "-Xfatal-warnings", "-Xlint"),
+  Test / fork := true,
+  Compile / javaOptions += "-Xmx2G",
 )
 
 lazy val fatalWarnings: Seq[Setting[_]] = List(
@@ -87,11 +87,11 @@ lazy val core = (project in file("core")).
         List("-Ywarn-unused:-locals,-explicits,-privates")
       case _ => Nil
     }),
-    managedSourceDirectories in Compile += (sourceDirectory in Compile).value / "contraband-scala",
-    unmanagedSourceDirectories in Compile += (sourceDirectory in Compile).value / "contraband-scala",
-    sourceManaged in (Compile, generateContrabands) := (sourceDirectory in Compile).value / "contraband-scala",
+    Compile / managedSourceDirectories += (Compile / sourceDirectory).value / "contraband-scala",
+    Compile / unmanagedSourceDirectories += (Compile / sourceDirectory).value / "contraband-scala",
+    Compile / generateContrabands / sourceManaged := (Compile / sourceDirectory).value / "contraband-scala",
     // You need this otherwise you get X is already defined as class.
-    sources in Compile := (sources in Compile).value.toList.distinct
+    Compile / sources := (Compile / sources).value.toList.distinct,
   )
 
 lazy val commonTest = (project in file("common-test")).
@@ -134,7 +134,7 @@ lazy val okhttp = (project in file("okhttp")).
     commonSettings,
     fatalWarnings,
     name := "gigahorse-okhttp",
-    crossScalaVersions := Vector(scala212, scala213, scala211),
+    crossScalaVersions := Vector(scala212, scala213, scala3),
     libraryDependencies ++= Seq(Dependencies.okHttp)
   )
 
@@ -143,7 +143,7 @@ lazy val asynchttpclient = (project in file("asynchttpclient")).
   settings(
     commonSettings,
     fatalWarnings,
-    crossScalaVersions := Vector(scala212, scala213, scala211),
+    crossScalaVersions := Vector(scala212, scala213, scala3),
     name := "gigahorse-asynchttpclient"
   )
 
@@ -151,7 +151,7 @@ lazy val akkaHttp = (project in file("akka-http")).
   dependsOn(core, commonTest % Test).
   settings(
     commonSettings,
-    crossScalaVersions := Vector(scala212, scala213, scala211),
+    crossScalaVersions := Vector(scala212, scala213),
     name := "gigahorse-akka-http",
     libraryDependencies ++= Seq(akkaHttpCore, Dependencies.akkaHttp, akkaStream),
     dependencyOverrides += sslConfig
