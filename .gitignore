@@ -7,3 +7,4 @@ rsync.sh
 /*/target/
 /project/project/target/
 /shaded/asynchttpclient/target/
+bazel*
