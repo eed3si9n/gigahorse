@@ -8,7 +8,7 @@ object Dependencies {
   val slf4jApi = "org.slf4j" % "slf4j-api" % "1.7.28"
   val ahc = "org.asynchttpclient" % "async-http-client" % "2.0.39"
   val scalatest = "org.scalatest" %% "scalatest" % "3.2.10"
-  val sslConfig = "com.typesafe" %% "ssl-config-core" % "0.6.0"
+  val sslConfig = "com.typesafe" %% "ssl-config-core" % "0.6.1"
   val reactiveStreams = "org.reactivestreams" % "reactive-streams" % "1.0.3"
   val akkaHttpVersion = "10.2.7"
   val akkaHttpCore = "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
