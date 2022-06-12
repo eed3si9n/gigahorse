@@ -15,7 +15,7 @@
  */
 
 package gigahorse
-package support.apachehttpasyncclient
+package support.apachehttp
 
 import shaded.apache.org.apache.http.Header
 

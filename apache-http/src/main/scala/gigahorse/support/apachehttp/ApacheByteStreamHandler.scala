@@ -15,19 +15,20 @@
  */
 
 package gigahorse
-package support.apachehttpasyncclient
+package support.apachehttp
 
-import java.io.File
+import java.nio.ByteBuffer
+import scala.concurrent.Future
 import shaded.apache.org.apache.http.Header
-import shaded.apache.org.apache.http.entity.ContentType
+import shaded.apache.org.apache.http.nio.IOControl
 
 /**
- * Wrapper around org.apache.http.nio.client.methods.ZeroCopyConsumer
- * so we can perform status code check using OkHandler.
- * See OkHanlder.zeroCopy.
+ * Wrapper around org.apache.http.nio.client.methods.AsyncByteConsumer.
  */
-abstract class ApacheZeroCopyHandler extends ApacheHandler {
+abstract class ApacheByteStreamHandler[A] extends ApacheHandler {
   def onStatusReceived(status: Int): Unit = ()
   def onHeadersReceived(headers: List[Header]): Unit = ()
-  def onFileReceived(file: File, contentType: ContentType): Unit
+
+  def onByteReceived(buf: ByteBuffer, ioControl: IOControl): Unit
+  def buildResult: Future[A]
 }

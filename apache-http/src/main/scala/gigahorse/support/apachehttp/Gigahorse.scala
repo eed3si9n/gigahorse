@@ -15,7 +15,7 @@
  */
 
 package gigahorse
-package support.apachehttpasyncclient
+package support.apachehttp
 
 abstract class Gigahorse extends GigahorseSupport {
   def withHttp[A](config: Config)(f: HttpClient => A): A =
