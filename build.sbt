@@ -12,8 +12,8 @@ ThisBuild / scmInfo := Some(ScmInfo(url("https://github.com/eed3si9n/gigahorse")
 ThisBuild / developers := List(
   Developer("eed3si9n", "Eugene Yokota", "@eed3si9n", url("https://github.com/eed3si9n"))
 )
-ThisBuild / version := "0.7.0-SNAPSHOT"
-ThisBuild / description := "An HTTP client for Scala with Async Http Client underneath."
+ThisBuild / version := "0.7.1-SNAPSHOT"
+ThisBuild / description := "Gigahorse is an HTTP client for Scala with multiple backend support."
 ThisBuild / licenses := Seq("Apache 2" -> new URL("http://www.apache.org/licenses/LICENSE-2.0.txt"))
 
 lazy val root = (project in file(".")).
