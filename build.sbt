@@ -12,12 +12,12 @@ ThisBuild / scmInfo := Some(ScmInfo(url("https://github.com/eed3si9n/gigahorse")
 ThisBuild / developers := List(
   Developer("eed3si9n", "Eugene Yokota", "@eed3si9n", url("https://github.com/eed3si9n"))
 )
-ThisBuild / version := "0.6.1-SNAPSHOT"
+ThisBuild / version := "0.7.0-SNAPSHOT"
 ThisBuild / description := "An HTTP client for Scala with Async Http Client underneath."
 ThisBuild / licenses := Seq("Apache 2" -> new URL("http://www.apache.org/licenses/LICENSE-2.0.txt"))
 
 lazy val root = (project in file(".")).
-  aggregate(core, asynchttpclient, shadedAsyncHttpClient, okhttp, akkaHttp).
+  aggregate(core, apacheHttpAsyncClient, asynchttpclient, shadedAsyncHttpClient, okhttp, akkaHttp).
   dependsOn(core).
   settings(
     name := "gigahorse",
@@ -127,6 +127,15 @@ lazy val commonTest = (project in file("common-test")).
 //     publishSigned := ()
 //   )
 
+lazy val apacheHttpAsyncClient = (project in file("apache-http")).
+  dependsOn(core, shadedApacheHttpAsyncClient, commonTest % Test).
+  settings(
+    commonSettings,
+    fatalWarnings,
+    name := "gigahorse-apache-http",
+    crossScalaVersions := Vector(scala212, scala213, scala3),
+  )
+
 lazy val okhttp = (project in file("okhttp")).
   dependsOn(core, commonTest % Test).
   settings(
@@ -154,6 +163,21 @@ lazy val akkaHttp = (project in file("akka-http")).
     name := "gigahorse-akka-http",
     libraryDependencies ++= Seq(akkaHttpCore, Dependencies.akkaHttp, akkaStream),
     dependencyOverrides += sslConfig
+  )
+
+lazy val shadedApacheHttpAsyncClient = (project in file("shaded/apache-httpasyncclient"))
+  .configs(ShadeSandbox)
+  .settings(commonSettings)
+  .settings(apacheShadeSettings)
+  .settings(
+    crossScalaVersions := Vector(scala212, scala213),
+    libraryDependencies ++= Seq(
+      Dependencies.apacheHttpAsyncClient.exclude("commons-logging", "commons-logging") % ShadeSandbox,
+      Dependencies.jclOverSlf4j % ShadeSandbox,
+    ),
+    name := "shaded-apache-httpasyncclient",
+    autoScalaLibrary := false,
+    crossPaths := false
   )
 
 lazy val shadedAsyncHttpClient = (project in file("shaded/asynchttpclient"))
