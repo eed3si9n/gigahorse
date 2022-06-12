@@ -20,7 +20,7 @@ import org.scalatest._
 import scala.concurrent.Future
 
 class ApacheHttpClientSpec extends BaseHttpClientSpec {
-  import gigahorse.support.apachehttpasyncclient.Gigahorse
+  import gigahorse.support.apachehttp.Gigahorse
   // custom loan pattern
   override def withHttp(testCode: gigahorse.HttpClient => Future[Assertion]): Future[Assertion] =
     {

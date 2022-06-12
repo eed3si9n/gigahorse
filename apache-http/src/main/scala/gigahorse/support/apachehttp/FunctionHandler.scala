@@ -15,7 +15,7 @@
  */
 
 package gigahorse
-package support.apachehttpasyncclient
+package support.apachehttp
 
 abstract class FunctionHandler[A](f: FullResponse => A) extends ApacheCompletionHandler[A] {
   override def onCompleted(response: FullResponse): A = f(response)

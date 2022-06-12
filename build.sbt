@@ -17,7 +17,7 @@ ThisBuild / description := "An HTTP client for Scala with Async Http Client unde
 ThisBuild / licenses := Seq("Apache 2" -> new URL("http://www.apache.org/licenses/LICENSE-2.0.txt"))
 
 lazy val root = (project in file(".")).
-  aggregate(core, apacheHttpAsyncClient, asynchttpclient, shadedAsyncHttpClient, okhttp, akkaHttp).
+  aggregate(core, apacheHttp, asynchttpclient, shadedAsyncHttpClient, okhttp, akkaHttp).
   dependsOn(core).
   settings(
     name := "gigahorse",
@@ -27,15 +27,19 @@ lazy val root = (project in file(".")).
       "clean" ::
         s"++ ${scala3}!" ::
         "core/publishSigned" ::
+        "apacheHttp/publishSigned" ::
         "okhttp/publishSigned" ::
         "asynchttpclient/publishSigned" ::
         s"++ ${scala213}!" ::
         "core/publishSigned" ::
+        "apacheHttp/publishSigned" ::
         "okhttp/publishSigned" ::
         "asynchttpclient/publishSigned" ::
         "akkaHttp/publishSigned" ::
         s"++ ${scala212}!" ::
         "core/publishSigned" ::
+        "apacheHttp/publishSigned" ::
+        "shadedApacheHttpAsyncClient/publishSigned" ::
         "okhttp/publishSigned" ::
         "asynchttpclient/publishSigned" ::
         "shadedAsyncHttpClient/publishSigned" ::
@@ -127,7 +131,7 @@ lazy val commonTest = (project in file("common-test")).
 //     publishSigned := ()
 //   )
 
-lazy val apacheHttpAsyncClient = (project in file("apache-http")).
+lazy val apacheHttp = (project in file("apache-http")).
   dependsOn(core, shadedApacheHttpAsyncClient, commonTest % Test).
   settings(
     commonSettings,
@@ -170,12 +174,12 @@ lazy val shadedApacheHttpAsyncClient = (project in file("shaded/apache-httpasync
   .settings(commonSettings)
   .settings(apacheShadeSettings)
   .settings(
+    name := "shaded-apache-httpasyncclient",
     crossScalaVersions := Vector(scala212, scala213),
     libraryDependencies ++= Seq(
       Dependencies.apacheHttpAsyncClient.exclude("commons-logging", "commons-logging") % ShadeSandbox,
       Dependencies.jclOverSlf4j % ShadeSandbox,
     ),
-    name := "shaded-apache-httpasyncclient",
     autoScalaLibrary := false,
     crossPaths := false
   )

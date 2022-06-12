@@ -15,7 +15,7 @@
  */
 
 package gigahorse
-package support.apachehttpasyncclient
+package support.apachehttp
 
 import java.nio.ByteBuffer
 import shaded.apache.org.apache.http.{ Header, HttpResponse => XResponse }
