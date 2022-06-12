@@ -42,6 +42,7 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers
   def wsSetup: Server => Server = {
     _.handler(WsTestPlan.testPlan)
   }
+  def isWebSocketSupported: Boolean = true
 
   // custom loan pattern
   def withHttp(testCode: gigahorse.HttpClient => Future[Assertion]): Future[Assertion]
@@ -139,24 +140,26 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers
     }
 
   "http.websocket(r)" should "open a websocket connection and exchange messages" in
-    withHttp { http =>
-      import WebSocketEvent._
-      val r = Gigahorse.url(wsTestUrl).get
-      val p = Promise[String]()
-      val m = "Hello World!"
-      val h: PartialFunction[WebSocketEvent, Unit] = {
-        case TextMessage(ws, message) =>
-          p.complete(Success(message))
-          ws.close()
+    (if (isWebSocketSupported)
+      withHttp { http =>
+        import WebSocketEvent._
+        val r = Gigahorse.url(wsTestUrl).get
+        val p = Promise[String]()
+        val m = "Hello World!"
+        val h: PartialFunction[WebSocketEvent, Unit] = {
+          case TextMessage(ws, message) =>
+            p.complete(Success(message))
+            ws.close()
+        }
+        val f = http.websocket(r)(h) flatMap { ws =>
+          ws.sendMessage(m)
+          p.future
+        }
+        f map { s =>
+          assert(s === m)
+        }
       }
-      val f = http.websocket(r)(h) flatMap { ws =>
-        ws.sendMessage(m)
-        p.future
-      }
-      f map { s =>
-        assert(s === m)
-      }
-    }
+    else cancel())
 
   "http.run(r, Gigahorse.asEither)" should "retrieve a resource and convert to Right" in
     withHttp { http =>

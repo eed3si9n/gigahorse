@@ -6,7 +6,33 @@ import xml.transform.{RuleTransformer, RewriteRule}
 
 object Shade {
   val shadePrefix = "gigahorse.shaded.ahc"
+  val shadePrefix2 = "gigahorse.shaded.apache"
   val ShadeSandbox = config("shade").hide
+
+  def apacheShadeSettings: Seq[Setting[_]] =
+    inConfig(ShadeSandbox)(
+      Defaults.configSettings ++
+      baseAssemblySettings ++ Seq(
+      logLevel in assembly := Level.Error,
+      //logLevel in assembly := Level.Debug,
+      assemblyShadeRules in assembly := Seq(
+        ShadeRule.rename("org.apache.**" -> s"$shadePrefix2.@0").inAll,
+        ShadeRule.zap("org.reactivestreams.**").inAll,
+        ShadeRule.zap("org.slf4j.**").inAll
+      ),
+      assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeBin = false, includeScala = false),
+      // cut ties with Runtime
+      fullClasspath in assembly := fullClasspath.value,
+      // cut ties with Runtime
+      externalDependencyClasspath in assembly := externalDependencyClasspath.value,
+      // cut ties with Runtime
+      mainClass in assembly := mainClass.value,
+      // cut ties with Runtime
+      test in assembly := {}
+    )) ++ Seq(
+      packageBin in Compile := (assembly in ShadeSandbox).value,
+      exportJars := true
+    )
 
   def ahcShadeSettings: Seq[Setting[_]] =
     inConfig(ShadeSandbox)(
