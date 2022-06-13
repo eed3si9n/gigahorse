@@ -11,8 +11,9 @@ out: concepts.html
 
 `Gigahorse`　は、色々便利なものを作るためのヘルパーオブジェクトだ。
 
-- OkHttp をバックエンドに使う場合は、`gigahorse.support.okhttp.Gigahorse`。
+- Apache HTTP をバックエンドに使う場合は、`gigahorse.support.apachehttp.Gigahorse`。
 - AHC をバックエンドに使う場合は、`gigahorse.support.asynchttpclient.Gigahorse`。
+- OkHttp をバックエンドに使う場合は、`gigahorse.support.okhttp.Gigahorse`。
 - Akka HTTP をバックエンドに使う場合は、`gigahorse.support.akkahttp.Gigahorse`。
 
 ### HttpClient
@@ -23,10 +24,10 @@ out: concepts.html
 
 `HttpClient` を作るには 2つの方法がある。
 第一の方法としては、`Gigahorse.http(Gigahourse.config)` を使って
-`HttpClient` を作ることだ。AHC を使ってこの方法を取った場合、**必ずクライアントを閉じる**必要がある。
+`HttpClient` を作ることだ。Apache HTTP や AHC を使ってこの方法を取った場合、**必ずクライアントを閉じる**必要がある。
 
 ```console
-scala> import gigahorse._, support.okhttp.Gigahorse
+scala> import gigahorse._, support.apachehttp.Gigahorse
 scala> val http = Gigahorse.http(Gigahorse.config)
 scala> http.close() // must call close()
 ```
@@ -34,7 +35,7 @@ scala> http.close() // must call close()
 第二の方法は loan パターン `Gigahorse.withHttp(config) { ... }` を使うことだ:
 
 ```scala
-import gigahorse._, support.okhttp.Gigahorse
+import gigahorse._, support.apachehttp.Gigahorse
 Gigahorse.withHttp(Gigahorse.config) { http =>
   // do something
 }
@@ -91,7 +92,7 @@ abstract class HttpClient extends AutoCloseable {
 さらに、これはただの関数なので `andThen` を使って他の関数と合成することができる:
 
 ```console
-scala> import gigahorse._, support.okhttp.Gigahorse
+scala> import gigahorse._, support.apachehttp.Gigahorse
 scala> import scala.concurrent._, duration._
 scala> val http = Gigahorse.http(Gigahorse.config)
 scala> val r = Gigahorse.url("https://api.duckduckgo.com").get.

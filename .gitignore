@@ -8,3 +8,4 @@ rsync.sh
 /project/project/target/
 /shaded/asynchttpclient/target/
 bazel*
+www/

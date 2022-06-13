@@ -11,8 +11,9 @@ Basic concepts
 
 `Gigahorse` is a helper object to create many useful things.
 
-- For OkHttp backend, use `gigahorse.support.okhttp.Gigahorse`.
+- For Apache HTTP backend, use `gigahorse.support.apachehttp.Gigahorse`
 - For AHC backend, use `gigahorse.support.asynchttpclient.Gigahorse`.
+- For OkHttp backend, use `gigahorse.support.okhttp.Gigahorse`.
 - For Akka HTTP backend, `gigahorse.support.akkahttp.Gigahorse`.
 
 ### HttpClient
@@ -23,10 +24,10 @@ must be managed with care. Otherwise your program will run out of resources.
 
 There are two ways of creating an `HttpClient`.
 First is creating using `Gigahorse.http(Gigahourse.config)`.
-If you use this with AHC, **you must close** the client yourself:
+If you use this with Apache HTTP or AHC, **you must close** the client yourself:
 
 ```console
-scala> import gigahorse._, support.okhttp.Gigahorse
+scala> import gigahorse._, support.apachehttp.Gigahorse
 scala> val http = Gigahorse.http(Gigahorse.config)
 scala> http.close() // must call close()
 ```
@@ -34,7 +35,7 @@ scala> http.close() // must call close()
 Second way is using the loan pattern `Gigahorse.withHttp(config) { ... }`:
 
 ```scala
-import gigahorse._, support.okhttp.Gigahorse
+import gigahorse._, support.apachehttp.Gigahorse
 Gigahorse.withHttp(Gigahorse.config) { http =>
   // do something
 }
@@ -93,7 +94,7 @@ Since this is a plain function, you can compose it with some other function
 using `andThen`:
 
 ```console
-scala> import gigahorse._, support.okhttp.Gigahorse
+scala> import gigahorse._, support.apachehttp.Gigahorse
 scala> import scala.concurrent._, duration._
 scala> val http = Gigahorse.http(Gigahorse.config)
 scala> val r = Gigahorse.url("https://api.duckduckgo.com").get.
