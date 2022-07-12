@@ -103,7 +103,7 @@ class ApacheHttpClient(config: Config) extends HttpClient {
       }
     def buildContentType(opt: Option[String], fallback: ContentType): ContentType =
       opt match {
-        case Some(value) => ContentType.create(value)
+        case Some(value) => ContentType.parse(value)
         case _           => fallback
       }
     def ct: ContentType =

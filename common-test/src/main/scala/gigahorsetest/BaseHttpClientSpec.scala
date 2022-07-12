@@ -23,8 +23,9 @@ import org.scalatest.matchers.should.Matchers
 import scala.util.Success
 import scala.concurrent._
 import java.io.File
+import java.nio.charset.Charset
 
-import gigahorse.{HeaderNames, SignatureCalculator, WebSocketEvent}
+import gigahorse.{HeaderNames, MimeTypes, SignatureCalculator, WebSocketEvent}
 import unfiltered.scalatest.Hosted
 import unfiltered.netty.Server
 
@@ -108,6 +109,15 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers
       val f = http.run(r.post(Map("arg1" -> List("{}"))), Gigahorse.asString)
       f map { s =>
         assert(s === "{}")
+      }
+    }
+
+  "http.run(r.withContentType(MimeTypes.Text, ISO-8859-1), f)" should "parse and post with correct content type" in
+    withHttp { http =>
+      val r = Gigahorse.url(s"${testUrl}charset")
+      val f = http.run(r.withContentType(MimeTypes.TEXT, Charset.forName("ISO-8859-1")).post("hello world", Charset.forName( "ISO-8859-1")), Gigahorse.asString)
+      f map { s =>
+        assert(s === "text/plain;charset=ISO-8859-1")
       }
     }
 
