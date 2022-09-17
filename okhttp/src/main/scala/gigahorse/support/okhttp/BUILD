@@ -12,6 +12,7 @@ scala_library(
       "//core/src/main",
       "@maven//:3rdparty/jvm/com/squareup/okhttp3/okhttp",
     ],
+    tags = ["maven_coordinates=com.eed3si9n:okhttp_2.12:{pom_version}"],
     visibility = ["//visibility:public"],
 )
 
@@ -25,5 +26,6 @@ jvm_export(
     license = "Apache-2.0",
     snapshot_repo = "central",
     release_repo = "central",
-    python_path = "/usr/local/bin/python3",
+    # python_path = "/usr/local/bin/python3",
+    tags = ["manual"],
 )

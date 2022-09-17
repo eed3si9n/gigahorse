@@ -17,7 +17,7 @@ scala_library(
         "@maven//:3rdparty/jvm/org/reactivestreams/reactive-streams",
         "@maven//:3rdparty/jvm/org/slf4j/slf4j-api",
     ],
-    tags = ["maven_coordinates=com.eed3si9n:gigahorse-core_2.12:{pom_version}", "manual"],
+    tags = ["maven_coordinates=com.eed3si9n:gigahorse-core_2.12:{pom_version}"],
     visibility = ["//visibility:public"],
 )
 
@@ -31,5 +31,6 @@ jvm_export(
     license = "Apache-2.0",
     snapshot_repo = "central",
     release_repo = "central",
-    python_path = "/usr/local/bin/python3",
+    # python_path = "/usr/local/bin/python3",
+    tags = ["manual"],
 )
