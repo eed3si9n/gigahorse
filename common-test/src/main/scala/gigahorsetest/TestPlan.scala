@@ -41,6 +41,12 @@ object TestPlan {
         case Some(Seq(x)) => Ok ~> ResponseString(x)
         case _            => BadRequest ~> ResponseString("args1 is not found!")
       }
+    case r @ POST(Path("/charset")) =>
+      val h = r.headers("Content-Type").filter(_.contains("text/plain"))
+      if (h.hasNext)
+        Ok ~> ResponseString(h.next().replaceAll("\\s", ""))
+      else
+        BadRequest ~> ResponseString("Content-Type header 'text/plain' not found")
     // sign
     case r @ GET(Path("/sign")) =>
       val h = r.headers("X-Signature")
