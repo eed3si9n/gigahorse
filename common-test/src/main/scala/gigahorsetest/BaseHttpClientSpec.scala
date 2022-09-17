@@ -26,13 +26,11 @@ import java.io.File
 import java.nio.charset.Charset
 
 import gigahorse.{HeaderNames, MimeTypes, SignatureCalculator, WebSocketEvent}
-import unfiltered.scalatest.Hosted
 import unfiltered.netty.Server
 
-abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers
-  with Hosted {
-
-  def testUrl: String = host.url.toString
+abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers {
+  val port: Int = unfiltered.util.Port.any
+  def testUrl: String = s"http://localhost:$port/"
   def getServer = setup(Server.http(port))
   def setup: Server => Server = {
     _.handler(TestPlan.testPlan)
@@ -69,7 +67,7 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers
 
   it should "retrieve a resource from Duckduckgo.com" in
     withHttp { http =>
-      val r = Gigahorse.url("http://api.duckduckgo.com").
+      val r = Gigahorse.url("http://duckduckgo.com").
         addQueryString(
           "q" -> "1 + 1",
           "format" -> "json"
@@ -173,7 +171,7 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers
 
   "http.run(r, Gigahorse.asEither)" should "retrieve a resource and convert to Right" in
     withHttp { http =>
-      val r = Gigahorse.url("http://api.duckduckgo.com").
+      val r = Gigahorse.url("http://duckduckgo.com").
         addQueryString(
           "q" -> "1 + 1",
           "format" -> "json"

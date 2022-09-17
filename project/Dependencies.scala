@@ -21,6 +21,5 @@ object Dependencies {
   val unfilteredVersion = "0.10.4"
   val ufDirectives = "ws.unfiltered" %% "unfiltered-directives" % unfilteredVersion
   val ufFilter = "ws.unfiltered" %% "unfiltered-filter" % unfilteredVersion
-  val ufScalatest = "ws.unfiltered" %% "unfiltered-scalatest" % unfilteredVersion
   val ufWebsockets = "ws.unfiltered" %% "unfiltered-netty-websockets" % unfilteredVersion
 }
