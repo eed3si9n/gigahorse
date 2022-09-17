@@ -1,0 +1,42 @@
+#!/usr/bin/env bash -e
+
+MULTIVERSION_VER="0.2.0"
+DOWNLOAD_BASE_URL="https://github.com/twitter/bazel-multiversion/releases/download"
+X86_LINUX_APP_NAME="multiversion-x86_64-pc-linux"
+X86_DARWIN_APP_NAME="multiversion-x86_64-apple-darwin"
+
+download_url () {
+  local url="$1"
+  local target="$2"
+  mkdir -p $(dirname "$target") && {
+    if command -v curl > /dev/null; then
+      curl --silent -L "$url" --output "$target"
+    elif command -v wget > /dev/null; then
+      wget --quiet -O "$target" "$url"
+    fi
+  } && [[ -f "$target" ]]
+}
+
+echoerr () {
+  echo 1>&2 "$@"
+}
+
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+  MULTIVERSION_URL="$DOWNLOAD_BASE_URL/v$MULTIVERSION_VER/$X86_LINUX_APP_NAME"
+  TARGET_APP="$HOME/.cache/bazel-multiversion/v$MULTIVERSION_VER/$X86_LINUX_APP_NAME"
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+  MULTIVERSION_URL="$DOWNLOAD_BASE_URL/v$MULTIVERSION_VER/$X86_DARWIN_APP_NAME"
+  TARGET_APP="$HOME/.cache/bazel-multiversion/v$MULTIVERSION_VER/$X86_DARWIN_APP_NAME"
+else
+  echoerr unsupported operating system
+  exit 1
+fi
+
+if ! [[ -f "$TARGET_APP" ]]; then
+  echoerr $TARGET_APP
+  echoerr downloading multiversion $MULTIVERSION_VER
+  download_url "$MULTIVERSION_URL" "$TARGET_APP"
+  chmod +x "$TARGET_APP"
+fi
+
+exec "$TARGET_APP" "$@"

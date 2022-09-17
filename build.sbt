@@ -101,7 +101,7 @@ lazy val commonTest = (project in file("common-test")).
   dependsOn(core).
   settings(
     libraryDependencies ++= Seq(scalatest,
-      ufDirectives, ufFilter, ufWebsockets, ufScalatest),
+      ufDirectives, ufFilter, ufWebsockets),
     publish := {},
     publishLocal := {},
     publishSigned := {}

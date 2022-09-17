@@ -25,13 +25,11 @@ import scala.concurrent._
 import java.io.File
 
 import gigahorse.{HeaderNames, SignatureCalculator, WebSocketEvent}
-import unfiltered.scalatest.Hosted
 import unfiltered.netty.Server
 
-abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers
-  with Hosted {
-
-  def testUrl: String = host.url.toString
+abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers {
+  val port: Int = unfiltered.util.Port.any
+  def testUrl: String = s"http://localhost:$port/"
   def getServer = setup(Server.http(port))
   def setup: Server => Server = {
     _.handler(TestPlan.testPlan)
