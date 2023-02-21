@@ -1,16 +1,19 @@
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library", "scala_binary", "scala_test")
 load("@twitter_rules_jvm_export//jvm_export:jvm_export.bzl", "jvm_export")
+load("@scala_multiverse//:cross_scala_config.bzl", "maven_dep")
 
 scala_library(
     name = "okhttp",
     srcs = glob(["*.scala"]),
     deps = [
       "//core/src/main",
-      "@maven//:3rdparty/jvm/com/squareup/okhttp3/okhttp",
+      maven_dep("com.squareup.okhttp3:okhttp"),
+      maven_dep("com.squareup.okio:okio"),
     ],
     exports = [
       "//core/src/main",
-      "@maven//:3rdparty/jvm/com/squareup/okhttp3/okhttp",
+      maven_dep("com.squareup.okhttp3:okhttp"),
+      maven_dep("com.squareup.okio:okio"),
     ],
     tags = ["maven_coordinates=com.eed3si9n:okhttp_2.12:{pom_version}"],
     visibility = ["//visibility:public"],

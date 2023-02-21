@@ -25,6 +25,10 @@ jobs:
             java: 8
             distribution: temurin
             jobtype: 2
+          - os: ubuntu-latest
+            java: 17
+            distribution: temurin
+            jobtype: 3
     runs-on: ${{ matrix.os }}
     env:
       JAVA_OPTS: -Xms800M -Xmx2G -Xss6M -XX:ReservedCodeCacheSize=128M -server -Dsbt.io.virtual=false -Dfile.encoding=UTF-8
@@ -48,3 +52,9 @@ jobs:
       if: ${{ matrix.jobtype == 2 }}
       shell: bash
       run: bazel test ...
+    - name: Build and test (3)
+      if: ${{ matrix.jobtype == 3 }}
+      shell: bash
+      run: |
+        ./bazelenv scala_2.13
+        bazel test ...

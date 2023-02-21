@@ -1,0 +1,24 @@
+bazel_dep(name = "mod_scala_multiverse")
+local_path_override(
+  module_name="mod_scala_multiverse",
+  path="tools/local_modules/default",
+)
+
+maven = use_extension("@mod_scala_multiverse//:extensions.bzl", "maven")
+
+UNFILTERED_VER = "0.10.4"
+
+maven.install(
+    artifacts = [
+        "com.squareup.okhttp3:okhttp:3.14.2",
+        "com.typesafe::ssl-config-core:0.6.1",
+        "org.asynchttpclient:async-http-client:2.0.39",
+        "org.scalatest::scalatest:3.2.10",
+        "org.slf4j:slf4j-api:1.7.28",
+        "org.reactivestreams:reactive-streams:1.0.3",
+        "ws.unfiltered::unfiltered-directives:{}".format(UNFILTERED_VER),
+        "ws.unfiltered::unfiltered-filter:{}".format(UNFILTERED_VER),
+        "ws.unfiltered::unfiltered-netty-websockets:{}".format(UNFILTERED_VER),
+    ],
+)
+use_repo(maven, "maven")
