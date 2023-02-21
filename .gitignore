@@ -9,3 +9,4 @@ rsync.sh
 /shaded/asynchttpclient/target/
 bazel*
 www/
+/.bazelenv

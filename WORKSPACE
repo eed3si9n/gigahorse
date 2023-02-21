@@ -8,17 +8,22 @@ http_archive(
     url = "https://mirror.bazel.build/github.com/bazelbuild/bazel-skylib/releases/download/{}/bazel-skylib-{}.tar.gz".format(skylib_version, skylib_version),
 )
 
-rules_scala_version = "a40063ef97688f056824b22b9e49fae6efd1df0f"
+rules_scala_version = "56bfe4f3cb79e1d45a3b64dde59a3773f67174e2"
 http_archive(
     name = "io_bazel_rules_scala",
-    sha256 = "f534e1fc268fb85abccc92fd80626a3c500c7e6b6943194f7d7f09f7291f4c37",
+    sha256 = "f1a4a794bad492fee9eac1c988702e1837373435c185736df45561fe68e85227",
     strip_prefix = "rules_scala-%s" % rules_scala_version,
     type = "zip",
     url = "https://github.com/bazelbuild/rules_scala/archive/%s.zip" % rules_scala_version,
 )
 
-load("@io_bazel_rules_scala//:scala_config.bzl", "scala_config")
-scala_config(scala_version = "2.12.15")
+local_repository(
+    name = "scala_multiverse",
+    path = "tools/local_repos/default",
+)
+
+load("@scala_multiverse//:cross_scala_config.bzl", "cross_scala_config")
+cross_scala_config()
 
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_repositories")
 scala_repositories()
@@ -50,8 +55,3 @@ http_archive(
 load("@io_bazel_rules_scala//testing:scalatest.bzl", "scalatest_repositories", "scalatest_toolchain")
 scalatest_repositories()
 scalatest_toolchain()
-
-load("//3rdparty:jvm_deps.bzl", "jvm_deps")
-jvm_deps()
-load("@maven//:jvm_deps.bzl", "load_jvm_deps")
-load_jvm_deps()

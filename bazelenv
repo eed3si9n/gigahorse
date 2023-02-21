@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+MODE=$1
+function usage() {
+  echo "usage ./bazelenv [<multiverse>]"
+  echo ""
+  echo "available multiverses are:"
+  candidates=$(/bin/ls tools/local_repos)
+  echo "$candidates"
+}
+if [[ "$MODE" == "" ]]; then
+  usage
+elif [[ -d tools/local_repos/$MODE ]]; then
+  echo "common --override_repository=scala_multiverse=$(pwd)/tools/local_repos/$MODE" > ".bazelenv"
+  echo "common --override_module=mod_scala_multiverse=$(pwd)/tools/local_modules/$MODE" >> ".bazelenv"
+else
+  usage; exit 1
+fi

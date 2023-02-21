@@ -1,5 +1,6 @@
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library", "scala_binary", "scala_test")
 load("@twitter_rules_jvm_export//jvm_export:jvm_export.bzl", "jvm_export")
+load("@scala_multiverse//:cross_scala_config.bzl", "maven_dep")
 
 scala_library(
     name = "main",
@@ -8,14 +9,16 @@ scala_library(
         "//core/src/main/scala/gigahorse",
     ],
     deps = [
-        "@maven//:3rdparty/jvm/com/typesafe/ssl-config-core",
-        "@maven//:3rdparty/jvm/org/reactivestreams/reactive-streams",
-        "@maven//:3rdparty/jvm/org/slf4j/slf4j-api",
+        maven_dep("com.typesafe::ssl-config-core"),
+        maven_dep("com.typesafe:config"),
+        maven_dep("org.reactivestreams:reactive-streams"),
+        maven_dep("org.slf4j:slf4j-api"),
     ],
     exports = [
-        "@maven//:3rdparty/jvm/com/typesafe/ssl-config-core",
-        "@maven//:3rdparty/jvm/org/reactivestreams/reactive-streams",
-        "@maven//:3rdparty/jvm/org/slf4j/slf4j-api",
+        maven_dep("com.typesafe::ssl-config-core"),
+        maven_dep("com.typesafe:config"),
+        maven_dep("org.reactivestreams:reactive-streams"),
+        maven_dep("org.slf4j:slf4j-api"),
     ],
     tags = ["maven_coordinates=com.eed3si9n:gigahorse-core_2.12:{pom_version}"],
     visibility = ["//visibility:public"],
