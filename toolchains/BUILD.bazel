@@ -1,0 +1,30 @@
+load(
+    "@io_bazel_rules_scala//scala:scala.bzl",
+    "setup_scala_toolchain",
+)
+
+setup_scala_toolchain(
+    name = "scala_toolchain",
+    scala_compile_classpath = [
+        "@maven//:org_scala_lang_scala_compiler",
+        "@maven//:org_scala_lang_scala_library",
+        "@maven//:org_scala_lang_scala_reflect",
+    ],
+    scala_library_classpath = [
+        "@maven//:org_scala_lang_scala_library",
+        "@maven//:org_scala_lang_scala_reflect",
+    ],
+    scala_macro_classpath = [
+        "@maven//:org_scala_lang_scala_library",
+        "@maven//:org_scala_lang_scala_reflect",
+    ],
+    scalacopts = [
+        "-Yrangepos",
+        "-deprecation",
+        "-Xlint",
+        "-feature",
+        "-language:existentials",
+        "-language:higherKinds",
+    ],
+    visibility = ["//visibility:public"]
+)

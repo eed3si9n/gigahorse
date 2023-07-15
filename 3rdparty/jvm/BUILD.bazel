@@ -1,0 +1,13 @@
+load("@scala_multiverse//:cross_scala_config.bzl", "maven_dep")
+
+alias(
+    name = "ch_epfl_scala__scalafix-cli",
+    actual = maven_dep("ch.epfl.scala:::scalafix-cli"),
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "org_scalameta__semanticdb_scalac",
+    actual = maven_dep("org.scalameta:::semanticdb.scalac"),
+    visibility = ["//visibility:public"],
+)

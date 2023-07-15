@@ -10,6 +10,8 @@ UNFILTERED_VER = "0.10.4"
 
 maven.install(
     artifacts = [
+        "ch.epfl.scala:::scalafix-cli:0.11.0",
+        "org.scalameta:::semanticdb-scalac:4.8.4",
         "com.squareup.okhttp3:okhttp:3.14.2",
         "com.typesafe::ssl-config-core:0.6.1",
         "org.asynchttpclient:async-http-client:2.0.39",
