@@ -17,17 +17,33 @@
 package gigahorse
 package support.okhttp
 
-import java.io.{ByteArrayOutputStream, File, IOException}
-
-import okhttp3.{OkHttpClient => XOkHttpClient, Request => XRequest, Response => XResponse}
-import okhttp3.{Authenticator, Cache, Call, Callback, Credentials, HttpUrl, Interceptor, MediaType, RequestBody, Route}
-
-import scala.concurrent.{ExecutionContext, Future, Promise}
-import scala.util.control.NonFatal
-import okio.Okio
 import com.typesafe.sslconfig.ssl._
-import javax.net.ssl.{SSLContext, TrustManager, X509TrustManager}
+import okhttp3.Authenticator
+import okhttp3.Cache
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.Credentials
+import okhttp3.HttpUrl
+import okhttp3.Interceptor
+import okhttp3.MediaType
+import okhttp3.RequestBody
+import okhttp3.Route
+import okhttp3.{OkHttpClient => XOkHttpClient}
+import okhttp3.{Request => XRequest}
+import okhttp3.{Response => XResponse}
+import okio.Okio
+
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.IOException
 import java.security.SecureRandom
+import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManager
+import javax.net.ssl.X509TrustManager
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+import scala.concurrent.Promise
+import scala.util.control.NonFatal
 
 class OkhClient(config: Config) extends HttpClient {
   private type HB = HttpUrl.Builder

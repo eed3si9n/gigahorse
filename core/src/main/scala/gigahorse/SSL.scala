@@ -19,9 +19,10 @@ package gigahorse
 
 import com.typesafe.sslconfig.ssl._
 import com.typesafe.sslconfig.util.NoopLogger
-import javax.net.ssl._
+
 import java.security.KeyStore
 import java.security.cert.X509Certificate
+import javax.net.ssl._
 
 private[gigahorse] object SSL {
   def buildContext(sslConfig: SSLConfigSettings): (SSLContext, Option[TrustManager]) = {

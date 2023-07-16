@@ -17,12 +17,14 @@
 
 package gigahorse
 
-import java.io.File
-import java.nio.charset.Charset
-import java.net.URI
 import com.typesafe.config.{ Config => XConfig }
-import scala.concurrent.duration.{ Duration, FiniteDuration }
 import com.typesafe.sslconfig.ssl.SSLConfigFactory
+
+import java.io.File
+import java.net.URI
+import java.nio.charset.Charset
+import scala.concurrent.duration.Duration
+import scala.concurrent.duration.FiniteDuration
 
 object ConfigParser {
   import ConfigDefaults._

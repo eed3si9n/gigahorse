@@ -8,10 +8,10 @@ http_archive(
     url = "https://mirror.bazel.build/github.com/bazelbuild/bazel-skylib/releases/download/{}/bazel-skylib-{}.tar.gz".format(skylib_version, skylib_version),
 )
 
-rules_scala_version = "56bfe4f3cb79e1d45a3b64dde59a3773f67174e2"
+rules_scala_version = "58b98f2f90c3c9038d53a80b5f7901bc96ba3f60"
 http_archive(
     name = "io_bazel_rules_scala",
-    sha256 = "f1a4a794bad492fee9eac1c988702e1837373435c185736df45561fe68e85227",
+    sha256 = "e96f0b9965b40efe0a750ce124bf468b785e0e1a1dd981772d3e043eba4bb5b3",
     strip_prefix = "rules_scala-%s" % rules_scala_version,
     type = "zip",
     url = "https://github.com/bazelbuild/rules_scala/archive/%s.zip" % rules_scala_version,
@@ -25,15 +25,14 @@ local_repository(
 load("@scala_multiverse//:cross_scala_config.bzl", "cross_scala_config")
 cross_scala_config()
 
-load("@io_bazel_rules_scala//scala:scala.bzl", "scala_repositories")
-scala_repositories()
+load("@scala_multiverse//:cross_scala_repositories.bzl", "cross_scala_repositories")
+cross_scala_repositories()
 
 load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies", "rules_proto_toolchains")
 rules_proto_dependencies()
 rules_proto_toolchains()
 
-load("@io_bazel_rules_scala//scala:toolchains.bzl", "scala_register_toolchains")
-scala_register_toolchains()
+register_toolchains("//toolchains:scala_toolchain")
 
 rules_jvm_export_version = "bb586d5ecb4fd6190197dbd2a15919b7fbdc1d3d"
 http_archive(

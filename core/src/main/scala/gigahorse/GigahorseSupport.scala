@@ -16,9 +16,9 @@
 
 package gigahorse
 
+import java.io.File
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
-import java.io.File
 import scala.concurrent.Future
 
 /** Common interface for Gigahorse backends.

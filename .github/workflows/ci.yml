@@ -63,3 +63,4 @@ jobs:
       run: |
         ./bazelenv scala_2.13
         bazel test ...
+        bin/scalafix ... --check

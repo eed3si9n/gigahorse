@@ -17,8 +17,9 @@
 package gigahorse
 package support.okhttp
 
-import scala.concurrent.Future
 import okhttp3.Headers
+
+import scala.concurrent.Future
 
 abstract class OkhStreamHandler[A] extends OkhHandler {
   def onStatusReceived(status: Int): Unit = ()

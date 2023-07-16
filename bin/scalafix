@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+set -o errexit  # abort on nonzero exitstatus
+set -o nounset  # abort on unbound variable
+set -o pipefail # don't hide errors within pipes
+
+BUILD_TARGET_QUERY=${1:-}
+if [[ -z "$BUILD_TARGET_QUERY" ]]; then
+  echo "usage: $0 <query> --rules <scalafix rules>"
+  exit 1
+fi
+shift
+
+SCALAFIX_TARGETS=$(bazel query "kind('scalafix', $BUILD_TARGET_QUERY)")
+for TARGET in $SCALAFIX_TARGETS; do
+  echo "processing $TARGET"
+  bazel run "$TARGET" -- $@
+done

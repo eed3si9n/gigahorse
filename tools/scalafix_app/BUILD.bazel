@@ -1,0 +1,9 @@
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_binary")
+
+scala_binary(
+    name = "bin",
+    srcs = glob(include = ["*.scala"]),
+    main_class = "com.example.tools.scalafix_app.Main",
+    visibility = ["//visibility:public"],
+    deps = ["//3rdparty/jvm:ch_epfl_scala__scalafix-cli"],
+)
