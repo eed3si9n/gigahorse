@@ -16,8 +16,8 @@
 
 package gigahorse
 
-import java.io.{ File, FileOutputStream }
-
+import java.io.File
+import java.io.FileOutputStream
 import scala.concurrent.Future
 import scala.util.Try
 

@@ -18,10 +18,13 @@ package gigahorse
 package support.okhttp
 
 import okhttp3.{ Response => XResponse }
-import okhttp3.{ WebSocket => XWebSocket , WebSocketListener => XWebSocketListener }
-import scala.concurrent.Promise
+import okhttp3.{WebSocket => XWebSocket}
+import okhttp3.{WebSocketListener => XWebSocketListener}
 import okio.ByteString
-import scala.util.{ Failure, Success }
+
+import scala.concurrent.Promise
+import scala.util.Failure
+import scala.util.Success
 
 class OkhWebSocketListener(handler: PartialFunction[WebSocketEvent, Unit],
                            result: Promise[WebSocket]) extends XWebSocketListener {

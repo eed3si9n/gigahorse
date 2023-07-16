@@ -16,17 +16,19 @@
 
 package gigahorsetest
 
+import gigahorse.HeaderNames
+import gigahorse.MimeTypes
+import gigahorse.SignatureCalculator
+import gigahorse.WebSocketEvent
 import org.scalatest.Assertion
 import org.scalatest.flatspec.AsyncFlatSpec
 import org.scalatest.matchers.should.Matchers
+import unfiltered.netty.Server
 
-import scala.util.Success
-import scala.concurrent._
 import java.io.File
 import java.nio.charset.Charset
-
-import gigahorse.{HeaderNames, MimeTypes, SignatureCalculator, WebSocketEvent}
-import unfiltered.netty.Server
+import scala.concurrent._
+import scala.util.Success
 
 abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers {
   val port: Int = unfiltered.util.Port.any

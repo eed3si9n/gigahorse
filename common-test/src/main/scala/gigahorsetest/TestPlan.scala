@@ -16,9 +16,9 @@
 
 package gigahorsetest
 
+import unfiltered.netty.cycle.Planify
 import unfiltered.request._
 import unfiltered.response._
-import unfiltered.netty.cycle.Planify
 
 object TestPlan {
   val Fail = Unauthorized ~> WWWAuthenticate("""Basic realm="/"""")

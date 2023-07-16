@@ -16,8 +16,9 @@
 
 package gigahorse
 
-import scala.concurrent.{ Future, ExecutionContext }
 import java.io.File
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 abstract class HttpClient extends AutoCloseable {
   def underlying[A]: A

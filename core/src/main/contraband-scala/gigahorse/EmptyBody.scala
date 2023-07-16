@@ -18,9 +18,7 @@ override def hashCode: Int = {
 override def toString: String = {
   "EmptyBody()"
 }
-private[this] def copy(): EmptyBody = {
-  new EmptyBody()
-}
+
 
 }
 object EmptyBody {

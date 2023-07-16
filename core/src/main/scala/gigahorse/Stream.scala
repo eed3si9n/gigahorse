@@ -17,6 +17,7 @@
 package gigahorse
 
 import org.reactivestreams.Publisher
+
 import scala.concurrent.Future
 
 abstract class Stream[A] {

@@ -16,7 +16,8 @@
 
 package gigahorse
 
-import scala.concurrent.{ Future, ExecutionContext }
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 /**
  * Lifts Future[A] into Future[Either[Throwable, A]]
