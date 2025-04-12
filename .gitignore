@@ -10,3 +10,4 @@ rsync.sh
 bazel*
 www/
 /.bazelenv
+metals.sbt

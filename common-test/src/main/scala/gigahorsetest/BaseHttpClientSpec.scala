@@ -16,16 +16,21 @@
 
 package gigahorsetest
 
-import gigahorse.HeaderNames
-import gigahorse.MimeTypes
-import gigahorse.SignatureCalculator
-import gigahorse.WebSocketEvent
+import gigahorse.{
+  FileUtil, 
+  HeaderNames,
+  MimeTypes,
+  SignatureCalculator,
+  WebSocketEvent,
+}
 import org.scalatest.Assertion
 import org.scalatest.flatspec.AsyncFlatSpec
 import org.scalatest.matchers.should.Matchers
 import unfiltered.netty.Server
 
 import java.io.File
+import java.nio.ByteBuffer
+import java.nio.channels.FileChannel
 import java.nio.charset.Charset
 import scala.concurrent._
 import scala.util.Success
@@ -44,6 +49,7 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers {
     _.handler(WsTestPlan.testPlan)
   }
   def isWebSocketSupported: Boolean = true
+  def isUploadSupported: Boolean = true
 
   // custom loan pattern
   def withHttp(testCode: gigahorse.HttpClient => Future[Assertion]): Future[Assertion]
@@ -199,12 +205,15 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers {
 
   "http.download" should "download a resource" in
     withHttp { http =>
-      withTemporaryDirectory{ dir =>
-        val file = new File(dir, "Google_2015_logo.svg")
-        val r = Gigahorse.url("https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg")
+      withTemporaryDirectory { dir =>
+        val file = new File(dir, "a.json")
+        val r = Gigahorse.url(s"${testUrl}download")
         val f = http.download(r, file)
-        f map { x =>
-          assert(file.exists)
+        f.map { (x) =>
+          val s = FileUtil.read(file)
+          assert(s == """{
+  "a": null
+}""")
         }
       }
     }
@@ -225,6 +234,24 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers {
         assert(either.right.get.bodyAsString contains "404 HTTP Status Code")
       }
     }
+
+  "http.processFull(r)" should "upload files" in
+    (if (isUploadSupported)
+      withHttp { http =>
+        withTemporaryDirectory { dir =>
+          val file = new File(dir, "a.json")
+          val content = """{
+    "b": null
+  }"""
+          FileUtil.write(file, content)
+          val r = Gigahorse.url(s"${testUrl}upload")
+            .post(file)
+          for {
+            res  <- http.processFull(r)
+          } yield assert(res.bodyAsString == content)
+        }
+      }
+    else cancel())
 
   /** The maximum number of times a unique temporary filename is attempted to be created.*/
   private[this] val MaximumTries = 10

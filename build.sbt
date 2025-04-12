@@ -39,7 +39,7 @@ lazy val root = (project in file(".")).
         s"++ ${scala212}!" ::
         "core/publishSigned" ::
         "apacheHttp/publishSigned" ::
-        "shadedApacheHttpAsyncClient/publishSigned" ::
+        "shadedApacheHttpClient5/publishSigned" ::
         "okhttp/publishSigned" ::
         "asynchttpclient/publishSigned" ::
         "shadedAsyncHttpClient/publishSigned" ::
@@ -59,11 +59,12 @@ lazy val commonSettings = List(
     "-deprecation",
     "-unchecked",
     "-Xlint",
+    "-Xsource:3",
     "-feature",
     "-language:existentials",
     "-language:experimental.macros",
     "-language:higherKinds",
-    "-language:implicitConversions"
+    "-language:implicitConversions",
   ),
   Compile / console / scalacOptions --= Seq("-deprecation", "-Xfatal-warnings", "-Xlint"),
   Test / fork := true,
@@ -102,9 +103,8 @@ lazy val commonTest = (project in file("common-test")).
   settings(
     libraryDependencies ++= Seq(scalatest,
       ufDirectives, ufFilter, ufWebsockets),
-    publish := {},
-    publishLocal := {},
-    publishSigned := {}
+    publish / skip := true,
+    exportJars := true,
   )
 
 // lazy val packageSite = taskKey[Unit]("package site")
@@ -132,7 +132,7 @@ lazy val commonTest = (project in file("common-test")).
 //   )
 
 lazy val apacheHttp = (project in file("apache-http")).
-  dependsOn(core, shadedApacheHttpAsyncClient, commonTest % Test).
+  dependsOn(core, shadedApacheHttpClient5, commonTest % Test).
   settings(
     commonSettings,
     fatalWarnings,
@@ -169,15 +169,15 @@ lazy val akkaHttp = (project in file("akka-http")).
     dependencyOverrides += sslConfig
   )
 
-lazy val shadedApacheHttpAsyncClient = (project in file("shaded/apache-httpasyncclient"))
+lazy val shadedApacheHttpClient5 = (project in file("shaded/apache-httpclient5"))
   .configs(ShadeSandbox)
   .settings(commonSettings)
   .settings(apacheShadeSettings)
   .settings(
-    name := "shaded-apache-httpasyncclient",
+    name := "shaded-apache-httpclient5",
     crossScalaVersions := Vector(scala212, scala213),
     libraryDependencies ++= Seq(
-      Dependencies.apacheHttpAsyncClient.exclude("commons-logging", "commons-logging") % ShadeSandbox,
+      Dependencies.httpClient5 % ShadeSandbox,
       Dependencies.jclOverSlf4j % ShadeSandbox,
     ),
     autoScalaLibrary := false,

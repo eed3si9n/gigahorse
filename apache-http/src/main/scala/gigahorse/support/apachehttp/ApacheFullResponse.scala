@@ -18,39 +18,35 @@ package gigahorse
 package support.apachehttp
 
 import java.nio.ByteBuffer
-import shaded.apache.org.apache.http.{ Header, HttpResponse => XResponse }
-import shaded.apache.org.apache.http.util.EntityUtils
+import shaded.apache.org.apache.hc.client5.http.async.methods.SimpleHttpResponse
+import shaded.apache.org.apache.hc.core5.http.{ Header => XHeader }
 
-/**
- * https://javadoc.io/doc/org.apache.httpcomponents/httpcore/4.4.1/org/apache/http/HttpResponse.html
- */
-class ApacheFullResponse(apacheResponse: XResponse) extends FullResponse {
+// https://hc.apache.org/httpcomponents-client-5.4.x/current/httpclient5/apidocs/org/apache/hc/client5/http/async/methods/SimpleHttpResponse.html
+class ApacheFullResponse(apacheResponse: SimpleHttpResponse) extends FullResponse {
   /**
    * @return The underlying response object.
    */
   override def underlying[A] = apacheResponse.asInstanceOf[A]
-  private[this] def entity = apacheResponse.getEntity
-  private[this] def statusLine = apacheResponse.getStatusLine
-
-  override def close(): Unit = EntityUtils.consumeQuietly(entity)
+//   private[this] def entity = apacheResponse.getEntity
+//   private[this] def statusLine = apacheResponse.getStatusLine
+  override def close(): Unit = () // EntityUtils.consumeQuietly(entity)
 
   /**
    * The response body as a `ByteBuffer`.
    */
   override def bodyAsByteBuffer: ByteBuffer =
-    ByteBuffer.wrap(EntityUtils.toByteArray(entity))
+    ByteBuffer.wrap(apacheResponse.getBodyBytes())
 
   /**
    * The response body as String.
    */
-  override lazy val bodyAsString: String =
-    EntityUtils.toString(entity)
+  override lazy val bodyAsString: String = apacheResponse.getBodyText
 
   /**
    * Return the headers of the response as a case-insensitive map
    */
   override lazy val allHeaders: Map[String, List[String]] =
-    apacheResponse.getAllHeaders.toList
+    apacheResponse.getHeaders().toList
       .groupBy(_.getName)
       .map { case (k, vs) =>
         (k, vs.map(_.getValue))
@@ -65,7 +61,7 @@ class ApacheFullResponse(apacheResponse: XResponse) extends FullResponse {
    * The response status message.
    */
   override def statusText: String =
-    Option(statusLine.getReasonPhrase).getOrElse("")
+    Option(apacheResponse.getReasonPhrase).getOrElse("")
 
   /**
    * Get a response header.
@@ -75,9 +71,12 @@ class ApacheFullResponse(apacheResponse: XResponse) extends FullResponse {
 }
 
 object ApacheFullResponse {
-  def headers(apacheResponse: XResponse): List[Header] =
-    apacheResponse.getAllHeaders.toList
+  def apply(apacheResponse: SimpleHttpResponse) =
+    new ApacheFullResponse(apacheResponse)
 
-  def status(apacheResponse: XResponse): Int =
-    apacheResponse.getStatusLine.getStatusCode
+  def headers(apacheResponse: SimpleHttpResponse): List[XHeader] =
+    apacheResponse.getHeaders().toList
+
+  def status(apacheResponse: SimpleHttpResponse): Int =
+    apacheResponse.getCode
 }
