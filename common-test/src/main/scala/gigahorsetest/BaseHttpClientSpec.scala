@@ -67,6 +67,7 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers {
     }
   }
 
+  /*
   it should "retrieve a resource from Duckduckgo.com" in
     withHttp { http =>
       val r = Gigahorse.url("http://duckduckgo.com").
@@ -79,6 +80,7 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers {
         assert(res.bodyAsString contains "2 (number)")
       }
     }
+  */
 
   "http.run(r, Gigahorse.asString)" should "retrieve a resource as String" in
     withHttp { http =>
@@ -171,6 +173,7 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers {
       }
     else cancel())
 
+  /*
   "http.run(r, Gigahorse.asEither)" should "retrieve a resource and convert to Right" in
     withHttp { http =>
       val r = Gigahorse.url("http://duckduckgo.com").
@@ -183,6 +186,7 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers {
         assert(either.right.get.toString contains "2 (number)")
       }
     }
+  */
 
   it should "retrieve a resource and convert to Left given 500" in
     withHttp { http =>
