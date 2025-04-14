@@ -17,9 +17,6 @@
 package gigahorse
 package support.apachehttp
 
-import java.io.File
-import shaded.apache.org.apache.http.entity.ContentType
-
 trait OkHandler extends ApacheHandler {
   abstract override def onStatusReceived(code: Int): Unit =
     {
@@ -30,9 +27,9 @@ trait OkHandler extends ApacheHandler {
 
 object OkHandler {
   abstract class FullOkHandler[A](f: FullResponse => A) extends FunctionHandler[A](f) with OkHandler {}
-  abstract class ZeroCopyOkHandler(f: (File, ContentType) => Unit) extends ApacheZeroCopyHandler with OkHandler {
-    override def onFileReceived(file: File, contentType: ContentType): Unit = f(file, contentType)
-  }
+  // abstract class ZeroCopyOkHandler(f: (File, ContentType) => Unit) extends ApacheZeroCopyHandler with OkHandler {
+  //   override def onFileReceived(file: File, contentType: ContentType): Unit = f(file, contentType)
+  // }
   def apply[A](f: FullResponse => A): FullOkHandler[A] = new FullOkHandler[A](f) {}
-  def zeroCopy(f: (File, ContentType) => Unit): ZeroCopyOkHandler = new ZeroCopyOkHandler(f) {}
+  // def zeroCopy(f: (File, ContentType) => Unit): ZeroCopyOkHandler = new ZeroCopyOkHandler(f) {}
 }

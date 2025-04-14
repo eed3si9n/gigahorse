@@ -16,6 +16,11 @@
 
 package gigahorsetest
 
+import gigahorse.FileUtil
+import java.io.ByteArrayOutputStream
+import java.nio.ByteBuffer
+import java.nio.channels.Channels
+import java.nio.file.{ Files, Paths }
 import unfiltered.netty.cycle.Planify
 import unfiltered.request._
 import unfiltered.response._
@@ -60,6 +65,15 @@ object TestPlan {
         Ok ~> ResponseString(s"${h.next()}:${r.parameterValues("query").mkString}:${r.parameterValues("content").mkString}")
       else
         BadRequest ~> ResponseString("X-Signature header is not found!")
+    // download
+    case GET(Path("/download")) =>
+      val r = this.getClass().getClassLoader().getResourceAsStream("a.json")
+      val baos = new ByteArrayOutputStream()
+      FileUtil.transfer(r, baos)
+      Ok ~> ResponseBytes(baos.toByteArray())
+    case r @ POST(Path("/upload")) =>
+      val body = FileUtil.read(r.inputStream)
+      Ok ~> ResponseString(body)
     case GET(Path(p)) =>
       println(p)
       Ok ~> ResponseString("foo")

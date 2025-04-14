@@ -18,42 +18,70 @@ package gigahorse
 package support.apachehttp
 
 import java.io.File
-import java.net.URLEncoder
-import java.nio.ByteBuffer
-import shaded.apache.org.apache.http.{
-  HttpEntityEnclosingRequest,
-  HttpHost,
-  HttpRequest => XRequest,
-  HttpResponse => XResponse,
-  HttpRequestInterceptor
+import java.net.URI
+import java.nio.{
+  ByteBuffer,
+  CharBuffer,
 }
-import shaded.apache.org.apache.http.auth.{ AuthScope, UsernamePasswordCredentials }
-import shaded.apache.org.apache.http.client.methods.HttpRequestWrapper
-import shaded.apache.org.apache.http.concurrent.FutureCallback
-import shaded.apache.org.apache.http.entity.ContentType
-import shaded.apache.org.apache.http.impl.client.BasicCredentialsProvider
-import shaded.apache.org.apache.http.impl.nio.client.{
-  CloseableHttpAsyncClient => XClient,
-  HttpAsyncClients,
+import java.nio.channels.{ FileChannel, Channels }
+import java.nio.file.{ Files, StandardOpenOption }
+import shaded.apache.org.apache.hc.client5
+import shaded.apache.org.apache.hc.core5
+import client5.http.async.methods.{
+  AbstractBinResponseConsumer,
+  AbstractCharResponseConsumer,
+  SimpleHttpResponse,
+  SimpleRequestBuilder,
+  SimpleRequestProducer,
+  SimpleResponseConsumer,
+}
+import client5.http.auth.{
+  AuthScope,
+  CredentialsProvider,
+  UsernamePasswordCredentials,
+}
+import client5.http.impl.async.{
+  CloseableHttpAsyncClient as XClient,
   HttpAsyncClientBuilder,
+  HttpAsyncClients,
 }
-import shaded.apache.org.apache.http.nio.IOControl
-import shaded.apache.org.apache.http.nio.client.methods.{
-  AsyncByteConsumer,
-  HttpAsyncMethods,
-  ZeroCopyConsumer,
+import client5.http.impl.auth.CredentialsProviderBuilder
+import client5.http.impl.nio.PoolingAsyncClientConnectionManager
+import core5.concurrent.FutureCallback
+import core5.http.{
+  ContentType,
+  EntityDetails,
+  Header as XHeader,
+  HttpEntity,
+  HttpRequest as XRequest,
+  HttpRequestInterceptor,
+  HttpResponse as XResponse,
 }
-import shaded.apache.org.apache.http.nio.protocol.HttpAsyncRequestProducer
-import shaded.apache.org.apache.http.protocol.HttpContext
-import shaded.apache.org.apache.http.util.EntityUtils
+import core5.http.nio.{
+  AsyncEntityProducer,
+  AsyncRequestProducer,
+  DataStreamChannel,
+}
+import core5.http.nio.entity.FileEntityProducer
+import core5.http.nio.support.BasicRequestProducer
+import core5.http.protocol.HttpContext
+import core5.reactor.IOReactorConfig
+import core5.util.Timeout
+
 import scala.collection.concurrent.TrieMap
 import scala.concurrent.{ ExecutionContext, Future, Promise }
 import scala.util.control.NonFatal
 
 class ApacheHttpClient(config: Config) extends HttpClient {
-  private val clients: TrieMap[(Option[String], Option[Realm], Option[SignatureCalculator]), XClient] =
+
+  private val clients: TrieMap[(Option[Realm], Option[SignatureCalculator], Option[String]), XClient] =
     TrieMap()
+
   private type CB = HttpAsyncClientBuilder
+
+  val ioReactorConfig = IOReactorConfig.custom()
+    .setSoTimeout(Timeout.ofSeconds(5))
+    .build()
 
   override def underlying[A]: A = buildClient(None, None, None).asInstanceOf[A]
 
@@ -73,72 +101,69 @@ class ApacheHttpClient(config: Config) extends HttpClient {
   override def run[A](request: Request, lifter: FutureLifter[A])(implicit ec: ExecutionContext): Future[Either[Throwable,A]] =
     lifter.run(run(request))
 
-  // This creates an XRequest object, and potentially an XOkHttpClient with some overrides
-  def buildRequest(request: Request): (XRequest, XClient) = {
-    import request._
-    val (producer, client) = buildRequestProducer(request)
-    val r = producer.generateRequest
-    if (headers.nonEmpty) {
-      headers.foreach { case (k, vs) =>
-        vs.foreach { v =>
-          r.setHeader(k, v)
-        }
-      }
-    }
-    (r, client)
-  }
-
-  def buildRequestProducer(request: Request): (HttpAsyncRequestProducer, XClient) = {
-    import request._
-    val u =
-      if (queryString.isEmpty) url
-      else {
-        val q = queryString.toSeq.flatMap { case (k, vs) =>
-          vs.map { v =>
-            val ek = URLEncoder.encode(k, "UTF-8")
-            val ev = URLEncoder.encode(v, "UTF-8")
-            s"$ek=$ev" }
-        }.mkString("&")
-        s"$url?$q"
-      }
-    def buildContentType(opt: Option[String], fallback: ContentType): ContentType =
-      opt match {
-        case Some(value) => ContentType.parse(value)
-        case _           => fallback
-      }
+  // Returns a AsyncRequestProducer.
+  // SimpleHttpRequest maps to our idea of the request, and that would work for empty body request.
+  // However, for file upload, we need to customize the producer.
+  private def buildRequestProducer(request: Request): AsyncRequestProducer = {
+    import request.*
+    val builder = buildRequestBuilder(request)
     def ct: ContentType =
       body match {
         case _: FileBody => buildContentType(contentType, ContentType.MULTIPART_FORM_DATA)
         case _           => buildContentType(contentType, ContentType.create("text/plain", "utf-8"))
       }
-    def buildProducer(
-        create: (String, Array[Byte], ContentType) => HttpAsyncRequestProducer,
-        createZero: (String, File, ContentType) => HttpAsyncRequestProducer,
-    ): HttpAsyncRequestProducer =
-      body match {
-        case _: EmptyBody    => create(u, Array[Byte](), ct)
-        case b: FileBody     => createZero(u, b.file, ct)
-        case b: InMemoryBody => create(u, b.bytes, ct)
-      }
-
-    // https://www.javadoc.io/static/org.apache.httpcomponents/httpcore/4.4.6/org/apache/http/entity/ContentType.html
-    val producer = method match {
-      case HttpVerbs.GET    => HttpAsyncMethods.createGet(u)
-      case HttpVerbs.POST   => buildProducer(HttpAsyncMethods.createPost, HttpAsyncMethods.createZeroCopyPost)
-      case HttpVerbs.PUT    => buildProducer(HttpAsyncMethods.createPut, HttpAsyncMethods.createZeroCopyPut)
-      case HttpVerbs.DELETE => HttpAsyncMethods.createDelete(u)
-      case HttpVerbs.HEAD   => HttpAsyncMethods.createHead(u)
-      case HttpVerbs.PATCH  => sys.error(s"PATCH method is not supported")
+    body match {
+      case _: EmptyBody =>
+        val r = builder.build()
+        SimpleRequestProducer.create(r)
+      case b: InMemoryBody =>
+        builder.setBody(b.bytes, ct)
+        val r = builder.build()
+        SimpleRequestProducer.create(r)
+      case b: FileBody =>
+        val r = builder.build()
+        val entity = new FileEntityProducer(b.file, ct)
+        new BasicRequestProducer(r, entity)
     }
-    val client =
-      if (authOpt.isDefined || signatureOpt.isDefined)
-        buildClient(authOpt, signatureOpt, Option(producer.getTarget))
-      else buildClient(authOpt, signatureOpt, None)
-    (producer, client)
+  }
+  private def buildContentType(opt: Option[String], fallback: ContentType): ContentType =
+    opt match {
+      case Some(value) => ContentType.parse(value)
+      case _           => fallback
+    }
+  private def buildRequestBuilder(request: Request): SimpleRequestBuilder = {
+    import request.*
+    val uri = new URI(url)
+    val builder = method match {
+      case HttpVerbs.GET    => SimpleRequestBuilder.get(uri)
+      case HttpVerbs.POST   => SimpleRequestBuilder.post(uri)
+      case HttpVerbs.PUT    => SimpleRequestBuilder.put(uri)
+      case HttpVerbs.DELETE => SimpleRequestBuilder.delete(uri)
+      case HttpVerbs.HEAD   => SimpleRequestBuilder.head(uri)
+      case HttpVerbs.PATCH  => SimpleRequestBuilder.patch(uri)
+    }
+    queryString.toSeq.foreach { case (k, vs) =>
+      vs.foreach { (v: String) =>
+        builder.addParameter(k, v)
+      }
+    }
+    builder
   }
 
   def download(request: Request, file: File): Future[File] =
-    processFile(request, file, OkHandler.zeroCopy { (_, _) => () })
+    processByteStream(request, new ApacheByteStreamHandler[File] {
+      val temp = Files.createTempFile("temp", ".tmp")
+      val c = FileChannel.open(temp, StandardOpenOption.WRITE)
+      override def onByteReceived(buf: ByteBuffer): Unit = {
+        c.write(buf)
+        ()
+      }
+      override def onCompleted(): File = {
+        c.force(true)
+        c.close()
+        Files.move(temp, file.toPath()).toFile()
+      }
+    })
 
   /** Executes the request and return a Future of FullResponse. Does not error on non-OK response. */
   override def processFull(request: Request): Future[FullResponse] =
@@ -154,25 +179,29 @@ class ApacheHttpClient(config: Config) extends HttpClient {
 
   /** Executes the request. Does not error on non-OK response. */
   def processFull[A](request: Request, handler: ApacheCompletionHandler[A]): Future[A] = {
+    val client = buildClient(request)
     val result = Promise[A]()
-    val (r, client) = buildRequest(request)
     client.start()
-    client.execute(HttpRequestWrapper.wrap(r),
-      new FutureCallback[XResponse] {
-        def completed(response: XResponse): Unit =
+    // https://github.com/apache/httpcomponents-client/blob/5.4.x/httpclient5/src/test/java/org/apache/hc/client5/http/examples/AsyncClientHttpExchange.java
+    client.execute(
+      buildRequestProducer(request),
+      SimpleResponseConsumer.create(),
+      new FutureCallback[SimpleHttpResponse] {
+        def completed(response: SimpleHttpResponse): Unit =
           attempt(result) {
             handler.onStatusReceived(ApacheFullResponse.status(response))
             handler.onHeadersReceived(ApacheFullResponse.headers(response))
-            result.success(handler.onCompleted(new ApacheFullResponse(response)))
+            result.success(handler.onCompleted(ApacheFullResponse(response)))
           }
         def cancelled(): Unit = result.failure(new RuntimeException("cancelled"))
         def failed(e: Exception): Unit = result.failure(e)
-      })
+      }
+    )
     result.future
   }
 
   // if anything happens, fail the promise
-  def attempt[A](result: Promise[A])(f: => Unit): Unit =
+  private def attempt[A](result: Promise[A])(f: => Unit): Unit =
     try {
       f
     } catch {
@@ -181,75 +210,111 @@ class ApacheHttpClient(config: Config) extends HttpClient {
     }
 
   /** Executes the request. Does not error on non-OK response. */
-  def processFile(request: Request, file: File, handler: ApacheZeroCopyHandler): Future[File] = {
-    val result = Promise[File]()
-    val (r, client) = buildRequestProducer(request)
+  def processByteStream[A](request: Request, handler: ApacheByteStreamHandler[A]): Future[A] = {
+    val client = buildClient(request)
+    val result = Promise[A]()
     client.start()
+    // https://hc.apache.org/httpcomponents-client-5.4.x/current/httpclient5/apidocs/org/apache/hc/client5/http/impl/async/CloseableHttpAsyncClient.html
     client.execute(
-      r,
-      new ZeroCopyConsumer[File](file) {
-        override def process(response: XResponse, file: File, contentType: ContentType): File = {
+      buildRequestProducer(request),
+      new AbstractBinResponseConsumer[Unit] {
+        // Triggered to signal the beginning of response processing.
+        override def start(response: XResponse, contentType: ContentType): Unit =
           attempt(result) {
-            handler.onStatusReceived(ApacheFullResponse.status(response))
-            handler.onHeadersReceived(ApacheFullResponse.headers(response))
-            handler.onFileReceived(file, contentType)
-            result.success(file)
+            handler.onStatusReceived(response.getCode())
           }
-          file
-        }
+        // Triggered to obtain the capacity increment.
+        override def capacityIncrement(): Int = handler.onCapacityIncrement
+        override def data(buf: ByteBuffer, endOfStream: Boolean): Unit =
+          attempt(result) {
+            handler.onByteReceived(buf)
+          }
+        override def buildResult(): Unit = ()
+        override def releaseResources(): Unit = ()
       },
-      None.orNull,
+      new FutureCallback[Unit] {
+        def completed(u: Unit): Unit =
+          attempt(result) {
+            result.success(handler.onCompleted())
+          }
+        def cancelled(): Unit = result.failure(new RuntimeException("cancelled"))
+        def failed(e: Exception): Unit = result.failure(e)
+      }
     )
     result.future
   }
 
   /** Executes the request. Does not error on non-OK response. */
-  def processByteStream[A](request: Request, handler: ApacheByteStreamHandler[A]): Future[A] = {
+  def processCharStream[A](request: Request, handler: ApacheCharStreamHandler[A]): Future[A] = {
+    val client = buildClient(request)
     val result = Promise[A]()
-    val (r, client) = buildRequestProducer(request)
     client.start()
+    // https://hc.apache.org/httpcomponents-client-5.4.x/current/httpclient5/apidocs/org/apache/hc/client5/http/impl/async/CloseableHttpAsyncClient.html
+    // https://github.com/apache/httpcomponents-client/blob/5.4.x/httpclient5/src/test/java/org/apache/hc/client5/http/examples/AsyncClientHttpExchangeStreaming.java
     client.execute(
-      r,
-      new AsyncByteConsumer[Unit] {
-        override def onResponseReceived(response: XResponse): Unit =
+      buildRequestProducer(request),
+      new AbstractCharResponseConsumer[Unit] {
+        // Triggered to signal the beginning of response processing.
+        override def start(response: XResponse, contentType: ContentType): Unit =
           attempt(result) {
-            handler.onStatusReceived(ApacheFullResponse.status(response))
-            handler.onHeadersReceived(ApacheFullResponse.headers(response))
+            handler.onStatusReceived(response.getCode())
           }
-        override def onByteReceived(buf: ByteBuffer, ioControl: IOControl): Unit =
+        // Triggered to obtain the capacity increment.
+        override def capacityIncrement(): Int = handler.onCapacityIncrement
+        override def data(buf: CharBuffer, endOfStream: Boolean): Unit =
           attempt(result) {
-            handler.onByteReceived(buf, ioControl)
+            handler.onCharReceived(buf)
           }
-        override def buildResult(ctx: HttpContext): Unit =
-          attempt(result) {
-            result.completeWith(handler.buildResult)
-          }
+        override def buildResult(): Unit = ()
+        override def releaseResources(): Unit = ()
       },
-      None.orNull,
+      new FutureCallback[Unit] {
+        def completed(u: Unit): Unit =
+          attempt(result) {
+            result.success(handler.onCompleted())
+          }
+        def cancelled(): Unit = result.failure(new RuntimeException("cancelled"))
+        def failed(e: Exception): Unit = result.failure(e)
+      }
     )
     result.future
+  }
+
+  def buildClient(request: Request): XClient = {
+    val u = new URI(request.url)
+    if (request.authOpt.isDefined || request.signatureOpt.isDefined)
+      buildClient(request.authOpt, request.signatureOpt, Option(u.getHost()))
+    else buildClient(request.authOpt, request.signatureOpt, Option(u.getHost()))
   }
 
   def buildClient(
     authOpt: Option[Realm],
     signatureOpt: Option[SignatureCalculator],
-    targetOpt: Option[HttpHost],
+    targetOpt: Option[String],
   ): XClient =
     clients.getOrElseUpdate(
-      (targetOpt.map(_.toString), authOpt, signatureOpt),
+      (authOpt, signatureOpt, targetOpt),
       buildClient0(HttpAsyncClients.custom(), authOpt, signatureOpt, targetOpt)
     )
 
-  // https://hc.apache.org/httpcomponents-asyncclient-4.1.x/current/httpasyncclient/apidocs/
+  // https://hc.apache.org/httpcomponents-client-5.4.x/current/httpclient5/apidocs/org/apache/hc/client5/http/impl/async/HttpAsyncClientBuilder.html
   private def buildClient0(
     b0: CB,
     authOpt: Option[Realm],
     signatureOpt: Option[SignatureCalculator],
-    targetOpt: Option[HttpHost],
+    targetOpt: Option[String],
   ): XClient = {
     val clientfs: List[CB => CB] = List[CB => CB](
-      (b: CB) => if (config.maxConnections > 0) b.setMaxConnTotal(config.maxConnections) else b,
-      (b: CB) => if (config.maxConnectionsPerHost > 0) b.setMaxConnPerRoute(config.maxConnectionsPerHost) else b,
+      (b: CB) => if (config.maxConnections > 0 || config.maxConnectionsPerHost > 0) {
+        val manager = new PoolingAsyncClientConnectionManager()
+        if (config.maxConnections > 0) {
+          manager.setMaxTotal(config.maxConnections)
+        }
+        if (config.maxConnectionsPerHost > 0) {
+          manager.setDefaultMaxPerRoute(config.maxConnectionsPerHost)
+        }
+        b.setConnectionManager(manager)
+      } else b
     ) :::
     (authOpt match {
       case Some(auth) =>
@@ -261,7 +326,7 @@ class ApacheHttpClient(config: Config) extends HttpClient {
     ((signatureOpt, targetOpt) match {
       case (Some(signatureCalculator), Some(target)) =>
         List[CB => CB]({ case b: CB =>
-          b.addInterceptorLast(buildInterceptor(signatureCalculator, target))
+          b.addRequestInterceptorLast(buildInterceptor(signatureCalculator, target))
         })
       case _ => Nil
     })
@@ -270,33 +335,50 @@ class ApacheHttpClient(config: Config) extends HttpClient {
     result
   }
 
-  // https://hc.apache.org/httpclient-legacy/apidocs/org/apache/commons/httpclient/auth/AuthScope.html
-  def buildCredentialProvider(auth: Realm): BasicCredentialsProvider =
+  // https://hc.apache.org/httpcomponents-client-5.4.x/current/httpclient5/apidocs/org/apache/hc/client5/http/auth/AuthScope.html
+  def buildCredentialProvider(auth: Realm): CredentialsProvider =
     auth.scheme match {
       case AuthScheme.Basic =>
-        val p = new BasicCredentialsProvider
-        val credentials = new UsernamePasswordCredentials(auth.username, auth.password)
         val scope = auth.realmNameOpt match {
-          case Some(realm) => new AuthScope(AuthScope.ANY_HOST, AuthScope.ANY_PORT, realm)
-          case _           => AuthScope.ANY
+          case Some(realm) => new AuthScope(null, null, -1, realm, null)
+          case _           => new AuthScope(null, null, -1, null, null)
         }
-        p.setCredentials(scope, credentials)
-        p
+        val credentials = new UsernamePasswordCredentials(auth.username, auth.password.toCharArray())
+        val p = CredentialsProviderBuilder.create()
+        p.add(scope, credentials)
+        p.build()
       case _ =>
         sys.error(s"unsupported scheme: ${auth.scheme}")
     }
 
-  def buildInterceptor(signatureCalculator: SignatureCalculator, target: HttpHost): HttpRequestInterceptor =
-    (request: XRequest, context: HttpContext) => {
-      val uri = target.toString + HttpRequestWrapper.wrap(request).getURI.toString
-      val (contentType, content) = request match {
-        case req: HttpEntityEnclosingRequest =>
-          val entity = req.getEntity
-          val contentType = Option(entity.getContentType).map(_.getValue)
-          (contentType, EntityUtils.toByteArray(entity))
-        case _ => (None, Array[Byte]())
+  def buildInterceptor(signatureCalculator: SignatureCalculator, target: String): HttpRequestInterceptor =
+    (request: XRequest, entity: EntityDetails, context: HttpContext) => {
+      val uri = request.getUri().toString
+      val contentType = Option(entity).map(_.getContentType())
+      val contentLength = Option(entity) match {
+        case Some(en) => en.getContentLength().toInt
+        case _        => 0
       }
-      val (name, value) = signatureCalculator.sign(uri, contentType, content)
+      val b = ByteBuffer.allocate(contentLength)
+      Option(entity) match {
+        case Some(h: HttpEntity) =>
+          val c = Channels.newChannel(h.getContent())
+          while (c.read(b) > 0) ()
+        case Some(p: AsyncEntityProducer) =>
+          p.produce(new DataStreamChannel {
+            def endStream(): Unit = ()
+            def endStream(headers: java.util.List[_ <: XHeader]): Unit = ()
+            def requestOutput(): Unit = ()
+            def write(bf: ByteBuffer): Int = {
+              b.put(bf.array())
+              1
+            }
+          })
+        case Some(entity) => sys.error(s"unsupported entity: $entity")
+        case None => ()
+      }
+      val contents = b.array()
+      val (name, value) = signatureCalculator.sign(uri, contentType, contents)
       request.setHeader(name, value)
     }
 

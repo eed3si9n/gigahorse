@@ -18,17 +18,15 @@ package gigahorse
 package support.apachehttp
 
 import java.nio.ByteBuffer
-import scala.concurrent.Future
-import shaded.apache.org.apache.http.Header
-import shaded.apache.org.apache.http.nio.IOControl
+import shaded.apache.org.apache.hc.core5.http.{ Header => XHeader }
 
 /**
- * Wrapper around org.apache.http.nio.client.methods.AsyncByteConsumer.
+ * Wrapper around org.apache.hc.client5.http.async.methods.AbstractBinResponseConsumer.
  */
 abstract class ApacheByteStreamHandler[A] extends ApacheHandler {
   def onStatusReceived(status: Int): Unit = ()
-  def onHeadersReceived(headers: List[Header]): Unit = ()
-
-  def onByteReceived(buf: ByteBuffer, ioControl: IOControl): Unit
-  def buildResult: Future[A]
+  def onHeadersReceived(headers: List[XHeader]): Unit = ()
+  def onCapacityIncrement: Int = Int.MaxValue
+  def onByteReceived(buf: ByteBuffer): Unit
+  def onCompleted(): A
 }

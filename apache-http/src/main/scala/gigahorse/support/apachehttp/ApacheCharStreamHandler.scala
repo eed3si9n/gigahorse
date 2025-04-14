@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 by Eugene Yokota
+ * Copyright 2025 by Eugene Yokota
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,17 +17,16 @@
 package gigahorse
 package support.apachehttp
 
-import java.io.File
-import shaded.apache.org.apache.http.Header
-import shaded.apache.org.apache.http.entity.ContentType
+import java.nio.CharBuffer
+import shaded.apache.org.apache.hc.core5.http.{ Header => XHeader }
 
 /**
- * Wrapper around org.apache.http.nio.client.methods.ZeroCopyConsumer
- * so we can perform status code check using OkHandler.
- * See OkHanlder.zeroCopy.
+ * Wrapper around org.apache.hc.client5.http.async.methods.AbstractCharResponseConsumer.
  */
-abstract class ApacheZeroCopyHandler extends ApacheHandler {
+abstract class ApacheCharStreamHandler[A] extends ApacheHandler {
   def onStatusReceived(status: Int): Unit = ()
-  def onHeadersReceived(headers: List[Header]): Unit = ()
-  def onFileReceived(file: File, contentType: ContentType): Unit
+  def onHeadersReceived(headers: List[XHeader]): Unit = ()
+  def onCapacityIncrement: Int = Int.MaxValue
+  def onCharReceived(buf: CharBuffer): Unit
+  def onCompleted(): A
 }

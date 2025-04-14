@@ -21,7 +21,7 @@ package support.asynchttpclient
 import scala.collection.JavaConverters._
 import java.io.File
 import scala.concurrent.{ Future, Promise, ExecutionContext }
-import shaded.ahc.org.asynchttpclient.{ Response => XResponse, Request => XRequest, Realm => XRealm, SignatureCalculator => XSignatureCalculator, _ }
+import shaded.ahc.org.asynchttpclient.{ Response => XResponse, Request => XRequest, Realm => XRealm, SignatureCalculator => XSignatureCalculator, AsyncHandler => _, * }
 import shaded.ahc.org.asynchttpclient.AsyncHandler.{ State => XState }
 import shaded.ahc.org.asynchttpclient.handler.StreamedAsyncHandler
 import shaded.ahc.org.asynchttpclient.proxy.{ ProxyServer => XProxyServer }
