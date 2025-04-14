@@ -23,6 +23,7 @@ import akka.stream.scaladsl._
 import scala.util.Success
 import scala.concurrent.{ Future, Promise }
 import akka.actor.{ ActorSystem, Props, PoisonPill }
+import akka.actor.actorRef2Scala
 import akka.stream.actor.ActorPublisher
 import akka.http.scaladsl.model.ws.{ Message, TextMessage => XTextMessage, BinaryMessage => XBinaryMessage }
 import WebSocketEvent._
