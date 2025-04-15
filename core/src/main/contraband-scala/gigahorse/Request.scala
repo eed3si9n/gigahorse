@@ -37,18 +37,24 @@ final class Request private (
   def patch(body: String, charset: Charset): Request = this.withMethod(HttpVerbs.PATCH).withBody(EncodedString(body, charset))
   /** Uses PATCH method with the given file. */
   def patch(file: File): Request                     = this.withMethod(HttpVerbs.PATCH).withBody(FileBody(file))
+  /** Uses PATCH method with the multipart form. */
+  def patch(form: MultipartFormBody): Request        = this.withMethod(HttpVerbs.PATCH).withBody(form)
   /** Uses POST method with the given body. */
   def post[A: HttpWrite](body: A): Request           = this.withMethod(HttpVerbs.POST).withBody(body)
   /** Uses POST method with the given body. */
   def post(body: String, charset: Charset): Request  = this.withMethod(HttpVerbs.POST).withBody(EncodedString(body, charset))
   /** Uses POST method with the given file. */
   def post(file: File): Request                      = this.withMethod(HttpVerbs.POST).withBody(FileBody(file))
+  /** Uses POST method with the multipart form. */
+  def post(form: MultipartFormBody): Request         = this.withMethod(HttpVerbs.POST).withBody(form)
   /** Uses PUT method with the given body. */
   def put[A: HttpWrite](body: A): Request            = this.withMethod(HttpVerbs.PUT).withBody(body)
   /** Uses PUT method with the given body. */
   def put(body: String, charset: Charset): Request   = this.withMethod(HttpVerbs.PUT).withBody(EncodedString(body, charset))
   /** Uses PUT method with the given file. */
   def put(file: File): Request                       = this.withMethod(HttpVerbs.PUT).withBody(FileBody(file))
+  /** Uses PUT method with the multipart form. */
+  def put(form: MultipartFormBody): Request          = this.withMethod(HttpVerbs.PUT).withBody(form)
   /** Uses DELETE method. */
   def delete: Request                                = this.withMethod(HttpVerbs.DELETE)
   /** Uses HEAD method. */

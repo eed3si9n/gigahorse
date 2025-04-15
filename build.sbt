@@ -98,11 +98,12 @@ lazy val core = (project in file("core")).
     Compile / sources := (Compile / sources).value.toList.distinct,
   )
 
+lazy val testDeps = Seq(scalatest, ufDirectives, ufFilter, ufWebsockets, ufUploads)
 lazy val commonTest = (project in file("common-test")).
   dependsOn(core).
   settings(
-    libraryDependencies ++= Seq(scalatest,
-      ufDirectives, ufFilter, ufWebsockets),
+    libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always,
+    libraryDependencies ++= testDeps,
     publish / skip := true,
     exportJars := true,
   )
@@ -138,6 +139,7 @@ lazy val apacheHttp = (project in file("apache-http")).
     fatalWarnings,
     name := "gigahorse-apache-http",
     crossScalaVersions := Vector(scala212, scala213, scala3),
+    libraryDependencies ++= testDeps.map(_ % Test),
   )
 
 lazy val okhttp = (project in file("okhttp")).
@@ -147,7 +149,8 @@ lazy val okhttp = (project in file("okhttp")).
     fatalWarnings,
     name := "gigahorse-okhttp",
     crossScalaVersions := Vector(scala212, scala213, scala3),
-    libraryDependencies ++= Seq(Dependencies.okHttp)
+    libraryDependencies ++= Seq(Dependencies.okHttp),
+    libraryDependencies ++= testDeps.map(_ % Test),
   )
 
 lazy val asynchttpclient = (project in file("asynchttpclient")).
@@ -155,8 +158,9 @@ lazy val asynchttpclient = (project in file("asynchttpclient")).
   settings(
     commonSettings,
     fatalWarnings,
+    name := "gigahorse-asynchttpclient",
     crossScalaVersions := Vector(scala212, scala213, scala3),
-    name := "gigahorse-asynchttpclient"
+    libraryDependencies ++= testDeps.map(_ % Test),
   )
 
 lazy val akkaHttp = (project in file("akka-http")).
@@ -166,7 +170,8 @@ lazy val akkaHttp = (project in file("akka-http")).
     crossScalaVersions := Vector(scala212, scala213),
     name := "gigahorse-akka-http",
     libraryDependencies ++= Seq(akkaHttpCore, Dependencies.akkaHttp, akkaStream),
-    dependencyOverrides += sslConfig
+    dependencyOverrides += sslConfig,
+    libraryDependencies ++= testDeps.map(_ % Test),
   )
 
 lazy val shadedApacheHttpClient5 = (project in file("shaded/apache-httpclient5"))

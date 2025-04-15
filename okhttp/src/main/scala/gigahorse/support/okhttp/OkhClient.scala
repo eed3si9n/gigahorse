@@ -26,11 +26,12 @@ import okhttp3.Credentials
 import okhttp3.HttpUrl
 import okhttp3.Interceptor
 import okhttp3.MediaType
+import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.Route
-import okhttp3.{OkHttpClient => XOkHttpClient}
-import okhttp3.{Request => XRequest}
-import okhttp3.{Response => XResponse}
+import okhttp3.{ OkHttpClient => XOkHttpClient }
+import okhttp3.{ Request => XRequest }
+import okhttp3.{ Response => XResponse }
 import okio.Okio
 
 import java.io.ByteArrayOutputStream
@@ -95,13 +96,34 @@ class OkhClient(config: Config) extends HttpClient {
         }
 
       // body
-      def bdy = body match {
+      def bdy: RequestBody = body match {
         case _: EmptyBody    =>
           RequestBody.create(MediaType.parse(contentType.getOrElse("text/plain; charset=utf-8")), "")
-        case b: FileBody     =>
-          RequestBody.create(MediaType.parse(contentType.getOrElse("multipart/form-data")), b.file)
         case b: InMemoryBody =>
           RequestBody.create(MediaType.parse(contentType.getOrElse("text/plain; charset=utf-8")), b.bytes)
+        case b: FileBody     =>
+          var builder = new MultipartBody.Builder().setType(MultipartBody.FORM)
+          val body = RequestBody.create(MediaType.parse(contentType.getOrElse("application/octet-stream")), b.file)
+          builder = builder.addFormDataPart(b.file.getName(), b.file.getName(), body)
+          builder.build()
+        case b: MultipartFormBody =>
+          var builder = new MultipartBody.Builder().setType(MultipartBody.FORM)
+          for { p <- b.parts } {
+            val contentType = p.contentType
+            p.body match {
+              case _: EmptyBody =>
+                builder = builder.addFormDataPart(p.name, null)
+              case b: FileBody =>
+                val body = RequestBody.create(MediaType.parse(contentType.getOrElse("application/octet-stream")), b.file)
+                builder = builder.addFormDataPart(p.name, b.file.getName(), body)
+              case b: InMemoryBody =>
+                val body = RequestBody.create(MediaType.parse(contentType.getOrElse("text/plain; charset=utf-8")), b.bytes)
+                builder = builder.addFormDataPart(p.name, null, body)
+              case _ =>
+                ()
+            }
+          }
+          builder.build()
       }
 
       // headers

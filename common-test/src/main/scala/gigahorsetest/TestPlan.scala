@@ -21,14 +21,15 @@ import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 import java.nio.channels.Channels
 import java.nio.file.{ Files, Paths }
-import unfiltered.netty.cycle.Planify
+import unfiltered.netty.cycle
 import unfiltered.request._
 import unfiltered.response._
+import unfiltered.netty.request._
 
 object TestPlan {
   val Fail = Unauthorized ~> WWWAuthenticate("""Basic realm="/"""")
 
-  def testPlan = Planify {
+  def testPlan = cycle.Planify {
     case GET(Path(Seg("500" :: Nil))) =>
       InternalServerError ~> ResponseString("500 HTTP Status Code")
     case GET(Path(Seg("404" :: Nil))) =>
@@ -71,12 +72,22 @@ object TestPlan {
       val baos = new ByteArrayOutputStream()
       FileUtil.transfer(r, baos)
       Ok ~> ResponseBytes(baos.toByteArray())
-    case r @ POST(Path("/upload")) =>
-      val body = FileUtil.read(r.inputStream)
+    // upload
+    case POST(Path("/upload") & MultiPart(r)) =>
+      val mem = MultiPartParams.Memory(r)
+      val f = mem.files("a.json").head
+      val body = f.stream(FileUtil.read)
       Ok ~> ResponseString(body)
+    // multipart form
+    case POST(Path("/multipart") & MultiPart(r)) =>
+      val mem = MultiPartParams.Memory(r)
+      val f = mem.files("a.json").head
+      val body = f.stream(FileUtil.read)
+      val p = mem.params("a").head
+      Ok ~> ResponseString(body + "\n" + p)
     case GET(Path(p)) =>
       println(p)
-      Ok ~> ResponseString("foo")
+      Ok ~> ResponseString("fallthrough")
   }
 
   def verify(login: String, password: String): Boolean = login == "admin"
