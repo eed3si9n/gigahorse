@@ -24,6 +24,7 @@ import scala.concurrent.{ Future, Promise, ExecutionContext }
 import shaded.ahc.org.asynchttpclient.{ Response => XResponse, Request => XRequest, Realm => XRealm, SignatureCalculator => XSignatureCalculator, AsyncHandler => _, * }
 import shaded.ahc.org.asynchttpclient.AsyncHandler.{ State => XState }
 import shaded.ahc.org.asynchttpclient.handler.StreamedAsyncHandler
+import shaded.ahc.org.asynchttpclient.request.body.multipart.{ ByteArrayPart, FilePart }
 import shaded.ahc.org.asynchttpclient.proxy.{ ProxyServer => XProxyServer }
 import shaded.ahc.org.asynchttpclient.Realm.{ AuthScheme => XAuthScheme }
 import shaded.ahc.org.asynchttpclient.ws.WebSocketUpgradeHandler
@@ -190,16 +191,26 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends ReactiveHttpClient {
 
     val (builderWithBody, updatedHeaders) = body match {
       case b: EmptyBody => (builder, request.headers)
-      case b: FileBody =>
-        import shaded.ahc.org.asynchttpclient.request.body.generator.FileBodyGenerator
-        val bodyGenerator = new FileBodyGenerator(b.file)
-        builder.setBody(bodyGenerator)
-        (builder, request.headers)
       case b: InMemoryBody =>
         builder.setBody(b.bytes)
         (builder, request.headers)
-      // case StreamedBody(bytes) =>
-      //  (builder, request.headers)
+      case b: FileBody =>
+        val ct = contentType.getOrElse("application/octet-stream")
+        builder.addBodyPart(new FilePart(b.file.getName(), b.file, ct, null))
+        (builder, request.headers.updated(HeaderNames.CONTENT_TYPE, List("multipart/form-data")))
+      case b: MultipartFormBody =>
+        for { p <- b.parts } {
+          p.body match {
+            case b: InMemoryBody =>
+              val ct = p.contentType.getOrElse("text/plain")
+              builder.addBodyPart(new ByteArrayPart(p.name, b.bytes, ct))
+            case b: FileBody =>
+              val ct = p.contentType.getOrElse("application/octet-stream")
+              builder.addBodyPart(new FilePart(p.name, b.file, ct, null))
+            case _ => ()
+          }
+        }
+        (builder, request.headers.updated(HeaderNames.CONTENT_TYPE, List("multipart/form-data")))
     }
 
     // headers

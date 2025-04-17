@@ -19,12 +19,26 @@ package support.akkahttp
 
 import java.io.File
 
-import scala.concurrent.{Await, ExecutionContext, Future, Promise}
+import scala.concurrent.{ Await, ExecutionContext, Future, Promise }
 import scala.concurrent.duration.Duration
 import akka.actor.ActorSystem
 import akka.stream.Materializer
-import akka.http.scaladsl.{Http, HttpExt}
-import akka.http.scaladsl.model.{ContentType, HttpEntity, HttpHeader, HttpMethod, HttpMethods, HttpRequest, HttpResponse, RequestEntity, StatusCodes, Uri}
+import akka.stream.scaladsl.{ FileIO, Source }
+import akka.http.scaladsl.{ Http, HttpExt }
+import akka.http.scaladsl.marshalling.Marshal
+import akka.http.scaladsl.model.{
+  ContentType,
+  HttpEntity,
+  HttpHeader,
+  HttpMethod,
+  HttpMethods,
+  HttpRequest,
+  HttpResponse,
+  Multipart,
+  RequestEntity,
+  StatusCodes,
+  Uri,
+}
 import akka.http.scaladsl.model.ws.WebSocketRequest
 import akka.util.ByteString
 import DownloadHandler.asFile
@@ -102,30 +116,37 @@ class AkkaHttpClient(config: Config, system: ActorSystem)(implicit fm: Materiali
           p.future
         }
       for {
-        response <- akkaHttp.singleRequest(buildRequest(request))
+        r        <- buildRequest(request)
+        response <- akkaHttp.singleRequest(r)
         _        <- processInitialResponse(response)
         result   <- handler.onPartialResponse(response, config)
       } yield result
     }
 
-  def buildRequest(request: Request): HttpRequest = {
-    val httpReq = HttpRequest(method = buildMethod(request),
-      uri = buildUri(request),
-      headers = buildHeaders(request),
-      entity = buildEntity(request))
-    request.signatureOpt match {
-      case Some(signatureCalculator) =>
-        val body = request.body match {
-          case b: InMemoryBody => b.bytes
-          case _ => Array.emptyByteArray
-        }
-        val (name, value) = signatureCalculator.sign(httpReq.uri.toString(), request.contentType, body)
-        HttpHeader.parse(name, value) match {
-          case Ok(header, _) => httpReq.withHeaders(header)
-          case _ => sys.error(s"Invalid header: ${name} = ${value}")
-        }
-      case None => httpReq
-    }
+  def buildRequest(request: Request): Future[HttpRequest] = {
+    implicit val ec = system.dispatcher
+    for {
+      entity <- buildEntity(request)
+      httpReq = HttpRequest(method = buildMethod(request),
+        uri = buildUri(request),
+        headers = buildHeaders(request),
+        entity = entity)
+      f <- request.signatureOpt match {
+              case Some(signatureCalculator) =>
+                val body = request.body match {
+                  case b: InMemoryBody => b.bytes
+                  case _ => Array.emptyByteArray
+                }
+                val (name, value) = signatureCalculator.sign(httpReq.uri.toString(), request.contentType, body)
+                Future(
+                  HttpHeader.parse(name, value) match {
+                    case Ok(header, _) => httpReq.withHeaders(header)
+                    case _ => sys.error(s"Invalid header: ${name} = ${value}")
+                  }
+                )
+              case None => Future(httpReq)
+            }
+    } yield f
   }
 
   def buildWsRequest(request: Request): WebSocketRequest =
@@ -177,17 +198,58 @@ class AkkaHttpClient(config: Config, system: ActorSystem)(implicit fm: Materiali
       Uri(url).withQuery(Uri.Query(qs))
     }
 
-  private def buildEntity(request: Request): RequestEntity =
+  private def buildEntity(request: Request): Future[RequestEntity] = {
+    implicit val ec = system.dispatcher
     request.body match {
-      case _: EmptyBody => HttpEntity.Empty
-      case b: FileBody => ??? // https://gist.github.com/jrudolph/08d0d28e1eddcd64dbd0
+      case _: EmptyBody => Future(HttpEntity.Empty)
       case b: InMemoryBody =>
         val ct = ContentType.parse(request.contentType.getOrElse("text/plain; charset=utf-8")) match {
           case Right(x) => x
           case Left(xs) => sys.error(xs.toString)
         }
-        HttpEntity.Strict(ct, ByteString(b.bytes))
+        Future(HttpEntity.Strict(ct, ByteString(b.bytes)))
+      case b: FileBody =>
+        val file = b.file
+        val ct = ContentType.parse(request.contentType.getOrElse("application/octet-stream")) match {
+          case Right(x) => x
+          case Left(xs) => sys.error(xs.toString)
+        }
+        val data = Multipart.FormData(
+          Source.single(
+            Multipart.FormData.BodyPart(
+              file.getName,
+              HttpEntity(ct, file.length(), FileIO.fromPath(file.toPath(), chunkSize = 100000)),
+              Map("filename" -> file.getName))))
+        Marshal(data).to[RequestEntity]
+      case b: MultipartFormBody =>
+        val data = Multipart.FormData(
+          Source(b.parts.map { p =>
+            p.body match {
+              case b: InMemoryBody =>
+                val ct = ContentType.parse(p.contentType.getOrElse("text/plain; charset=utf-8")) match {
+                  case Right(x) => x
+                  case Left(xs) => sys.error(xs.toString)
+                }
+                Multipart.FormData.BodyPart(
+                  p.name,
+                  HttpEntity(ct, b.bytes.length, Source.single(ByteString.fromArray(b.bytes))),
+                  Map())
+              case b: FileBody =>
+                val ct = ContentType.parse(p.contentType.getOrElse("application/octet-stream")) match {
+                  case Right(x) => x
+                  case Left(xs) => sys.error(xs.toString)
+                }
+                Multipart.FormData.BodyPart(
+                  p.name,
+                  HttpEntity(ct, b.file.length(), FileIO.fromPath(b.file.toPath(), chunkSize = 100000)),
+                  Map("filename" -> b.file.getName))
+              case _ =>
+                sys.error(s"unexpected body in multipart: ${p.body}")
+            }
+          }))
+        Marshal(data).to[RequestEntity]
     }
+  }
 
   /** Open a websocket connection. */
   def websocket(request: Request)(handler: PartialFunction[WebSocketEvent, Unit]): Future[WebSocket] =

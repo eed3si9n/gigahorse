@@ -62,7 +62,6 @@ import core5.http.nio.{
   AsyncRequestProducer,
   DataStreamChannel,
 }
-import core5.http.nio.entity.FileEntityProducer
 import core5.http.nio.support.BasicRequestProducer
 import core5.http.protocol.HttpContext
 import core5.reactor.IOReactorConfig
@@ -109,7 +108,7 @@ class ApacheHttpClient(config: Config) extends HttpClient {
     val builder = buildRequestBuilder(request)
     def ct: ContentType =
       body match {
-        case _: FileBody => buildContentType(contentType, ContentType.MULTIPART_FORM_DATA)
+        case _: FileBody => buildContentType(contentType, ContentType.parse("application/octet-stream"))
         case _           => buildContentType(contentType, ContentType.create("text/plain", "utf-8"))
       }
     body match {
@@ -120,9 +119,14 @@ class ApacheHttpClient(config: Config) extends HttpClient {
         builder.setBody(b.bytes, ct)
         val r = builder.build()
         SimpleRequestProducer.create(r)
+      case b: MultipartFormBody =>
+        val r = builder.build()
+        val entity = MultipartAsyncEntityProducer(b)
+        new BasicRequestProducer(r, entity)
       case b: FileBody =>
         val r = builder.build()
-        val entity = new FileEntityProducer(b.file, ct)
+        val multi = MultipartFormBody(FormPart(b.file.getName(), b.file).withContentType(ct.toString()))
+        val entity = MultipartAsyncEntityProducer(multi)
         new BasicRequestProducer(r, entity)
     }
   }

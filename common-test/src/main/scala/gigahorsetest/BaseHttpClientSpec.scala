@@ -17,9 +17,11 @@
 package gigahorsetest
 
 import gigahorse.{
-  FileUtil, 
+  FileUtil,
+  FormPart,
   HeaderNames,
   MimeTypes,
+  MultipartFormBody,
   SignatureCalculator,
   WebSocketEvent,
 }
@@ -40,7 +42,7 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers {
   def testUrl: String = s"http://localhost:$port/"
   def getServer = setup(Server.http(port))
   def setup: Server => Server = {
-    _.handler(TestPlan.testPlan)
+    _.chunked(1024 * 1024).handler(TestPlan.testPlan)
   }
   val wsPort = unfiltered.util.Port.any
   def wsTestUrl: String = s"ws://localhost:$wsPort"
@@ -49,7 +51,6 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers {
     _.handler(WsTestPlan.testPlan)
   }
   def isWebSocketSupported: Boolean = true
-  def isUploadSupported: Boolean = true
 
   // custom loan pattern
   def withHttp(testCode: gigahorse.HttpClient => Future[Assertion]): Future[Assertion]
@@ -236,22 +237,41 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers {
     }
 
   "http.processFull(r)" should "upload files" in
-    (if (isUploadSupported)
-      withHttp { http =>
+    withHttp { http =>
+      withTemporaryDirectory { dir =>
+        val file = new File(dir, "a.json")
+        val content = """{
+    "b": null
+  }"""
+        FileUtil.write(file, content)
+        val r = Gigahorse.url(s"${testUrl}upload")
+          .post(file)
+          .withContentType("application/json")
+        for {
+          res  <- http.processFull(r)
+        } yield assert(res.bodyAsString == content)
+      }
+    }
+
+  "http.processFull(r)" should "upload multipart form" in
+    withHttp { http =>
         withTemporaryDirectory { dir =>
           val file = new File(dir, "a.json")
           val content = """{
-    "b": null
+    "a": 1
   }"""
           FileUtil.write(file, content)
-          val r = Gigahorse.url(s"${testUrl}upload")
-            .post(file)
+          val content2 = "bbb"
+          val r = Gigahorse.url(s"${testUrl}multipart")
+            .post(MultipartFormBody(
+              FormPart("a", content2, "text/plain"),
+              FormPart("a.json", file, "application/json")
+            ))
           for {
             res  <- http.processFull(r)
-          } yield assert(res.bodyAsString == content)
+          } yield assert(res.bodyAsString == content + "\n" + content2)
         }
-      }
-    else cancel())
+    }
 
   /** The maximum number of times a unique temporary filename is attempted to be created.*/
   private[this] val MaximumTries = 10

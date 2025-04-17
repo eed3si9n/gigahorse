@@ -22,7 +22,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 
 class AkkaHttpClientSpec extends BaseHttpClientSpec {
-  override def isUploadSupported: Boolean = false
+  // override def isUploadSupported: Boolean = false
 
   // custom loan pattern
   override def withHttp(testCode: gigahorse.HttpClient => Future[Assertion]): Future[Assertion] =
