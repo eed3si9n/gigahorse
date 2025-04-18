@@ -17,12 +17,12 @@
 package gigahorse
 package support.asynchttpclient
 
-import shaded.ahc.org.asynchttpclient.ws.{ WebSocketByteListener, WebSocketPingListener, WebSocketPongListener, WebSocketTextListener, WebSocket => XWebSocket, WebSocketListener => XWebSocketListener }
+import shaded.ahc.org.asynchttpclient.ws.{ WebSocket => XWebSocket, WebSocketListener => XWebSocketListener }
 
 import scala.concurrent.Promise
 import scala.util.{ Failure, Success }
 
-class WebSocketListener(handler: PartialFunction[WebSocketEvent, Unit], result: Promise[WebSocket]) extends XWebSocketListener with WebSocketByteListener with WebSocketTextListener with WebSocketPingListener with WebSocketPongListener {
+class WebSocketListener(handler: PartialFunction[WebSocketEvent, Unit], result: Promise[WebSocket]) extends XWebSocketListener {
   import WebSocketEvent._
 
   protected var ws: WebSocket = null
@@ -30,16 +30,16 @@ class WebSocketListener(handler: PartialFunction[WebSocketEvent, Unit], result: 
   private def broadcast(event: WebSocketEvent): Unit =
     if (handler.isDefinedAt(event)) handler(event)
 
-  override def onMessage(message: Array[Byte]): Unit =
+  override def onBinaryFrame(message: Array[Byte], finalFragment: Boolean, rsv: Int): Unit =
     broadcast(BinaryMessage(ws, message))
 
-  override def onPing(message: Array[Byte]): Unit =
+  override def onPingFrame(message: Array[Byte]): Unit =
     broadcast(Ping(ws, message))
 
-  override def onPong(message: Array[Byte]): Unit =
+  override def onPongFrame(message: Array[Byte]): Unit =
     broadcast(Pong(ws, message))
 
-  override def onMessage(message: String): Unit =
+  override def onTextFrame(message: String, finalFragment: Boolean, rsv: Int): Unit =
     broadcast(TextMessage(ws, message))
 
   override def onOpen(websocket: XWebSocket): Unit = {
@@ -48,44 +48,47 @@ class WebSocketListener(handler: PartialFunction[WebSocketEvent, Unit], result: 
       def underlying[A]: A = ahcWebSocket.asInstanceOf[A]
 
       override def sendPing(payload: Array[Byte]): WebSocket = {
-        websocket.sendPing(payload)
+        websocket.sendPingFrame(payload)
         this
       }
 
       override def sendPong(payload: Array[Byte]): WebSocket = {
-        websocket.sendPong(payload)
+        websocket.sendPongFrame(payload)
         this
       }
 
       override def isOpen: Boolean = websocket.isOpen
 
       override def sendMessage(message: Array[Byte]): WebSocket = {
-        websocket.sendMessage(message)
+        websocket.sendBinaryFrame(message)
         this
       }
 
       override def sendMessage(message: String): WebSocket = {
-        websocket.sendMessage(message)
+        websocket.sendTextFrame(message)
         this
       }
 
       override def sendFragment(fragment: Array[Byte], last: Boolean): WebSocket = {
-        websocket.stream(fragment, last)
+        websocket.sendBinaryFrame(fragment, last, 0)
         this
       }
 
       override def sendFragment(fragment: String, last: Boolean): WebSocket = {
-        websocket.stream(fragment, last)
+        websocket.sendTextFrame(fragment, last, 0)
         this
       }
 
-      override def close(): Unit = websocket.close()
+      override def close(): Unit = websocket match {
+        case x: AutoCloseable => x.close()
+        case _                => ()
+      }
     }
     broadcast(Open(ws))
     result.tryComplete(Success(ws))
   }
 
-  override def onClose(websocket: XWebSocket): Unit = {
+  override def onClose(websocket: XWebSocket, code: Int, reason: String): Unit = {
     broadcast(Close(ws))
     ws = null
   }

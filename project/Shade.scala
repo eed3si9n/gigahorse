@@ -42,7 +42,7 @@ object Shade {
       assemblyMergeStrategy in assembly := {
         case "META-INF/io.netty.versions.properties" =>
           MergeStrategy.first
-        case "ahc-default.properties" =>
+        case "gigahorse/shaded/ahc/org/asynchttpclient/config/ahc-default.properties" =>
           ahcMerge
         case x =>
           val oldStrategy = (assemblyMergeStrategy in assembly).value

@@ -21,11 +21,12 @@ package support.asynchttpclient
 import scala.collection.JavaConverters._
 import java.io.File
 import scala.concurrent.{ Future, Promise, ExecutionContext }
+import shaded.ahc.io.netty.handler.codec.http.HttpHeaders
 import shaded.ahc.org.asynchttpclient.{ Response => XResponse, Request => XRequest, Realm => XRealm, SignatureCalculator => XSignatureCalculator, AsyncHandler => _, * }
 import shaded.ahc.org.asynchttpclient.AsyncHandler.{ State => XState }
 import shaded.ahc.org.asynchttpclient.handler.StreamedAsyncHandler
 import shaded.ahc.org.asynchttpclient.request.body.multipart.{ ByteArrayPart, FilePart }
-import shaded.ahc.org.asynchttpclient.proxy.{ ProxyServer => XProxyServer }
+import shaded.ahc.org.asynchttpclient.proxy.{ ProxyServer as XProxyServer, ProxyType as XProxyType }
 import shaded.ahc.org.asynchttpclient.Realm.{ AuthScheme => XAuthScheme }
 import shaded.ahc.org.asynchttpclient.ws.WebSocketUpgradeHandler
 import org.reactivestreams.Publisher
@@ -75,7 +76,7 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends ReactiveHttpClient {
         override def onStatusReceived(status: HttpResponseStatus): XState = {
           fromState(handler.onStatusReceived(status))
         }
-        override def onHeadersReceived(headers: HttpResponseHeaders): XState = {
+        override def onHeadersReceived(headers: HttpHeaders): XState = {
           fromState(handler.onHeadersReceived(headers))
         }
         override def onBodyPartReceived(bodyPart: HttpResponseBodyPart): XState = {
@@ -123,7 +124,7 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends ReactiveHttpClient {
         override def onStatusReceived(status: HttpResponseStatus): XState = {
           fromState(handler.onStatusReceived(status))
         }
-        override def onHeadersReceived(headers: HttpResponseHeaders): XState = {
+        override def onHeadersReceived(headers: HttpHeaders): XState = {
           fromState(handler.onHeadersReceived(headers))
         }
         override def onStream(publisher: Publisher[HttpResponseBodyPart]): XState = {
@@ -237,14 +238,13 @@ object AhcHttpClient {
     x match {
       case XState.CONTINUE => State.Continue
       case XState.ABORT    => State.Abort
-      case XState.UPGRADE  => State.Upgrade
     }
 
   def fromState(state: State): XState =
     state match {
       case State.Continue => XState.CONTINUE
       case State.Abort    => XState.ABORT
-      case State.Upgrade  => XState.UPGRADE
+      case State.Upgrade  => sys.error(s"unexpected state: $state")
     }
 
   def buildRealm(auth: Realm): XRealm =
@@ -279,8 +279,13 @@ object AhcHttpClient {
 
   def buildProxy(proxy: ProxyServer): XProxyServer =
     {
-      new XProxyServer(proxy.host, proxy.port, proxy.securedPort.getOrElse(proxy.port),
+      new XProxyServer(
+        proxy.host,
+        proxy.port,
+        proxy.securedPort.getOrElse(proxy.port),
         proxy.authOpt.map(buildRealm).getOrElse(null),
-        proxy.nonProxyHosts.asJava)
+        proxy.nonProxyHosts.asJava,
+        XProxyType.HTTP,
+      )
     }
 }

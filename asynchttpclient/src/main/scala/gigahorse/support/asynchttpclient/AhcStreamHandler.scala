@@ -18,6 +18,7 @@ package gigahorse
 package support.asynchttpclient
 
 import scala.concurrent.Future
+import shaded.ahc.io.netty.handler.codec.http.HttpHeaders
 import shaded.ahc.org.asynchttpclient.{ Response => XResponse, _ }
 
 abstract class AhcStreamHandler[A] extends AhcHandler {
@@ -28,7 +29,7 @@ abstract class AhcStreamHandler[A] extends AhcHandler {
     builder.accumulate(status)
     State.Continue
   }
-  def onHeadersReceived(headers: HttpResponseHeaders): State = {
+  def onHeadersReceived(headers: HttpHeaders): State = {
     builder.accumulate(headers)
     State.Continue
   }
