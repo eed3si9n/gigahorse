@@ -17,6 +17,7 @@
 package gigahorse
 package support.asynchttpclient
 
+import shaded.ahc.io.netty.handler.codec.http.HttpHeaders
 import shaded.ahc.org.asynchttpclient
 import asynchttpclient.{ Response => XResponse, _ }
 
@@ -34,7 +35,7 @@ abstract class AhcCompletionHandler[A] extends CompletionHandler[A] with AhcHand
     State.Continue
   }
 
-  def onHeadersReceived(headers: HttpResponseHeaders): State = {
+  def onHeadersReceived(headers: HttpHeaders): State = {
     builder.accumulate(headers)
     State.Continue
   }

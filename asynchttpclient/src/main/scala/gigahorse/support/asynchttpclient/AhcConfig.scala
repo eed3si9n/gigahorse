@@ -84,7 +84,7 @@ object AhcConfig {
       val defaultCiphers = defaultParams.getCipherSuites
       builder.setEnabledCipherSuites(defaultCiphers)
 
-      builder.setAcceptAnyCertificate(sslConfig.loose.acceptAnyCertificate)
+      builder.setUseInsecureTrustManager(sslConfig.loose.acceptAnyCertificate)
 
       // If you wan't to accept any certificate you also want to use a loose netty based loose SslContext
       // Never use this in production.

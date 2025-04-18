@@ -47,8 +47,8 @@ class AhcFullResponse(ahcResponse: XResponse) extends FullResponse {
     // explicitly set, while Plays default encoding is UTF-8.  So, use UTF-8 if charset is not explicitly
     // set and content type is not text/*, otherwise default to ISO-8859-1
     val contentType = Option(ahcResponse.getContentType).getOrElse("application/octet-stream")
-    val charset: Charset = Option(HttpUtils.parseCharset(contentType)).getOrElse {
-      if (contentType.startsWith("text/")) HttpUtils.DEFAULT_CHARSET
+    val charset: Charset = Option(HttpUtils.extractContentTypeCharsetAttribute(contentType)).getOrElse {
+      if (contentType.startsWith("text/")) Charset.forName("ISO-8859-1")
       else Charset.forName("utf-8")
     }
     ahcResponse.getResponseBody(charset)

@@ -17,10 +17,11 @@
 package gigahorse
 package support.asynchttpclient
 
+import shaded.ahc.io.netty.handler.codec.http.HttpHeaders
 import shaded.ahc.org.asynchttpclient
 import asynchttpclient._
 
 trait AhcHandler {
   def onStatusReceived(status: HttpResponseStatus): State
-  def onHeadersReceived(headers: HttpResponseHeaders): State
+  def onHeadersReceived(headers: HttpHeaders): State
 }
