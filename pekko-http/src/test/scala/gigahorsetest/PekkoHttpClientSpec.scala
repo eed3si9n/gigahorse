@@ -29,11 +29,11 @@ class PekkoHttpClientSpec extends BaseHttpClientSpec {
     {
       import gigahorse.support.pekkohttp.Gigahorse
       implicit val system = ActorSystem("gigahorse-pekko-http")
-      implicit val materializer = (ActorMaterializer(): @nowarn)
+      implicit val materializer: ActorMaterializer = (ActorMaterializer(): @nowarn)
       val server = getServer
-      server.start
+      server.start()
       val wsServer = getWsServer
-      wsServer.start
+      wsServer.start()
       val http: gigahorse.HttpClient = Gigahorse.http(Gigahorse.config, system)
       complete {
         testCode(http)
