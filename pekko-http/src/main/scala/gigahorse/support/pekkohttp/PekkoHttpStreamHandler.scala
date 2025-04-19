@@ -15,21 +15,17 @@
  */
 
 package gigahorse
-package support.akkahttp
+package support.pekkohttp
 
+import scala.concurrent.{ Future, ExecutionContext }
+import org.apache.pekko
+import pekko.http.scaladsl.model.HttpResponse
+import pekko.stream.Materializer
 import scala.concurrent.Future
 
-abstract class FunctionHandler[A](f: FullResponse => A) extends AkkaHttpCompletionHandler[A] {
-  override def onCompleted(response: FullResponse): A = f(response)
-}
-
-abstract class StreamFunctionHandler[A](f: StreamResponse => Future[A]) extends AkkaHttpStreamHandler[A] {
-  override def onStream(response: StreamResponse): Future[A] = f(response)
-}
-
-object FunctionHandler {
-  def apply[A](f: FullResponse => A): FunctionHandler[A] =
-    new FunctionHandler[A](f) {}
-  def stream[A](f: StreamResponse => Future[A]): StreamFunctionHandler[A] =
-    new StreamFunctionHandler[A](f) {}
+abstract class PekkoHttpStreamHandler[A] extends PekkoHttpCompletionHandler[A] {
+  override def onCompleted(response: FullResponse): A = ???
+  def onStream(response: StreamResponse): Future[A]
+  override def onPartialResponse(httpResponse: HttpResponse, config: Config)(implicit fm: Materializer, ec: ExecutionContext): Future[A] =
+    onStream(new PekkoHttpStreamResponse(httpResponse, config))
 }

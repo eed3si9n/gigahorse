@@ -15,32 +15,23 @@
  */
 
 package gigahorse
-package support.akkahttp
+package support.pekkohttp
 
-import akka.actor._
-import akka.stream.actor._
-import akka.http.scaladsl.model.ws.Message
+import org.apache.pekko
+import pekko.actor.*
+import pekko.Done
+import pekko.http.scaladsl.model.ws.Message
 
-object MessageForwarder {
-  def props : Props = Props[MessageForwarder]
-}
-
-class MessageForwarder extends Actor with ActorPublisher[Message] {
+class MessageForwarder(streamRef: ActorRef) extends Actor {
   var items:List[Message] = List.empty
-  import ActorPublisherMessage._
   def receive = {
     case m: Message =>
-      if (totalDemand == 0) items = items :+ m
-      else onNext(m)
-    case Request(demand) =>
-      if (demand > items.size){
-        items foreach (onNext)
-        items = List.empty
-      }
-      else {
-        val (send, keep) = items.splitAt(demand.toInt)
-        items = keep
-        send foreach (onNext)
-      }
+      streamRef ! m
+    case Done =>
+      streamRef ! Done
+      context.stop(self)
+    case Status.Failure(e) =>
+      streamRef ! Status.Failure(e)
+      context.stop(self)
   }
 }

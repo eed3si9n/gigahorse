@@ -99,13 +99,13 @@ object DownloadHandler {
 
 ### Newline delimited stream
 
-Here's another example, this time using Akka HTTP.
+Here's another example, this time using Pekko HTTP.
 Suppose we are running `\$ python -m SimpleHTTPServer 8000`, which serves the current directory over port 8000, and let's say we want to take `README.markdown` and print each line:
 
 ```scala
-scala> import gigahorse._, support.akkahttp.Gigahorse
+scala> import gigahorse._, support.pekkohttp.Gigahorse
 import gigahorse._
-import support.akkahttp.Gigahorse
+import support.pekkohttp.Gigahorse
 
 scala> import scala.concurrent._, duration._
 import scala.concurrent._
@@ -121,7 +121,8 @@ scala> Gigahorse.withHttp(Gigahorse.config) { http =>
 Gigahorse
 ==========
 
-Gigahorse is an HTTP client for Scala with Async Http Client or Lightbend Akka HTTP underneath.
+Gigahorse is an HTTP client for Scala with multiple backend support.
+Gigahorse can wrap [Apache HttpComponents HttpClient][apachehttp],
 ....
 ```
 

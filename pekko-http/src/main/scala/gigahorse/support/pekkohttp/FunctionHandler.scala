@@ -15,22 +15,21 @@
  */
 
 package gigahorse
-package support.akkahttp
+package support.pekkohttp
 
-import akka.http.scaladsl.model.StatusCode
 import scala.concurrent.Future
 
-trait OkHandler[A] extends AkkaHttpCompletionHandler[A] {
-  abstract override def onStatusReceived(status: StatusCode): State =
-    {
-      if (status.isFailure) State.Abort
-      else super.onStatusReceived(status)
-    }
+abstract class FunctionHandler[A](f: FullResponse => A) extends PekkoHttpCompletionHandler[A] {
+  override def onCompleted(response: FullResponse): A = f(response)
 }
 
-object OkHandler {
+abstract class StreamFunctionHandler[A](f: StreamResponse => Future[A]) extends PekkoHttpStreamHandler[A] {
+  override def onStream(response: StreamResponse): Future[A] = f(response)
+}
+
+object FunctionHandler {
   def apply[A](f: FullResponse => A): FunctionHandler[A] =
-    new FunctionHandler[A](f) with OkHandler[A] {}
+    new FunctionHandler[A](f) {}
   def stream[A](f: StreamResponse => Future[A]): StreamFunctionHandler[A] =
-    new StreamFunctionHandler[A](f) with OkHandler[A] {}
+    new StreamFunctionHandler[A](f) {}
 }

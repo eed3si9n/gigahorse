@@ -15,14 +15,15 @@
  */
 
 package gigahorse
-package support.akkahttp
+package support.pekkohttp
 
 import java.nio.ByteBuffer
 import scala.collection.immutable.TreeMap
-import akka.http.scaladsl.model._
-import akka.stream.Materializer
+import org.apache.pekko
+import pekko.http.scaladsl.model.*
+import pekko.stream.Materializer
 
-class AkkaHttpFullResponse(akkaHttpResponse: HttpResponse, entity: HttpEntity.Strict)(implicit val fm: Materializer) extends FullResponse {
+class PekkoHttpFullResponse(pekkoHttpResponse: HttpResponse, entity: HttpEntity.Strict)(implicit val fm: Materializer) extends FullResponse {
   /**
    * @return The underlying entity object.
    */
@@ -30,13 +31,13 @@ class AkkaHttpFullResponse(akkaHttpResponse: HttpResponse, entity: HttpEntity.St
 
   def close(): Unit =
     {
-      akkaHttpResponse.discardEntityBytes(fm)
+      pekkoHttpResponse.discardEntityBytes(fm)
     }
 
   /**
    * @return The underlying response object.
    */
-  def underlyingResponse[A] = akkaHttpResponse.asInstanceOf[A]
+  def underlyingResponse[A] = pekkoHttpResponse.asInstanceOf[A]
 
   /**
    * The response body as a `ByteBuffer`.
@@ -60,21 +61,21 @@ class AkkaHttpFullResponse(akkaHttpResponse: HttpResponse, entity: HttpEntity.St
    */
   lazy val allHeaders: Map[String, List[String]] =
     TreeMap[String, List[String]]() ++
-    akkaHttpResponse.headers.groupBy(_.name).mapValues(vs => vs.toList map { _.value })
+    pekkoHttpResponse.headers.groupBy(_.name).mapValues(vs => vs.toList map { _.value })
 
   /**
    * The response status code.
    */
-  def status: Int = akkaHttpResponse.status.intValue
+  def status: Int = pekkoHttpResponse.status.intValue
 
   /**
    * The response status message.
    */
-  def statusText: String = akkaHttpResponse.status.reason
+  def statusText: String = pekkoHttpResponse.status.reason
 
   /**
    * Get a response header.
    */
   def header(key: String): Option[String] =
-    akkaHttpResponse.headers.find(_.name == key) map { _.value }
+    pekkoHttpResponse.headers.find(_.name == key) map { _.value }
 }

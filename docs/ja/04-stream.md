@@ -102,15 +102,15 @@ object DownloadHandler {
 
 ### 改行区切りのストリーム
 
-Akka HTTP を使った例もみてみる。
+Pekko HTTP を使った例もみてみる。
 `\$ python -m SimpleHTTPServer 8000` を実行してカレントディレクトリを
 8000番ポートでサーブしているとして、
 `README.markdown` の各行を表示したい。
 
 ```scala
-scala> import gigahorse._, support.akkahttp.Gigahorse
+scala> import gigahorse._, support.pekkohttp.Gigahorse
 import gigahorse._
-import support.akkahttp.Gigahorse
+import support.pekkohttp.Gigahorse
 
 scala> import scala.concurrent._, duration._
 import scala.concurrent._
@@ -126,7 +126,8 @@ scala> Gigahorse.withHttp(Gigahorse.config) { http =>
 Gigahorse
 ==========
 
-Gigahorse is an HTTP client for Scala with Async Http Client or Lightbend Akka HTTP underneath.
+Gigahorse is an HTTP client for Scala with multiple backend support.
+Gigahorse can wrap [Apache HttpComponents HttpClient][apachehttp],
 ....
 ```
 

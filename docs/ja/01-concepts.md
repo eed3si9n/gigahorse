@@ -14,7 +14,7 @@ out: concepts.html
 - Apache HTTP をバックエンドに使う場合は、`gigahorse.support.apachehttp.Gigahorse`。
 - AHC をバックエンドに使う場合は、`gigahorse.support.asynchttpclient.Gigahorse`。
 - OkHttp をバックエンドに使う場合は、`gigahorse.support.okhttp.Gigahorse`。
-- Akka HTTP をバックエンドに使う場合は、`gigahorse.support.akkahttp.Gigahorse`。
+- Pekko HTTP をバックエンドに使う場合は、`gigahorse.support.pekkohttp.Gigahorse`。
 
 ### HttpClient
 
@@ -104,7 +104,7 @@ scala> Await.result(f, 120.seconds)
 scala> http.close()
 ```
 
-**注意**: OkHttp もしくは Akka HTTP を用いてレスポンスのボディーを消費しない場合は、
+**注意**: OkHttp もしくは Pekko HTTP を用いてレスポンスのボディーを消費しない場合は、
 リソースを解放するために `close()` メソッドを呼び出す必要がある。
 
 ### Future

@@ -17,7 +17,7 @@ ThisBuild / description := "Gigahorse is an HTTP client for Scala with multiple 
 ThisBuild / licenses := Seq("Apache 2" -> new URL("http://www.apache.org/licenses/LICENSE-2.0.txt"))
 
 lazy val root = (project in file(".")).
-  aggregate(core, apacheHttp, asynchttpclient, shadedAsyncHttpClient, okhttp, akkaHttp).
+  aggregate(core, apacheHttp, asynchttpclient, shadedAsyncHttpClient, okhttp, pekkoHttp).
   dependsOn(core).
   settings(
     name := "gigahorse",
@@ -35,7 +35,7 @@ lazy val root = (project in file(".")).
         "apacheHttp/publishSigned" ::
         "okhttp/publishSigned" ::
         "asynchttpclient/publishSigned" ::
-        "akkaHttp/publishSigned" ::
+        "pekkoHttp/publishSigned" ::
         s"++ ${scala212}!" ::
         "core/publishSigned" ::
         "apacheHttp/publishSigned" ::
@@ -43,7 +43,7 @@ lazy val root = (project in file(".")).
         "okhttp/publishSigned" ::
         "asynchttpclient/publishSigned" ::
         "shadedAsyncHttpClient/publishSigned" ::
-        "akkaHttp/publishSigned" ::
+        "pekkoHttp/publishSigned" ::
         state
     }
   )
@@ -112,7 +112,7 @@ lazy val commonTest = (project in file("common-test")).
 // lazy val doPackageSite = taskKey[File]("package site")
 // lazy val packageSitePath = settingKey[File]("path for the package")
 // lazy val docsProject = (project in file("docs-project")).
-//   dependsOn(asynchttpclient, akkaHttp, okhttp).
+//   dependsOn(asynchttpclient, pekkoHttp, okhttp).
 //   enablePlugins(PamfletPlugin).
 //   settings(
 //     sourceDirectory in (Pamflet, pf) := (baseDirectory.value).getParentFile / "docs",
@@ -163,13 +163,13 @@ lazy val asynchttpclient = (project in file("asynchttpclient")).
     libraryDependencies ++= testDeps.map(_ % Test),
   )
 
-lazy val akkaHttp = (project in file("akka-http")).
+lazy val pekkoHttp = (project in file("pekko-http")).
   dependsOn(core, commonTest % Test).
   settings(
     commonSettings,
     crossScalaVersions := Vector(scala212, scala213),
-    name := "gigahorse-akka-http",
-    libraryDependencies ++= Seq(akkaHttpCore, Dependencies.akkaHttp, akkaStream),
+    name := "gigahorse-pekko-http",
+    libraryDependencies ++= Seq(pekkoActorTyped, pekkoStream, Dependencies.pekkoHttp),
     dependencyOverrides += sslConfig,
     libraryDependencies ++= testDeps.map(_ % Test),
   )

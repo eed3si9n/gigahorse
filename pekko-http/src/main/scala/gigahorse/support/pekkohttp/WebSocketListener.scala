@@ -15,31 +15,36 @@
  */
 
 package gigahorse
-package support.akkahttp
+package support.pekkohttp
 
-import akka.{ Done, NotUsed }
-import akka.util.ByteString
-import akka.stream.scaladsl._
+import org.apache.pekko
+import pekko.Done
+import pekko.util.ByteString
+import pekko.stream.scaladsl.*
+import pekko.actor.{ ActorSystem, Props, PoisonPill }
+import pekko.stream.{ Materializer, OverflowStrategy }
+import pekko.http.scaladsl.model.ws.{ Message, TextMessage => XTextMessage, BinaryMessage => XBinaryMessage }
+import WebSocketEvent.*
+import scala.annotation.nowarn
 import scala.util.Success
 import scala.concurrent.{ Future, Promise }
-import akka.actor.{ ActorSystem, Props, PoisonPill }
-import akka.actor.actorRef2Scala
-import akka.stream.actor.ActorPublisher
-import akka.http.scaladsl.model.ws.{ Message, TextMessage => XTextMessage, BinaryMessage => XBinaryMessage }
-import WebSocketEvent._
 
 // http://doc.akka.io/api/akka-http/current/akka/index.html
 // http://doc.akka.io/api/akka/2.4.16/
 
 class WebSocketListener(
   handler: PartialFunction[WebSocketEvent, Unit],
-  system: ActorSystem) { self =>
+  system: ActorSystem)(implicit fm: Materializer) { self =>
   protected var ws: WebSocket = null
   protected var open: Boolean = true
   val result = Promise[WebSocket]()
-  val forwarder = system.actorOf(Props[MessageForwarder])
-  val publisher = ActorPublisher[Message](forwarder)
-  val source: Source[Message, NotUsed] = Source.fromPublisher(publisher)
+
+  lazy val (streamRef, source) = (Source.actorRef[Message](
+    bufferSize = 100,
+    overflowStrategy = OverflowStrategy.dropHead,
+  ).preMaterialize(): @nowarn("cat=deprecation"))
+
+  val forwarder = system.actorOf(Props(new MessageForwarder(streamRef)))
   val sink: Sink[Message, Future[Done]] =
     Sink.foreach {
       case message: XTextMessage.Strict =>

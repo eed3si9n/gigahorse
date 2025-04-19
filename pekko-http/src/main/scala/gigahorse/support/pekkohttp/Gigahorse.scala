@@ -15,21 +15,24 @@
  */
 
 package gigahorse
-package support.akkahttp
+package support.pekkohttp
 
-import akka.actor.ActorSystem
-import akka.stream.{ Materializer, ActorMaterializer }
+import org.apache.pekko
+import pekko.actor.ActorSystem
+import pekko.stream.{ Materializer, ActorMaterializer }
+import scala.annotation.nowarn
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
 abstract class Gigahorse extends GigahorseSupport {
   /** Returns HttpClient. You must call `close` when you're done. */
-  def http(config: Config, system: ActorSystem)(implicit fm: Materializer): ReactiveHttpClient = new AkkaHttpClient(config, system)
+  def http(config: Config, system: ActorSystem)(implicit fm: Materializer): ReactiveHttpClient = new PekkoHttpClient(config, system)
 
   def withHttp[A](config: Config)(f: ReactiveHttpClient => A): A =
     {
-      implicit val system = ActorSystem("gigahorse-akka-http")
-      implicit val materializer = ActorMaterializer()
+      implicit val system = ActorSystem("gigahorse-pekko-http")
+      @nowarn
+      implicit val materializer: ActorMaterializer = (ActorMaterializer(): @nowarn)
       val client: ReactiveHttpClient = http(config, system)
       try {
         f(client)

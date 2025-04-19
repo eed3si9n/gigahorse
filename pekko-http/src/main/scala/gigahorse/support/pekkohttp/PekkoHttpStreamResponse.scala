@@ -16,30 +16,31 @@
  */
 
 package gigahorse
-package support.akkahttp
+package support.pekkohttp
 
 import java.nio.ByteBuffer
 import scala.concurrent.ExecutionContext
 import scala.collection.immutable.TreeMap
-import akka.util.ByteString
-import akka.http.scaladsl.model._
-import akka.stream.Materializer
-import akka.stream.scaladsl.{ Source, Framing }
+import org.apache.pekko
+import pekko.util.ByteString
+import pekko.http.scaladsl.model.*
+import pekko.stream.Materializer
+import pekko.stream.scaladsl.{ Source, Framing }
 
 /** Represents a stream response.
  */
-class AkkaHttpStreamResponse(akkaHttpResponse: HttpResponse, config: Config)(implicit fm: Materializer, ec: ExecutionContext) extends StreamResponse {
+class PekkoHttpStreamResponse(pekkoHttpResponse: HttpResponse, config: Config)(implicit fm: Materializer, ec: ExecutionContext) extends StreamResponse {
   /**
    * @return The underlying entity object.
    */
-  def underlying[A] = akkaHttpResponse.asInstanceOf[A]
+  def underlying[A] = pekkoHttpResponse.asInstanceOf[A]
 
-  def asSource: Source[ByteString, Any] = akkaHttpResponse.entity.dataBytes
+  def asSource: Source[ByteString, Any] = pekkoHttpResponse.entity.dataBytes
 
   /**
    * The response body as Reactive Stream.
    */
-  override def byteBuffers: Stream[ByteBuffer] = new AkkaHttpStream(byteBufferSource)
+  override def byteBuffers: Stream[ByteBuffer] = new PekkoHttpStream(byteBufferSource)
 
   def byteBufferSource: Source[ByteBuffer, Any] =
     asSource
@@ -49,7 +50,7 @@ class AkkaHttpStreamResponse(akkaHttpResponse: HttpResponse, config: Config)(imp
   /**
    * The response body as Reactive Stream of Newline delimited strings.
    */
-  override def newLineDelimited: Stream[String] = new AkkaHttpStream(newLineDelimitedSource)
+  override def newLineDelimited: Stream[String] = new PekkoHttpStream(newLineDelimitedSource)
 
   def newLineDelimitedSource: Source[String, Any] =
     asSource
@@ -62,21 +63,21 @@ class AkkaHttpStreamResponse(akkaHttpResponse: HttpResponse, config: Config)(imp
    */
   lazy val allHeaders: Map[String, List[String]] =
     TreeMap[String, List[String]]() ++
-    akkaHttpResponse.headers.groupBy(_.name).mapValues(vs => vs.toList map { _.value })
+    pekkoHttpResponse.headers.groupBy(_.name).mapValues(vs => vs.toList map { _.value })
 
   /**
    * The response status code.
    */
-  def status: Int = akkaHttpResponse.status.intValue
+  def status: Int = pekkoHttpResponse.status.intValue
 
   /**
    * The response status message.
    */
-  def statusText: String = akkaHttpResponse.status.reason
+  def statusText: String = pekkoHttpResponse.status.reason
 
   /**
    * Get a response header.
    */
   def header(key: String): Option[String] =
-    akkaHttpResponse.headers.find(_.name == key) map { _.value }
+    pekkoHttpResponse.headers.find(_.name == key) map { _.value }
 }
