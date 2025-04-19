@@ -16,20 +16,20 @@
 
 package gigahorsetest
 
-import org.scalatest._
+import org.scalatest.*
+import org.apache.pekko
+import pekko.actor.ActorSystem
+import pekko.stream.ActorMaterializer
+import scala.annotation.nowarn
 import scala.concurrent.Future
-import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
 
-class AkkaHttpClientSpec extends BaseHttpClientSpec {
-  // override def isUploadSupported: Boolean = false
-
+class PekkoHttpClientSpec extends BaseHttpClientSpec {
   // custom loan pattern
   override def withHttp(testCode: gigahorse.HttpClient => Future[Assertion]): Future[Assertion] =
     {
-      import gigahorse.support.akkahttp.Gigahorse
-      implicit val system = ActorSystem("gigahorse-akka-http")
-      implicit val materializer = ActorMaterializer()
+      import gigahorse.support.pekkohttp.Gigahorse
+      implicit val system = ActorSystem("gigahorse-pekko-http")
+      implicit val materializer = (ActorMaterializer(): @nowarn)
       val server = getServer
       server.start
       val wsServer = getWsServer

@@ -15,15 +15,16 @@
  */
 
 package gigahorse
-package support.akkahttp
+package support.pekkohttp
 
 import org.reactivestreams.Publisher
 
 import scala.concurrent.{ ExecutionContext, Future }
-import akka.stream.scaladsl.{ Sink, Source }
-import akka.stream.Materializer
+import org.apache.pekko
+import pekko.stream.scaladsl.{ Sink, Source }
+import pekko.stream.Materializer
 
-class AkkaHttpStream[A](source: Source[A, Any])(implicit fm: Materializer, ec: ExecutionContext) extends Stream[A] {
+class PekkoHttpStream[A](source: Source[A, Any])(implicit fm: Materializer, ec: ExecutionContext) extends Stream[A] {
   /**
    * @return The underlying Stream object.
    */

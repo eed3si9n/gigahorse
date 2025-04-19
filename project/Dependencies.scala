@@ -12,10 +12,11 @@ object Dependencies {
   val scalatest = "org.scalatest" %% "scalatest" % "3.2.10"
   val sslConfig = "com.typesafe" %% "ssl-config-core" % "0.6.1"
   val reactiveStreams = "org.reactivestreams" % "reactive-streams" % "1.0.3"
-  val akkaHttpVersion = "10.2.7"
-  val akkaHttpCore = "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
-  val akkaHttp = "com.typesafe.akka" %% "akka-http" % akkaHttpVersion
-  val akkaStream = "com.typesafe.akka" %% "akka-stream" % "2.5.32"
+  val pekkoVersion = "1.1.2"
+  val pekkoHttpVersion = "1.1.0"
+  val pekkoActorTyped = "org.apache.pekko" %% "pekko-actor-typed" % pekkoVersion
+  val pekkoStream = "org.apache.pekko" %% "pekko-stream" % pekkoVersion
+  val pekkoHttp = "org.apache.pekko" %% "pekko-http" % pekkoHttpVersion
   val okHttp = "com.squareup.okhttp3" % "okhttp" % "3.14.2"
   val httpClient5 = "org.apache.httpcomponents.client5" % "httpclient5" % "5.4.3"
   val unfilteredVersion = "0.12.1"

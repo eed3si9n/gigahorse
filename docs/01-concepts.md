@@ -14,7 +14,7 @@ Basic concepts
 - For Apache HTTP backend, use `gigahorse.support.apachehttp.Gigahorse`
 - For AHC backend, use `gigahorse.support.asynchttpclient.Gigahorse`.
 - For OkHttp backend, use `gigahorse.support.okhttp.Gigahorse`.
-- For Akka HTTP backend, `gigahorse.support.akkahttp.Gigahorse`.
+- For Pekko HTTP backend, `gigahorse.support.pekkohttp.Gigahorse`.
 
 ### HttpClient
 
@@ -106,7 +106,7 @@ scala> Await.result(f, 120.seconds)
 scala> http.close()
 ```
 
-**Note**: Using OkHttp or Akka HTTP, if you don't consume the response body,
+**Note**: Using OkHttp or Pekko HTTP, if you don't consume the response body,
 you must call `close()` method on the `FullResponse` to let go of the resource.
 
 ### Future

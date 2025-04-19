@@ -15,18 +15,19 @@
  */
 
 package gigahorse
-package support.akkahttp
+package support.pekkohttp
 
 import java.io.File
 
 import scala.concurrent.{ Await, ExecutionContext, Future, Promise }
 import scala.concurrent.duration.Duration
-import akka.actor.ActorSystem
-import akka.stream.Materializer
-import akka.stream.scaladsl.{ FileIO, Source }
-import akka.http.scaladsl.{ Http, HttpExt }
-import akka.http.scaladsl.marshalling.Marshal
-import akka.http.scaladsl.model.{
+import org.apache.pekko
+import pekko.actor.ActorSystem
+import pekko.stream.Materializer
+import pekko.stream.scaladsl.{ FileIO, Source }
+import pekko.http.scaladsl.{ Http, HttpExt }
+import pekko.http.scaladsl.marshalling.Marshal
+import pekko.http.scaladsl.model.{
   ContentType,
   HttpEntity,
   HttpHeader,
@@ -39,20 +40,20 @@ import akka.http.scaladsl.model.{
   StatusCodes,
   Uri,
 }
-import akka.http.scaladsl.model.ws.WebSocketRequest
-import akka.util.ByteString
+import pekko.http.scaladsl.model.ws.WebSocketRequest
+import pekko.util.ByteString
 import DownloadHandler.asFile
-import akka.http.scaladsl.model.HttpHeader.ParsingResult.Ok
+import pekko.http.scaladsl.model.HttpHeader.ParsingResult.Ok
 
-class AkkaHttpClient(config: Config, system: ActorSystem)(implicit fm: Materializer) extends ReactiveHttpClient {
-  private val akkaHttp: HttpExt = Http(system)
+class PekkoHttpClient(config: Config, system: ActorSystem)(implicit fm: Materializer) extends ReactiveHttpClient {
+  private val pekkoHttp: HttpExt = Http(system)
 
-  def underlying[A]: A = akkaHttp.asInstanceOf[A]
+  def underlying[A]: A = pekkoHttp.asInstanceOf[A]
 
   /** Closes this client, and releases underlying resources. */
   def close(): Unit =
     {
-      val x = akkaHttp.shutdownAllConnectionPools
+      val x = pekkoHttp.shutdownAllConnectionPools
       Await.result(x, Duration.Inf)
     }
 
@@ -97,11 +98,11 @@ class AkkaHttpClient(config: Config, system: ActorSystem)(implicit fm: Materiali
     processStream(request, FunctionHandler.stream(f))
 
   /** Executes the request. Does not error on non-OK response. */
-  def processStream[A](request: Request, handler: AkkaHttpStreamHandler[A]): Future[A] =
+  def processStream[A](request: Request, handler: PekkoHttpStreamHandler[A]): Future[A] =
     process(request, handler)
 
   /** Executes the request. Does not error on non-OK response. */
-  def process[A](request: Request, handler: AkkaHttpCompletionHandler[A]): Future[A] =
+  def process[A](request: Request, handler: PekkoHttpCompletionHandler[A]): Future[A] =
     {
       implicit val ec = system.dispatcher
       def processInitialResponse(response: HttpResponse): Future[Unit] =
@@ -117,7 +118,7 @@ class AkkaHttpClient(config: Config, system: ActorSystem)(implicit fm: Materiali
         }
       for {
         r        <- buildRequest(request)
-        response <- akkaHttp.singleRequest(r)
+        response <- pekkoHttp.singleRequest(r)
         _        <- processInitialResponse(response)
         result   <- handler.onPartialResponse(response, config)
       } yield result
@@ -166,7 +167,7 @@ class AkkaHttpClient(config: Config, system: ActorSystem)(implicit fm: Materiali
 
   private def buildHeaders(request: Request): List[HttpHeader] =
     {
-      import akka.http.scaladsl.model.headers.{ Authorization, BasicHttpCredentials }
+      import pekko.http.scaladsl.model.headers.{ Authorization, BasicHttpCredentials }
       val authHeaders = (request.authOpt orElse config.authOpt) match {
         case Some(auth) =>
           auth.scheme match {
@@ -255,11 +256,10 @@ class AkkaHttpClient(config: Config, system: ActorSystem)(implicit fm: Materiali
   def websocket(request: Request)(handler: PartialFunction[WebSocketEvent, Unit]): Future[WebSocket] =
     {
       implicit val ec = system.dispatcher
-      // http://doc.akka.io/docs/akka-http/current/scala/http/client-side/websocket-support.html
       val xrequest = buildWsRequest(request)
-      import akka.stream.scaladsl._
-      import akka.Done
-      import akka.http.scaladsl.model.ws.Message
+      import pekko.stream.scaladsl._
+      import pekko.Done
+      import pekko.http.scaladsl.model.ws.Message
       val listener = new WebSocketListener(handler, system)
       val wsSink: Sink[Message, Future[Done]] = listener.sink
       val wsSource = listener.source
@@ -268,7 +268,7 @@ class AkkaHttpClient(config: Config, system: ActorSystem)(implicit fm: Materiali
       // upgradeResponse is a Future[WebSocketUpgradeResponse] that
       // completes or fails when the connection succeeds or fails
       // and closed is a Future[Done] representing the stream completion from above
-      val (upgradeResponse, _) = akkaHttp.singleWebSocketRequest(xrequest, flow)
+      val (upgradeResponse, _) = pekkoHttp.singleWebSocketRequest(xrequest, flow)
       val _ = upgradeResponse.map { upgrade =>
         // just like a regular http request we can access response status which is available via upgrade.response.status
         // status code 101 (Switching Protocols) indicates that server support WebSockets

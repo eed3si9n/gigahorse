@@ -15,18 +15,19 @@
  */
 
 package gigahorse
-package support.akkahttp
+package support.pekkohttp
 
 import scala.concurrent.{ Future, ExecutionContext }
-import akka.http.scaladsl.model.{ HttpResponse, StatusCode, HttpHeader }
-import akka.stream.Materializer
+import org.apache.pekko
+import pekko.http.scaladsl.model.{ HttpResponse, StatusCode, HttpHeader }
+import pekko.stream.Materializer
 
-abstract class AkkaHttpCompletionHandler[A] extends CompletionHandler[A] {
+abstract class PekkoHttpCompletionHandler[A] extends CompletionHandler[A] {
   def onStatusReceived(status: StatusCode): State = State.Continue
   def onHeadersReceived(headers: Seq[HttpHeader]): State = State.Continue
   def onCompleted(response: FullResponse): A
   def onPartialResponse(httpResponse: HttpResponse, config: Config)(implicit fm: Materializer, ec: ExecutionContext): Future[A] =
     for {
       entity <- httpResponse.entity.toStrict(config.requestTimeout)
-    } yield onCompleted(new AkkaHttpFullResponse(httpResponse, entity))
+    } yield onCompleted(new PekkoHttpFullResponse(httpResponse, entity))
 }
