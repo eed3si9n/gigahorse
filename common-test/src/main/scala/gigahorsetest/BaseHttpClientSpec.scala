@@ -37,13 +37,7 @@ import java.nio.charset.Charset
 import scala.concurrent._
 import scala.util.Success
 
-abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers {
-  val port: Int = unfiltered.util.Port.any
-  def testUrl: String = s"http://localhost:$port/"
-  def getServer = setup(Server.http(port))
-  def setup: Server => Server = {
-    _.chunked(1024 * 1024).handler(TestPlan.testPlan)
-  }
+abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers with TestHttpServer {
   val wsPort = unfiltered.util.Port.any
   def wsTestUrl: String = s"ws://localhost:$wsPort"
   def getWsServer = wsSetup(Server.local(wsPort))
