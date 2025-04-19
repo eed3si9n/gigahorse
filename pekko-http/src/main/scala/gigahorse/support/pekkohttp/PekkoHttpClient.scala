@@ -53,12 +53,12 @@ class PekkoHttpClient(config: Config, system: ActorSystem)(implicit fm: Material
   /** Closes this client, and releases underlying resources. */
   def close(): Unit =
     {
-      val x = pekkoHttp.shutdownAllConnectionPools
+      val x = pekkoHttp.shutdownAllConnectionPools()
       Await.result(x, Duration.Inf)
     }
 
   /** Runs the request and return a Future of FullResponse. Errors on non-OK response. */
-  def run(request: Request): Future[FullResponse] = run(request, identity)
+  def run(request: Request): Future[FullResponse] = run(request, identity: FullResponse => FullResponse)
 
   /** Runs the request and return a Future of A. Errors on non-OK response. */
   def run[A](request: Request, f: FullResponse => A): Future[A] = process(request, OkHandler(f))

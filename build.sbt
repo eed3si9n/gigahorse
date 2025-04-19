@@ -167,7 +167,7 @@ lazy val pekkoHttp = (project in file("pekko-http")).
   dependsOn(core, commonTest % Test).
   settings(
     commonSettings,
-    crossScalaVersions := Vector(scala212, scala213),
+    crossScalaVersions := Vector(scala212, scala213, scala3),
     name := "gigahorse-pekko-http",
     libraryDependencies ++= Seq(pekkoActorTyped, pekkoStream, Dependencies.pekkoHttp),
     dependencyOverrides += sslConfig,
