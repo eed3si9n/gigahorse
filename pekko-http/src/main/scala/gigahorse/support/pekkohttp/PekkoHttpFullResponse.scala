@@ -23,16 +23,18 @@ import org.apache.pekko
 import pekko.http.scaladsl.model.*
 import pekko.stream.Materializer
 
-class PekkoHttpFullResponse(pekkoHttpResponse: HttpResponse, entity: HttpEntity.Strict)(implicit val fm: Materializer) extends FullResponse {
+class PekkoHttpFullResponse(pekkoHttpResponse: HttpResponse, entity: HttpEntity.Strict)(implicit
+    val fm: Materializer
+) extends FullResponse {
+
   /**
    * @return The underlying entity object.
    */
   def underlying[A] = entity.asInstanceOf[A]
 
-  def close(): Unit =
-    {
-      pekkoHttpResponse.discardEntityBytes(fm)
-    }
+  def close(): Unit = {
+    pekkoHttpResponse.discardEntityBytes(fm)
+  }
 
   /**
    * @return The underlying response object.
@@ -61,7 +63,7 @@ class PekkoHttpFullResponse(pekkoHttpResponse: HttpResponse, entity: HttpEntity.
    */
   lazy val allHeaders: Map[String, List[String]] =
     TreeMap[String, List[String]]() ++
-    pekkoHttpResponse.headers.groupBy(_.name).mapValues(vs => vs.toList map { _.value })
+      pekkoHttpResponse.headers.groupBy(_.name).mapValues(vs => vs.toList map { _.value })
 
   /**
    * The response status code.

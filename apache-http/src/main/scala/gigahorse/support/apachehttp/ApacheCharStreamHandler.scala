@@ -18,7 +18,7 @@ package gigahorse
 package support.apachehttp
 
 import java.nio.CharBuffer
-import shaded.apache.org.apache.hc.core5.http.{ Header => XHeader }
+import shaded.apache.org.apache.hc.core5.http.{ Header as XHeader }
 
 /**
  * Wrapper around org.apache.hc.client5.http.async.methods.AbstractCharResponseConsumer.

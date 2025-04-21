@@ -65,3 +65,9 @@ jobs:
         ./bazelenv scala_2.13
         bazel test ...
         bin/scalafix ... --check
+  scalafmt:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - uses: jrouly/scalafmt-native-action@v4

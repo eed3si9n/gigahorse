@@ -45,37 +45,43 @@ import pekko.util.ByteString
 import DownloadHandler.asFile
 import pekko.http.scaladsl.model.HttpHeader.ParsingResult.Ok
 
-class PekkoHttpClient(config: Config, system: ActorSystem)(implicit fm: Materializer) extends ReactiveHttpClient {
+class PekkoHttpClient(config: Config, system: ActorSystem)(implicit fm: Materializer)
+    extends ReactiveHttpClient {
   private val pekkoHttp: HttpExt = Http(system)
 
   def underlying[A]: A = pekkoHttp.asInstanceOf[A]
 
   /** Closes this client, and releases underlying resources. */
-  def close(): Unit =
-    {
-      val x = pekkoHttp.shutdownAllConnectionPools()
-      Await.result(x, Duration.Inf)
-    }
+  def close(): Unit = {
+    val x = pekkoHttp.shutdownAllConnectionPools()
+    Await.result(x, Duration.Inf)
+  }
 
   /** Runs the request and return a Future of FullResponse. Errors on non-OK response. */
-  def run(request: Request): Future[FullResponse] = run(request, identity: FullResponse => FullResponse)
+  def run(request: Request): Future[FullResponse] =
+    run(request, identity: FullResponse => FullResponse)
 
   /** Runs the request and return a Future of A. Errors on non-OK response. */
   def run[A](request: Request, f: FullResponse => A): Future[A] = process(request, OkHandler(f))
 
   /** Runs the request and return a Future of Either a FullResponse or a Throwable. Errors on non-OK response. */
-  def run[A](request: Request, lifter: FutureLifter[A])(implicit ec: ExecutionContext): Future[Either[Throwable, A]] =
+  def run[A](request: Request, lifter: FutureLifter[A])(implicit
+      ec: ExecutionContext
+  ): Future[Either[Throwable, A]] =
     lifter.run(run(request))
 
   /** Executes the request and return a Future of FullResponse. Does not error on non-OK response. */
-  def processFull(request: Request): Future[FullResponse] = processFull(request, identity[FullResponse] _)
+  def processFull(request: Request): Future[FullResponse] =
+    processFull(request, identity[FullResponse] _)
 
   /** Executes the request and return a Future of A. Does not error on non-OK response. */
   def processFull[A](request: Request, f: FullResponse => A): Future[A] =
     process(request, FunctionHandler(f))
 
   /** Executes the request and return a Future of Either a FullResponse or a Throwable. Does not error on non-OK response. */
-  def processFull[A](request: Request, lifter: FutureLifter[A])(implicit ec: ExecutionContext): Future[Either[Throwable, A]] =
+  def processFull[A](request: Request, lifter: FutureLifter[A])(implicit
+      ec: ExecutionContext
+  ): Future[Either[Throwable, A]] =
     lifter.run(processFull(request))
 
   /** Runs the request and return a Future of StreamResponse. */
@@ -102,57 +108,56 @@ class PekkoHttpClient(config: Config, system: ActorSystem)(implicit fm: Material
     process(request, handler)
 
   /** Executes the request. Does not error on non-OK response. */
-  def process[A](request: Request, handler: PekkoHttpCompletionHandler[A]): Future[A] =
-    {
-      implicit val ec = system.dispatcher
-      def processInitialResponse(response: HttpResponse): Future[Unit] =
-        {
-          val p = Promise[Unit]()
-          val s1 = handler.onStatusReceived(response.status)
-          if (s1 == State.Abort) {
-            response.entity.discardBytes(fm)
-            p.failure { StatusError(response.status.intValue) }
-          }
-          else p.success(())
-          p.future
-        }
-      for {
-        r        <- buildRequest(request)
-        response <- pekkoHttp.singleRequest(r)
-        _        <- processInitialResponse(response)
-        result   <- handler.onPartialResponse(response, config)
-      } yield result
+  def process[A](request: Request, handler: PekkoHttpCompletionHandler[A]): Future[A] = {
+    implicit val ec = system.dispatcher
+    def processInitialResponse(response: HttpResponse): Future[Unit] = {
+      val p = Promise[Unit]()
+      val s1 = handler.onStatusReceived(response.status)
+      if (s1 == State.Abort) {
+        response.entity.discardBytes(fm)
+        p.failure { StatusError(response.status.intValue) }
+      } else p.success(())
+      p.future
     }
+    for {
+      r <- buildRequest(request)
+      response <- pekkoHttp.singleRequest(r)
+      _ <- processInitialResponse(response)
+      result <- handler.onPartialResponse(response, config)
+    } yield result
+  }
 
   def buildRequest(request: Request): Future[HttpRequest] = {
     implicit val ec = system.dispatcher
     for {
       entity <- buildEntity(request)
-      httpReq = HttpRequest(method = buildMethod(request),
+      httpReq = HttpRequest(
+        method = buildMethod(request),
         uri = buildUri(request),
         headers = buildHeaders(request),
-        entity = entity)
+        entity = entity
+      )
       f <- request.signatureOpt match {
-              case Some(signatureCalculator) =>
-                val body = request.body match {
-                  case b: InMemoryBody => b.bytes
-                  case _ => Array.emptyByteArray
-                }
-                val (name, value) = signatureCalculator.sign(httpReq.uri.toString(), request.contentType, body)
-                Future(
-                  HttpHeader.parse(name, value) match {
-                    case Ok(header, _) => httpReq.withHeaders(header)
-                    case _ => sys.error(s"Invalid header: ${name} = ${value}")
-                  }
-                )
-              case None => Future(httpReq)
+        case Some(signatureCalculator) =>
+          val body = request.body match {
+            case b: InMemoryBody => b.bytes
+            case _               => Array.emptyByteArray
+          }
+          val (name, value) =
+            signatureCalculator.sign(httpReq.uri.toString(), request.contentType, body)
+          Future(
+            HttpHeader.parse(name, value) match {
+              case Ok(header, _) => httpReq.withHeaders(header)
+              case _             => sys.error(s"Invalid header: ${name} = ${value}")
             }
+          )
+        case None => Future(httpReq)
+      }
     } yield f
   }
 
   def buildWsRequest(request: Request): WebSocketRequest =
-    WebSocketRequest(uri = buildUri(request),
-      extraHeaders = buildHeaders(request))
+    WebSocketRequest(uri = buildUri(request), extraHeaders = buildHeaders(request))
 
   private def buildMethod(request: Request): HttpMethod =
     request.method match {
@@ -165,120 +170,131 @@ class PekkoHttpClient(config: Config, system: ActorSystem)(implicit fm: Material
       case HttpVerbs.OPTIONS => HttpMethods.OPTIONS
     }
 
-  private def buildHeaders(request: Request): List[HttpHeader] =
-    {
-      import pekko.http.scaladsl.model.headers.{ Authorization, BasicHttpCredentials }
-      val authHeaders = (request.authOpt orElse config.authOpt) match {
-        case Some(auth) =>
-          auth.scheme match {
-            case AuthScheme.Basic =>
-              List(Authorization(BasicHttpCredentials(auth.username, auth.password)))
-            case _                => sys.error(s"Unsupported scheme: ${auth.scheme}")
-          }
-        case None       => Nil
-      }
-      val headers0 = for {
-        (k, vs) <- request.headers.toList
-        v       <- vs.toList
-        x       <- HttpHeader.parse(k, v) match {
-          case HttpHeader.ParsingResult.Ok(header, _) => List(header)
-          case _                                      => Nil
+  private def buildHeaders(request: Request): List[HttpHeader] = {
+    import pekko.http.scaladsl.model.headers.{ Authorization, BasicHttpCredentials }
+    val authHeaders = (request.authOpt orElse config.authOpt) match {
+      case Some(auth) =>
+        auth.scheme match {
+          case AuthScheme.Basic =>
+            List(Authorization(BasicHttpCredentials(auth.username, auth.password)))
+          case _ => sys.error(s"Unsupported scheme: ${auth.scheme}")
         }
-      } yield x
-      headers0 ::: authHeaders
+      case None => Nil
     }
+    val headers0 = for {
+      (k, vs) <- request.headers.toList
+      v <- vs.toList
+      x <- HttpHeader.parse(k, v) match {
+        case HttpHeader.ParsingResult.Ok(header, _) => List(header)
+        case _                                      => Nil
+      }
+    } yield x
+    headers0 ::: authHeaders
+  }
 
-  private def buildUri(request: Request): Uri =
-    {
-      import request._
-      // queries
-      val qs = for {
-        (key, values) <- queryString
-        value <- values
-      } yield (key, value)
-      Uri(url).withQuery(Uri.Query(qs))
-    }
+  private def buildUri(request: Request): Uri = {
+    import request.*
+    // queries
+    val qs = for {
+      (key, values) <- queryString
+      value <- values
+    } yield (key, value)
+    Uri(url).withQuery(Uri.Query(qs))
+  }
 
   private def buildEntity(request: Request): Future[RequestEntity] = {
     implicit val ec = system.dispatcher
     request.body match {
       case _: EmptyBody => Future(HttpEntity.Empty)
       case b: InMemoryBody =>
-        val ct = ContentType.parse(request.contentType.getOrElse("text/plain; charset=utf-8")) match {
-          case Right(x) => x
-          case Left(xs) => sys.error(xs.toString)
-        }
+        val ct =
+          ContentType.parse(request.contentType.getOrElse("text/plain; charset=utf-8")) match {
+            case Right(x) => x
+            case Left(xs) => sys.error(xs.toString)
+          }
         Future(HttpEntity.Strict(ct, ByteString(b.bytes)))
       case b: FileBody =>
         val file = b.file
-        val ct = ContentType.parse(request.contentType.getOrElse("application/octet-stream")) match {
-          case Right(x) => x
-          case Left(xs) => sys.error(xs.toString)
-        }
+        val ct =
+          ContentType.parse(request.contentType.getOrElse("application/octet-stream")) match {
+            case Right(x) => x
+            case Left(xs) => sys.error(xs.toString)
+          }
         val data = Multipart.FormData(
           Source.single(
             Multipart.FormData.BodyPart(
               file.getName,
               HttpEntity(ct, file.length(), FileIO.fromPath(file.toPath(), chunkSize = 100000)),
-              Map("filename" -> file.getName))))
+              Map("filename" -> file.getName)
+            )
+          )
+        )
         Marshal(data).to[RequestEntity]
       case b: MultipartFormBody =>
-        val data = Multipart.FormData(
-          Source(b.parts.map { p =>
-            p.body match {
-              case b: InMemoryBody =>
-                val ct = ContentType.parse(p.contentType.getOrElse("text/plain; charset=utf-8")) match {
+        val data = Multipart.FormData(Source(b.parts.map { p =>
+          p.body match {
+            case b: InMemoryBody =>
+              val ct =
+                ContentType.parse(p.contentType.getOrElse("text/plain; charset=utf-8")) match {
                   case Right(x) => x
                   case Left(xs) => sys.error(xs.toString)
                 }
-                Multipart.FormData.BodyPart(
-                  p.name,
-                  HttpEntity(ct, b.bytes.length, Source.single(ByteString.fromArray(b.bytes))),
-                  Map())
-              case b: FileBody =>
-                val ct = ContentType.parse(p.contentType.getOrElse("application/octet-stream")) match {
+              Multipart.FormData.BodyPart(
+                p.name,
+                HttpEntity(ct, b.bytes.length, Source.single(ByteString.fromArray(b.bytes))),
+                Map()
+              )
+            case b: FileBody =>
+              val ct =
+                ContentType.parse(p.contentType.getOrElse("application/octet-stream")) match {
                   case Right(x) => x
                   case Left(xs) => sys.error(xs.toString)
                 }
-                Multipart.FormData.BodyPart(
-                  p.name,
-                  HttpEntity(ct, b.file.length(), FileIO.fromPath(b.file.toPath(), chunkSize = 100000)),
-                  Map("filename" -> b.file.getName))
-              case _ =>
-                sys.error(s"unexpected body in multipart: ${p.body}")
-            }
-          }))
+              Multipart.FormData.BodyPart(
+                p.name,
+                HttpEntity(
+                  ct,
+                  b.file.length(),
+                  FileIO.fromPath(b.file.toPath(), chunkSize = 100000)
+                ),
+                Map("filename" -> b.file.getName)
+              )
+            case _ =>
+              sys.error(s"unexpected body in multipart: ${p.body}")
+          }
+        }))
         Marshal(data).to[RequestEntity]
     }
   }
 
   /** Open a websocket connection. */
-  def websocket(request: Request)(handler: PartialFunction[WebSocketEvent, Unit]): Future[WebSocket] =
-    {
-      implicit val ec = system.dispatcher
-      val xrequest = buildWsRequest(request)
-      import pekko.stream.scaladsl._
-      import pekko.Done
-      import pekko.http.scaladsl.model.ws.Message
-      val listener = new WebSocketListener(handler, system)
-      val wsSink: Sink[Message, Future[Done]] = listener.sink
-      val wsSource = listener.source
-      val flow: Flow[Message, Message, Future[Done]] =
-        Flow.fromSinkAndSourceMat(wsSink, wsSource)(Keep.left)
-      // upgradeResponse is a Future[WebSocketUpgradeResponse] that
-      // completes or fails when the connection succeeds or fails
-      // and closed is a Future[Done] representing the stream completion from above
-      val (upgradeResponse, _) = pekkoHttp.singleWebSocketRequest(xrequest, flow)
-      val _ = upgradeResponse.map { upgrade =>
-        // just like a regular http request we can access response status which is available via upgrade.response.status
-        // status code 101 (Switching Protocols) indicates that server support WebSockets
-        if (upgrade.response.status == StatusCodes.SwitchingProtocols) {
-          Done
-        } else {
-          throw new RuntimeException(s"Connection failed: ${upgrade.response.status}")
-        }
+  def websocket(
+      request: Request
+  )(handler: PartialFunction[WebSocketEvent, Unit]): Future[WebSocket] = {
+    implicit val ec = system.dispatcher
+    val xrequest = buildWsRequest(request)
+    import pekko.stream.scaladsl.*
+    import pekko.Done
+    import pekko.http.scaladsl.model.ws.Message
+    val listener = new WebSocketListener(handler, system)
+    val wsSink: Sink[Message, Future[Done]] = listener.sink
+    val wsSource = listener.source
+    val flow: Flow[Message, Message, Future[Done]] =
+      Flow.fromSinkAndSourceMat(wsSink, wsSource)(Keep.left)
+    // upgradeResponse is a Future[WebSocketUpgradeResponse] that
+    // completes or fails when the connection succeeds or fails
+    // and closed is a Future[Done] representing the stream completion from above
+    val (upgradeResponse, _) = pekkoHttp.singleWebSocketRequest(xrequest, flow)
+    val _ = upgradeResponse.map { upgrade =>
+      // just like a regular http request we can access response status which is available via upgrade.response.status
+      // status code 101 (Switching Protocols) indicates that server support WebSockets
+      if (upgrade.response.status == StatusCodes.SwitchingProtocols) {
+        Done
+      } else {
+        throw new RuntimeException(s"Connection failed: ${upgrade.response.status}")
       }
-      val result = listener.result
-      result.future
     }
+    val result = listener.result
+    result.future
+  }
 }

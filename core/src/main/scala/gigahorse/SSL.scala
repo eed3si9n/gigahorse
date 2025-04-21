@@ -17,12 +17,12 @@
 
 package gigahorse
 
-import com.typesafe.sslconfig.ssl._
+import com.typesafe.sslconfig.ssl.*
 import com.typesafe.sslconfig.util.NoopLogger
 
 import java.security.KeyStore
 import java.security.cert.X509Certificate
-import javax.net.ssl._
+import javax.net.ssl.*
 
 private[gigahorse] object SSL {
   def buildContext(sslConfig: SSLConfigSettings): (SSLContext, Option[TrustManager]) = {
@@ -35,7 +35,12 @@ private[gigahorse] object SSL {
       val tmf = TrustManagerFactory.getInstance(sslConfig.trustManagerConfig.algorithm)
       tmf.init(null.asInstanceOf[KeyStore])
       val trustManager: X509TrustManager = tmf.getTrustManagers()(0).asInstanceOf[X509TrustManager]
-      val context = new ConfigSSLContextBuilder(NoopLogger.factory(), sslConfig, keyManagerFactory, trustManagerFactory).build()
+      val context = new ConfigSSLContextBuilder(
+        NoopLogger.factory(),
+        sslConfig,
+        keyManagerFactory,
+        trustManagerFactory
+      ).build()
       val trustManagerOpt = Option(trustManager)
       (context, trustManagerOpt)
     }

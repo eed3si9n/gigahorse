@@ -21,9 +21,11 @@ import java.nio.ByteBuffer
 import java.nio.charset.Charset
 import scala.concurrent.Future
 
-/** Common interface for Gigahorse backends.
+/**
+ * Common interface for Gigahorse backends.
  */
 abstract class GigahorseSupport {
+
   /**
    * Generates a request.
    *
@@ -33,13 +35,12 @@ abstract class GigahorseSupport {
   def url(url: String): Request = Request(url)
 
   /** Returns default configuration using `application.conf` if present. */
-  def config: Config =
-    {
-      import com.typesafe.config.ConfigFactory
-      val c = ConfigFactory.load
-      if (c.hasPath(ConfigParser.rootPath)) ConfigParser.parse(c)
-      else Config()
-    }
+  def config: Config = {
+    import com.typesafe.config.ConfigFactory
+    val c = ConfigFactory.load
+    if (c.hasPath(ConfigParser.rootPath)) ConfigParser.parse(c)
+    else Config()
+  }
 
   /** Function from `FullResponse` to `String` */
   lazy val asString: FullResponse => String = _.bodyAsString

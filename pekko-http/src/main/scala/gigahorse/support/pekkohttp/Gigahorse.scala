@@ -25,23 +25,23 @@ import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
 abstract class Gigahorse extends GigahorseSupport {
-  /** Returns HttpClient. You must call `close` when you're done. */
-  def http(config: Config, system: ActorSystem)(implicit fm: Materializer): ReactiveHttpClient = new PekkoHttpClient(config, system)
 
-  def withHttp[A](config: Config)(f: ReactiveHttpClient => A): A =
-    {
-      implicit val system = ActorSystem("gigahorse-pekko-http")
-      @nowarn
-      implicit val materializer: ActorMaterializer = (ActorMaterializer(): @nowarn)
-      val client: ReactiveHttpClient = http(config, system)
-      try {
-        f(client)
-      }
-      finally {
-        client.close()
-        Await.result(system.terminate(), Duration.Inf)
-      }
+  /** Returns HttpClient. You must call `close` when you're done. */
+  def http(config: Config, system: ActorSystem)(implicit fm: Materializer): ReactiveHttpClient =
+    new PekkoHttpClient(config, system)
+
+  def withHttp[A](config: Config)(f: ReactiveHttpClient => A): A = {
+    implicit val system = ActorSystem("gigahorse-pekko-http")
+    @nowarn
+    implicit val materializer: ActorMaterializer = (ActorMaterializer(): @nowarn)
+    val client: ReactiveHttpClient = http(config, system)
+    try {
+      f(client)
+    } finally {
+      client.close()
+      Await.result(system.terminate(), Duration.Inf)
     }
+  }
   def withHttp[A](f: ReactiveHttpClient => A): A =
     withHttp(config)(f)
 }

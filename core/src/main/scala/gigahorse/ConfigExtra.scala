@@ -17,7 +17,7 @@
 
 package gigahorse
 
-import com.typesafe.config.{ Config => XConfig }
+import com.typesafe.config.{ Config as XConfig }
 import com.typesafe.sslconfig.ssl.SSLConfigFactory
 
 import java.io.File
@@ -27,69 +27,70 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.duration.FiniteDuration
 
 object ConfigParser {
-  import ConfigDefaults._
+  import ConfigDefaults.*
   implicit def toRichXConfig(config: XConfig): RichXConfig = new RichXConfig(config)
 
   val rootPath: String = "gigahorse"
 
-  def parse(config0: XConfig): Config =
-    {
-      val config = config0.getConfig(rootPath)
-      val sslConfig =
-        if (config.hasPath("ssl")) SSLConfigFactory.parse(config.getConfig("ssl"))
-        else SSLConfigFactory.defaultConfig
-      val authOpt =
-        if (config.hasPath("auth")) Some(parseRealm(config.getConfig("auth")))
-        else defaultAuthOpt
-      val cacheOpt =
-        if (config.hasPath("cacheDirectory")) Some(new File(config.getString("cacheDirectory")))
-        else None
-      Config(
-        connectTimeout        = config.getFiniteDuration("connectTimeout", defaultConnectTimeout),
-        requestTimeout        = config.getFiniteDuration("requestTimeout", defaultRequestTimeout),
-        readTimeout           = config.getFiniteDuration("readTimeout", defaultReadTimeout),
-        frameTimeout          = config.getFiniteDuration("frameTimeout", defaultFrameTimeout),
-        followRedirects       = config.getBoolean("followRedirects", defaultFollowRedirects),
-        maxRedirects          = config.getInt("maxRedirects", defaultMaxRedirects),
-        compressionEnforced   = config.getBoolean("compressionEnforced", defaultCompressionEnforced),
-        userAgentOpt          = config.getStringOption("userAgent", defaultUserAgentOpt),
-        authOpt               = authOpt,
-        ssl                   = sslConfig,
-        maxRequestRetry       = config.getInt("maxRequestRetry", defaultMaxRequestRetry),
-        disableUrlEncoding    = config.getBoolean("disableUrlEncoding", defaultDisableUrlEncoding),
-        useProxyProperties    = config.getBoolean("useProxyProperties", defaultUseProxyProperties),
-        keepAlive             = config.getBoolean("keepAlive", defaultKeepAlive),
-        pooledConnectionIdleTimeout = config.getDuration("pooledConnectionIdleTimeout", defaultPooledConnectionIdleTimeout),
-        connectionTtl         = config.getDuration("connectionTtl", defaultConnectionTtl),
-        maxConnections        = config.getInt("maxConnections", defaultMaxConnections),
-        maxConnectionsPerHost = config.getInt("maxConnectionsPerHost", defaultMaxConnectionsPerHost),
-        maxFrameSize          = config.getMemorySize("maxFrameSize", defaultMaxFrameSize),
-        webSocketMaxFrameSize = config.getMemorySize("webSocketMaxFrameSize", defaultWebSocketMaxFrameSize),
-        cacheDirectory        = cacheOpt,
-        maxCacheSize          = config.getMemorySize("maxCacheSize", defaultMaxCacheSize)
-      )
-    }
+  def parse(config0: XConfig): Config = {
+    val config = config0.getConfig(rootPath)
+    val sslConfig =
+      if (config.hasPath("ssl")) SSLConfigFactory.parse(config.getConfig("ssl"))
+      else SSLConfigFactory.defaultConfig
+    val authOpt =
+      if (config.hasPath("auth")) Some(parseRealm(config.getConfig("auth")))
+      else defaultAuthOpt
+    val cacheOpt =
+      if (config.hasPath("cacheDirectory")) Some(new File(config.getString("cacheDirectory")))
+      else None
+    Config(
+      connectTimeout = config.getFiniteDuration("connectTimeout", defaultConnectTimeout),
+      requestTimeout = config.getFiniteDuration("requestTimeout", defaultRequestTimeout),
+      readTimeout = config.getFiniteDuration("readTimeout", defaultReadTimeout),
+      frameTimeout = config.getFiniteDuration("frameTimeout", defaultFrameTimeout),
+      followRedirects = config.getBoolean("followRedirects", defaultFollowRedirects),
+      maxRedirects = config.getInt("maxRedirects", defaultMaxRedirects),
+      compressionEnforced = config.getBoolean("compressionEnforced", defaultCompressionEnforced),
+      userAgentOpt = config.getStringOption("userAgent", defaultUserAgentOpt),
+      authOpt = authOpt,
+      ssl = sslConfig,
+      maxRequestRetry = config.getInt("maxRequestRetry", defaultMaxRequestRetry),
+      disableUrlEncoding = config.getBoolean("disableUrlEncoding", defaultDisableUrlEncoding),
+      useProxyProperties = config.getBoolean("useProxyProperties", defaultUseProxyProperties),
+      keepAlive = config.getBoolean("keepAlive", defaultKeepAlive),
+      pooledConnectionIdleTimeout =
+        config.getDuration("pooledConnectionIdleTimeout", defaultPooledConnectionIdleTimeout),
+      connectionTtl = config.getDuration("connectionTtl", defaultConnectionTtl),
+      maxConnections = config.getInt("maxConnections", defaultMaxConnections),
+      maxConnectionsPerHost = config.getInt("maxConnectionsPerHost", defaultMaxConnectionsPerHost),
+      maxFrameSize = config.getMemorySize("maxFrameSize", defaultMaxFrameSize),
+      webSocketMaxFrameSize =
+        config.getMemorySize("webSocketMaxFrameSize", defaultWebSocketMaxFrameSize),
+      cacheDirectory = cacheOpt,
+      maxCacheSize = config.getMemorySize("maxCacheSize", defaultMaxCacheSize)
+    )
+  }
 
   def parseRealm(config: XConfig): Realm =
     Realm(
-      username          = config.getString("username"),
-      password          = config.getString("password"),
-      scheme            = parseScheme(config.getString("scheme", "Basic")),
+      username = config.getString("username"),
+      password = config.getString("password"),
+      scheme = parseScheme(config.getString("scheme", "Basic")),
       usePreemptiveAuth = config.getBoolean("usePreemptiveAuth", true),
-      realmNameOpt      = config.getStringOption("realmName", None),
-      nonceOpt          = config.getStringOption("nonce", None),
-      algorithmOpt      = config.getStringOption("algorithm", None),
-      responseOpt       = config.getStringOption("response", None),
-      opaqueOpt         = config.getStringOption("opaque", None),
-      qopOpt            = config.getStringOption("qop", None),
-      ncOpt             = config.getStringOption("nc", None),
-      uriOpt            = config.getStringOption("uri", None) map { new URI(_) },
-      methodNameOpt     = config.getStringOption("methodName", None),
-      charsetOpt        = config.getStringOption("charset", None) map { Charset.forName },
-      ntlmDomainOpt     = config.getStringOption("ntlmDomain", None),
-      ntlmHostOpt       = config.getStringOption("ntlmHost", None),
-      useAbsoluteURI    = config.getBoolean("useAbsoluteURI", false),
-      omitQuery         = config.getBoolean("omitQuery", false)
+      realmNameOpt = config.getStringOption("realmName", None),
+      nonceOpt = config.getStringOption("nonce", None),
+      algorithmOpt = config.getStringOption("algorithm", None),
+      responseOpt = config.getStringOption("response", None),
+      opaqueOpt = config.getStringOption("opaque", None),
+      qopOpt = config.getStringOption("qop", None),
+      ncOpt = config.getStringOption("nc", None),
+      uriOpt = config.getStringOption("uri", None) map { new URI(_) },
+      methodNameOpt = config.getStringOption("methodName", None),
+      charsetOpt = config.getStringOption("charset", None) map { Charset.forName },
+      ntlmDomainOpt = config.getStringOption("ntlmDomain", None),
+      ntlmHostOpt = config.getStringOption("ntlmHost", None),
+      useAbsoluteURI = config.getBoolean("useAbsoluteURI", false),
+      omitQuery = config.getBoolean("omitQuery", false)
     )
 
   def parseScheme(s: String): AuthScheme =
@@ -104,27 +105,27 @@ object ConfigParser {
 }
 
 object ConfigDefaults {
-  val defaultConnectTimeout        = FiniteDuration(120, "s")
-  val defaultRequestTimeout        = FiniteDuration(120, "s")
-  val defaultReadTimeout           = FiniteDuration(120, "s")
-  val defaultFrameTimeout          = FiniteDuration(200, "ms")
-  val defaultFollowRedirects       = true
-  val defaultMaxRedirects          = 5
-  val defaultCompressionEnforced   = false
-  val defaultUserAgentOpt          = None
-  val defaultAuthOpt               = None
-  val defaultSslConfig             = SSLConfigFactory.defaultConfig
-  val defaultMaxRequestRetry       = 5
-  val defaultDisableUrlEncoding    = false
-  val defaultUseProxyProperties    = true
-  val defaultKeepAlive             = true
+  val defaultConnectTimeout = FiniteDuration(120, "s")
+  val defaultRequestTimeout = FiniteDuration(120, "s")
+  val defaultReadTimeout = FiniteDuration(120, "s")
+  val defaultFrameTimeout = FiniteDuration(200, "ms")
+  val defaultFollowRedirects = true
+  val defaultMaxRedirects = 5
+  val defaultCompressionEnforced = false
+  val defaultUserAgentOpt = None
+  val defaultAuthOpt = None
+  val defaultSslConfig = SSLConfigFactory.defaultConfig
+  val defaultMaxRequestRetry = 5
+  val defaultDisableUrlEncoding = false
+  val defaultUseProxyProperties = true
+  val defaultKeepAlive = true
   val defaultPooledConnectionIdleTimeout = Duration("60s")
-  val defaultConnectionTtl         = Duration.Inf
-  val defaultMaxConnections        = -1
+  val defaultConnectionTtl = Duration.Inf
+  val defaultMaxConnections = -1
   val defaultMaxConnectionsPerHost = -1
-  val defaultMaxFrameSize          = ConfigMemorySize(1024 * 1024)
+  val defaultMaxFrameSize = ConfigMemorySize(1024 * 1024)
   val defaultWebSocketMaxFrameSize = ConfigMemorySize(1024 * 1024)
-  val defaultMaxCacheSize          = ConfigMemorySize(100 * 1024 * 1024)
+  val defaultMaxCacheSize = ConfigMemorySize(100 * 1024 * 1024)
 }
 
 class RichXConfig(config: XConfig) {
@@ -148,8 +149,7 @@ class RichXConfig(config: XConfig) {
       val d = Duration(config.getString(path))
       if (d.isFinite) FiniteDuration(d.toMillis, "ms")
       else sys.error(s"A FiniteDuration is required for $path")
-    }
-    else fallback
+    } else fallback
   def getMemorySize(path: String, fallback: ConfigMemorySize): ConfigMemorySize =
     if (config.hasPath(path)) ConfigMemorySize(config.getBytes(path))
     else fallback

@@ -26,7 +26,10 @@ abstract class PekkoHttpCompletionHandler[A] extends CompletionHandler[A] {
   def onStatusReceived(status: StatusCode): State = State.Continue
   def onHeadersReceived(headers: Seq[HttpHeader]): State = State.Continue
   def onCompleted(response: FullResponse): A
-  def onPartialResponse(httpResponse: HttpResponse, config: Config)(implicit fm: Materializer, ec: ExecutionContext): Future[A] =
+  def onPartialResponse(httpResponse: HttpResponse, config: Config)(implicit
+      fm: Materializer,
+      ec: ExecutionContext
+  ): Future[A] =
     for {
       entity <- httpResponse.entity.toStrict(config.requestTimeout)
     } yield onCompleted(new PekkoHttpFullResponse(httpResponse, entity))

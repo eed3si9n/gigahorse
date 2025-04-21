@@ -17,14 +17,16 @@
 package gigahorse
 package support.okhttp
 
-import okhttp3.{ Response => XResponse }
+import okhttp3.{ Response as XResponse }
 
 import java.nio.ByteBuffer
-import scala.collection.JavaConverters._
+import scala.collection.JavaConverters.*
 
-/** The response body must be consumed or closed.
+/**
+ * The response body must be consumed or closed.
  */
 class OkhFullResponse(okhResponse: XResponse) extends FullResponse {
+
   /**
    * @return The underlying response object.
    */

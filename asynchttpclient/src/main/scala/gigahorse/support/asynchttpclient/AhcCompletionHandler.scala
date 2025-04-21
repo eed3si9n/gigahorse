@@ -19,7 +19,7 @@ package support.asynchttpclient
 
 import shaded.ahc.io.netty.handler.codec.http.HttpHeaders
 import shaded.ahc.org.asynchttpclient
-import asynchttpclient.{ Response => XResponse, _ }
+import asynchttpclient.{ Response as XResponse, * }
 
 abstract class AhcCompletionHandler[A] extends CompletionHandler[A] with AhcHandler {
   val builder = new XResponse.ResponseBuilder

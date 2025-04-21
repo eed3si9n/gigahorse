@@ -17,7 +17,7 @@
 package gigahorse
 package support.asynchttpclient
 
-import shaded.ahc.org.asynchttpclient._
+import shaded.ahc.org.asynchttpclient.*
 import scala.concurrent.Future
 
 trait OkHandler extends AhcHandler {
@@ -29,8 +29,12 @@ trait OkHandler extends AhcHandler {
 }
 
 object OkHandler {
-  abstract class FullOkHandler[A](f: FullResponse => A) extends FunctionHandler[A](f) with OkHandler {}
-  abstract class StreamOkHandler[A](f: StreamResponse => Future[A]) extends StreamFunctionHandler[A](f) with OkHandler {}
+  abstract class FullOkHandler[A](f: FullResponse => A)
+      extends FunctionHandler[A](f)
+      with OkHandler {}
+  abstract class StreamOkHandler[A](f: StreamResponse => Future[A])
+      extends StreamFunctionHandler[A](f)
+      with OkHandler {}
 
   def apply[A](f: FullResponse => A): FullOkHandler[A] = new FullOkHandler[A](f) {}
   def stream[A](f: StreamResponse => Future[A]): StreamOkHandler[A] = new StreamOkHandler[A](f) {}

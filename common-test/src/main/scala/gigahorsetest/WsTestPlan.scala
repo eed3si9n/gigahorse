@@ -16,9 +16,10 @@
 
 package gigahorsetest
 
-import unfiltered.netty.websockets._
+import unfiltered.netty.websockets.*
 
 object WsTestPlan {
+
   /**
    * An echo websocket server.
    */

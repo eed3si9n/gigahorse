@@ -20,16 +20,19 @@ package support.okhttp
 import scala.concurrent.Future
 
 trait OkHandler extends OkhHandler {
-  abstract override def onStatusReceived(code: Int): Unit =
-    {
-      if (code / 100 == 2) super.onStatusReceived(code)
-      else throw StatusError(code)
-    }
+  abstract override def onStatusReceived(code: Int): Unit = {
+    if (code / 100 == 2) super.onStatusReceived(code)
+    else throw StatusError(code)
+  }
 }
 
 object OkHandler {
-  abstract class FullOkHandler[A](f: FullResponse => A) extends FunctionHandler[A](f) with OkHandler {}
-  abstract class StreamOkHandler[A](f: FullResponse => Future[A]) extends StreamFunctionHandler[A](f) with OkHandler {}
+  abstract class FullOkHandler[A](f: FullResponse => A)
+      extends FunctionHandler[A](f)
+      with OkHandler {}
+  abstract class StreamOkHandler[A](f: FullResponse => Future[A])
+      extends StreamFunctionHandler[A](f)
+      with OkHandler {}
 
   def apply[A](f: FullResponse => A): FullOkHandler[A] = new FullOkHandler[A](f) {}
   def stream[A](f: FullResponse => Future[A]): StreamOkHandler[A] = new StreamOkHandler[A](f) {}

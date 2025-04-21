@@ -8,7 +8,9 @@ ThisBuild / crossScalaVersions := Vector(scala212, scala213, scala3)
 ThisBuild / organizationName := "eed3si9n"
 ThisBuild / organizationHomepage := Some(url("http://eed3si9n.com/"))
 ThisBuild / homepage := Some(url("https://github.com/eed3si9n/gigahorse"))
-ThisBuild / scmInfo := Some(ScmInfo(url("https://github.com/eed3si9n/gigahorse"), "git@github.com:eed3si9n/gigahorse.git"))
+ThisBuild / scmInfo := Some(
+  ScmInfo(url("https://github.com/eed3si9n/gigahorse"), "git@github.com:eed3si9n/gigahorse.git")
+)
 ThisBuild / developers := List(
   Developer("eed3si9n", "Eugene Yokota", "@eed3si9n", url("https://github.com/eed3si9n"))
 )
@@ -16,10 +18,10 @@ ThisBuild / version := "0.8.1-SNAPSHOT"
 ThisBuild / description := "Gigahorse is an HTTP client for Scala with multiple backend support."
 ThisBuild / licenses := Seq("Apache 2" -> new URL("http://www.apache.org/licenses/LICENSE-2.0.txt"))
 
-lazy val root = (project in file(".")).
-  aggregate(core, apacheHttp, asynchttpclient, shadedAsyncHttpClient, okhttp, pekkoHttp).
-  dependsOn(core).
-  settings(
+lazy val root = (project in file("."))
+  .aggregate(core, apacheHttp, asynchttpclient, shadedAsyncHttpClient, okhttp, pekkoHttp)
+  .dependsOn(core)
+  .settings(
     name := "gigahorse",
     publish / skip := true,
     crossScalaVersions := Nil,
@@ -55,7 +57,8 @@ lazy val commonSettings = List(
     else Some("releases" at nexus + "service/local/staging/deploy/maven2")
   },
   scalacOptions ++= Seq(
-    "-encoding", "utf8",
+    "-encoding",
+    "utf8",
     "-deprecation",
     "-unchecked",
     "-Xlint",
@@ -71,7 +74,7 @@ lazy val commonSettings = List(
   Compile / javaOptions += "-Xmx2G",
 )
 
-lazy val fatalWarnings: Seq[Setting[_]] = List(
+lazy val fatalWarnings: Seq[Setting[?]] = List(
   scalacOptions ++= (scalaVersion.value match {
     case VersionNumber(Seq(2, 12, _*), _, _) =>
       List("-Xfatal-warnings")
@@ -79,9 +82,9 @@ lazy val fatalWarnings: Seq[Setting[_]] = List(
   }),
 )
 
-lazy val core = (project in file("core")).
-  enablePlugins(ContrabandPlugin).
-  settings(
+lazy val core = (project in file("core"))
+  .enablePlugins(ContrabandPlugin)
+  .settings(
     commonSettings,
     fatalWarnings,
     name := "gigahorse-core",
@@ -99,11 +102,24 @@ lazy val core = (project in file("core")).
   )
 
 lazy val testDeps = Seq(scalatest, ufDirectives, ufFilter, ufWebsockets, ufUploads)
-lazy val commonTest = (project in file("common-test")).
-  dependsOn(core).
-  settings(
+lazy val commonTest = (project in file("common-test"))
+  .dependsOn(core)
+  .settings(
     libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always,
     libraryDependencies ++= testDeps,
+    scalacOptions ++= Seq(
+      "-encoding",
+      "utf8",
+      "-deprecation",
+      "-unchecked",
+      "-Xlint",
+      "-Xsource:3",
+      "-feature",
+      "-language:existentials",
+      "-language:experimental.macros",
+      "-language:higherKinds",
+      "-language:implicitConversions",
+    ),
     publish / skip := true,
     exportJars := true,
   )
@@ -132,9 +148,9 @@ lazy val commonTest = (project in file("common-test")).
 //     publishSigned := ()
 //   )
 
-lazy val apacheHttp = (project in file("apache-http")).
-  dependsOn(core, shadedApacheHttpClient5, commonTest % Test).
-  settings(
+lazy val apacheHttp = (project in file("apache-http"))
+  .dependsOn(core, shadedApacheHttpClient5, commonTest % Test)
+  .settings(
     commonSettings,
     fatalWarnings,
     name := "gigahorse-apache-http",
@@ -142,9 +158,9 @@ lazy val apacheHttp = (project in file("apache-http")).
     libraryDependencies ++= testDeps.map(_ % Test),
   )
 
-lazy val okhttp = (project in file("okhttp")).
-  dependsOn(core, commonTest % Test).
-  settings(
+lazy val okhttp = (project in file("okhttp"))
+  .dependsOn(core, commonTest % Test)
+  .settings(
     commonSettings,
     fatalWarnings,
     name := "gigahorse-okhttp",
@@ -153,9 +169,9 @@ lazy val okhttp = (project in file("okhttp")).
     libraryDependencies ++= testDeps.map(_ % Test),
   )
 
-lazy val asynchttpclient = (project in file("asynchttpclient")).
-  dependsOn(core, shadedAsyncHttpClient, commonTest % Test).
-  settings(
+lazy val asynchttpclient = (project in file("asynchttpclient"))
+  .dependsOn(core, shadedAsyncHttpClient, commonTest % Test)
+  .settings(
     commonSettings,
     fatalWarnings,
     name := "gigahorse-asynchttpclient",
@@ -163,9 +179,9 @@ lazy val asynchttpclient = (project in file("asynchttpclient")).
     libraryDependencies ++= testDeps.map(_ % Test),
   )
 
-lazy val pekkoHttp = (project in file("pekko-http")).
-  dependsOn(core, commonTest % Test).
-  settings(
+lazy val pekkoHttp = (project in file("pekko-http"))
+  .dependsOn(core, commonTest % Test)
+  .settings(
     commonSettings,
     crossScalaVersions := Vector(scala212, scala213, scala3),
     name := "gigahorse-pekko-http",

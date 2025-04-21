@@ -23,7 +23,7 @@ import pekko.Done
 import pekko.http.scaladsl.model.ws.Message
 
 class MessageForwarder(streamRef: ActorRef) extends Actor {
-  var items:List[Message] = List.empty
+  var items: List[Message] = List.empty
   def receive = {
     case m: Message =>
       streamRef ! m

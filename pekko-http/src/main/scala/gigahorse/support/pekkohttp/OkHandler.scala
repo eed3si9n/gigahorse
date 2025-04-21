@@ -22,11 +22,10 @@ import pekko.http.scaladsl.model.StatusCode
 import scala.concurrent.Future
 
 trait OkHandler[A] extends PekkoHttpCompletionHandler[A] {
-  abstract override def onStatusReceived(status: StatusCode): State =
-    {
-      if (status.isFailure) State.Abort
-      else super.onStatusReceived(status)
-    }
+  abstract override def onStatusReceived(status: StatusCode): State = {
+    if (status.isFailure) State.Abort
+    else super.onStatusReceived(status)
+  }
 }
 
 object OkHandler {

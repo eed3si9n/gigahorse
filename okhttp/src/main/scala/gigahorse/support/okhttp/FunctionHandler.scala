@@ -29,5 +29,6 @@ abstract class StreamFunctionHandler[A](f: FullResponse => Future[A]) extends Ok
 
 object FunctionHandler {
   def apply[A](f: FullResponse => A): FunctionHandler[A] = new FunctionHandler[A](f) {}
-  def stream[A](f: FullResponse => Future[A]): StreamFunctionHandler[A] = new StreamFunctionHandler[A](f) {}
+  def stream[A](f: FullResponse => Future[A]): StreamFunctionHandler[A] =
+    new StreamFunctionHandler[A](f) {}
 }

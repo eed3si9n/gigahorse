@@ -18,9 +18,9 @@
 package gigahorse
 package support.asynchttpclient
 
-import shaded.ahc.org.asynchttpclient._
-import scala.concurrent.duration._
-import com.typesafe.sslconfig.ssl._
+import shaded.ahc.org.asynchttpclient.*
+import scala.concurrent.duration.*
+import com.typesafe.sslconfig.ssl.*
 
 import shaded.ahc.io.netty.handler.ssl.SslContextBuilder
 import shaded.ahc.io.netty.handler.ssl.util.InsecureTrustManagerFactory
@@ -30,84 +30,89 @@ object AhcConfig {
   import AhcHttpClient.buildRealm
 
   /** Build `AsyncHttpClientConfig` */
-  def buildConfig(config: Config): AsyncHttpClientConfig =
-    {
-      val builder = new DefaultAsyncHttpClientConfig.Builder()
-      // timeouts
-      builder.setConnectTimeout(toMillis(config.connectTimeout))
-      builder.setRequestTimeout(toMillis(config.requestTimeout))
-      builder.setReadTimeout(toMillis(config.readTimeout))
-      // builder.setWebSocketTimeout(toMillis(config.webSocketIdleTimeout))
+  def buildConfig(config: Config): AsyncHttpClientConfig = {
+    val builder = new DefaultAsyncHttpClientConfig.Builder()
+    // timeouts
+    builder.setConnectTimeout(toMillis(config.connectTimeout))
+    builder.setRequestTimeout(toMillis(config.requestTimeout))
+    builder.setReadTimeout(toMillis(config.readTimeout))
+    // builder.setWebSocketTimeout(toMillis(config.webSocketIdleTimeout))
 
-      // http
-      builder.setFollowRedirect(config.followRedirects)
-      builder.setMaxRedirects(config.maxRedirects)
-      builder.setCompressionEnforced(config.compressionEnforced)
-      config.userAgentOpt foreach { builder.setUserAgent }
-      config.authOpt foreach { x => builder.setRealm(buildRealm(x)) }
-      builder.setMaxRequestRetry(config.maxRequestRetry)
-      builder.setDisableUrlEncodingForBoundRequests(config.disableUrlEncoding)
-      builder.setUseProxyProperties(config.useProxyProperties)
+    // http
+    builder.setFollowRedirect(config.followRedirects)
+    builder.setMaxRedirects(config.maxRedirects)
+    builder.setCompressionEnforced(config.compressionEnforced)
+    config.userAgentOpt foreach { builder.setUserAgent }
+    config.authOpt foreach { x => builder.setRealm(buildRealm(x)) }
+    builder.setMaxRequestRetry(config.maxRequestRetry)
+    builder.setDisableUrlEncodingForBoundRequests(config.disableUrlEncoding)
+    builder.setUseProxyProperties(config.useProxyProperties)
 
-      // keep-alive
-      builder.setKeepAlive(config.keepAlive)
-      builder.setPooledConnectionIdleTimeout(toMillis(config.pooledConnectionIdleTimeout))
-      builder.setConnectionTtl(toMillis(config.connectionTtl))
-      builder.setMaxConnectionsPerHost(config.maxConnectionsPerHost)
-      builder.setMaxConnections(config.maxConnections)
-      configureSsl(config.ssl, builder)
+    // keep-alive
+    builder.setKeepAlive(config.keepAlive)
+    builder.setPooledConnectionIdleTimeout(toMillis(config.pooledConnectionIdleTimeout))
+    builder.setConnectionTtl(toMillis(config.connectionTtl))
+    builder.setMaxConnectionsPerHost(config.maxConnectionsPerHost)
+    builder.setMaxConnections(config.maxConnections)
+    configureSsl(config.ssl, builder)
 
-      // websocket
+    // websocket
 
-      builder.setWebSocketMaxFrameSize(config.webSocketMaxFrameSize.bytes.toInt)
+    builder.setWebSocketMaxFrameSize(config.webSocketMaxFrameSize.bytes.toInt)
 
-      builder.build()
-    }
+    builder.build()
+  }
 
   def toMillis(duration: Duration): Int =
     if (duration.isFinite) duration.toMillis.toInt
     else -1
 
-  def configureSsl(sslConfig: SSLConfigSettings, builder: DefaultAsyncHttpClientConfig.Builder): Unit =
-    {
-      // context!
-      val (sslContext, _) = SSL.buildContext(sslConfig)
+  def configureSsl(
+      sslConfig: SSLConfigSettings,
+      builder: DefaultAsyncHttpClientConfig.Builder
+  ): Unit = {
+    // context!
+    val (sslContext, _) = SSL.buildContext(sslConfig)
 
-      // protocols!
-      val defaultParams = sslContext.getDefaultSSLParameters
-      val defaultProtocols = defaultParams.getProtocols
-      val protocols = configureProtocols(defaultProtocols, sslConfig)
-      defaultParams.setProtocols(protocols)
-      builder.setEnabledProtocols(protocols)
+    // protocols!
+    val defaultParams = sslContext.getDefaultSSLParameters
+    val defaultProtocols = defaultParams.getProtocols
+    val protocols = configureProtocols(defaultProtocols, sslConfig)
+    defaultParams.setProtocols(protocols)
+    builder.setEnabledProtocols(protocols)
 
-      // ciphers!
-      val defaultCiphers = defaultParams.getCipherSuites
-      builder.setEnabledCipherSuites(defaultCiphers)
+    // ciphers!
+    val defaultCiphers = defaultParams.getCipherSuites
+    builder.setEnabledCipherSuites(defaultCiphers)
 
-      builder.setUseInsecureTrustManager(sslConfig.loose.acceptAnyCertificate)
+    builder.setUseInsecureTrustManager(sslConfig.loose.acceptAnyCertificate)
 
-      // If you wan't to accept any certificate you also want to use a loose netty based loose SslContext
-      // Never use this in production.
-      if (sslConfig.loose.acceptAnyCertificate) {
-        builder.setSslContext(SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build())
-      } else {
-        builder.setSslEngineFactory(new JsseSslEngineFactory(sslContext))
-      }
+    // If you wan't to accept any certificate you also want to use a loose netty based loose SslContext
+    // Never use this in production.
+    if (sslConfig.loose.acceptAnyCertificate) {
+      builder.setSslContext(
+        SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build()
+      )
+    } else {
+      builder.setSslEngineFactory(new JsseSslEngineFactory(sslContext))
+    }
+  }
+
+  def configureProtocols(
+      existingProtocols: Array[String],
+      sslConfig: SSLConfigSettings
+  ): Array[String] = {
+    val definedProtocols = sslConfig.enabledProtocols match {
+      case Some(configuredProtocols) =>
+        // If we are given a specific list of protocols, then return it in exactly that order,
+        // assuming that it's actually possible in the SSL context.
+        configuredProtocols.filter(existingProtocols.contains).toArray
+
+      case None =>
+        // Otherwise, we return the default protocols in the given list.
+        Protocols.recommendedProtocols.filter(existingProtocols.contains).toArray
     }
 
-  def configureProtocols(existingProtocols: Array[String], sslConfig: SSLConfigSettings): Array[String] =
-    {
-      val definedProtocols = sslConfig.enabledProtocols match {
-        case Some(configuredProtocols) =>
-          // If we are given a specific list of protocols, then return it in exactly that order,
-          // assuming that it's actually possible in the SSL context.
-          configuredProtocols.filter(existingProtocols.contains).toArray
-
-        case None =>
-          // Otherwise, we return the default protocols in the given list.
-          Protocols.recommendedProtocols.filter(existingProtocols.contains).toArray
-      }
-
-      definedProtocols
-    }
+    definedProtocols
+  }
 }
