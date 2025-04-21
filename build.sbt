@@ -107,6 +107,19 @@ lazy val commonTest = (project in file("common-test"))
   .settings(
     libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always,
     libraryDependencies ++= testDeps,
+    scalacOptions ++= Seq(
+      "-encoding",
+      "utf8",
+      "-deprecation",
+      "-unchecked",
+      "-Xlint",
+      "-Xsource:3",
+      "-feature",
+      "-language:existentials",
+      "-language:experimental.macros",
+      "-language:higherKinds",
+      "-language:implicitConversions",
+    ),
     publish / skip := true,
     exportJars := true,
   )

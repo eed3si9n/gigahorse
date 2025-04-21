@@ -31,8 +31,6 @@ import org.scalatest.matchers.should.Matchers
 import unfiltered.netty.Server
 
 import java.io.File
-import java.nio.ByteBuffer
-import java.nio.channels.FileChannel
 import java.nio.charset.Charset
 import scala.concurrent.*
 import scala.util.Success

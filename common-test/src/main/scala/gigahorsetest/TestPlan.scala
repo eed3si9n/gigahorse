@@ -18,9 +18,6 @@ package gigahorsetest
 
 import gigahorse.FileUtil
 import java.io.ByteArrayOutputStream
-import java.nio.ByteBuffer
-import java.nio.channels.Channels
-import java.nio.file.{ Files, Paths }
 import unfiltered.netty.cycle
 import unfiltered.request.*
 import unfiltered.response.*
