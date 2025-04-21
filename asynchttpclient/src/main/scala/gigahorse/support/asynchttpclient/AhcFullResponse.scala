@@ -18,14 +18,15 @@
 package gigahorse
 package support.asynchttpclient
 
-import scala.collection.JavaConverters._
-import shaded.ahc.org.asynchttpclient.{ Response => XResponse }
+import scala.collection.JavaConverters.*
+import shaded.ahc.org.asynchttpclient.{ Response as XResponse }
 import shaded.ahc.org.asynchttpclient.util.HttpUtils
 import java.nio.charset.Charset
 import java.nio.ByteBuffer
 import scala.collection.immutable.TreeMap
 
 class AhcFullResponse(ahcResponse: XResponse) extends FullResponse {
+
   /**
    * @return The underlying response object.
    */
@@ -47,10 +48,11 @@ class AhcFullResponse(ahcResponse: XResponse) extends FullResponse {
     // explicitly set, while Plays default encoding is UTF-8.  So, use UTF-8 if charset is not explicitly
     // set and content type is not text/*, otherwise default to ISO-8859-1
     val contentType = Option(ahcResponse.getContentType).getOrElse("application/octet-stream")
-    val charset: Charset = Option(HttpUtils.extractContentTypeCharsetAttribute(contentType)).getOrElse {
-      if (contentType.startsWith("text/")) Charset.forName("ISO-8859-1")
-      else Charset.forName("utf-8")
-    }
+    val charset: Charset =
+      Option(HttpUtils.extractContentTypeCharsetAttribute(contentType)).getOrElse {
+        if (contentType.startsWith("text/")) Charset.forName("ISO-8859-1")
+        else Charset.forName("utf-8")
+      }
     ahcResponse.getResponseBody(charset)
   }
 

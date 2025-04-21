@@ -19,7 +19,8 @@ package gigahorse
 
 import java.nio.ByteBuffer
 
-/** Represents a completed response.
+/**
+ * Represents a completed response.
  */
 abstract class FullResponse {
   def underlying[A]: A

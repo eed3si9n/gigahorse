@@ -24,7 +24,9 @@ import org.apache.pekko
 import pekko.stream.scaladsl.{ Sink, Source }
 import pekko.stream.Materializer
 
-class PekkoHttpStream[A](source: Source[A, Any])(implicit fm: Materializer, ec: ExecutionContext) extends Stream[A] {
+class PekkoHttpStream[A](source: Source[A, Any])(implicit fm: Materializer, ec: ExecutionContext)
+    extends Stream[A] {
+
   /**
    * @return The underlying Stream object.
    */
@@ -32,7 +34,7 @@ class PekkoHttpStream[A](source: Source[A, Any])(implicit fm: Materializer, ec: 
 
   /** Runs f on each element received to the stream. */
   def foreach(f: A => Unit): Future[Unit] =
-    source.runForeach(f).map( _ => ())
+    source.runForeach(f).map(_ => ())
 
   /** Runs f on each element received to the stream with its previous output. */
   def reduce(f: (A, A) => A): Future[A] =
@@ -47,8 +49,11 @@ class PekkoHttpStream[A](source: Source[A, Any])(implicit fm: Materializer, ec: 
 
   /** Runs f on each element received to the stream with its previous output and does closing operation . */
   def foldResource[B](zero: B)(f: (B, A) => B, close: () => Unit): Future[B] =
-    source.fold(zero)(f).map { b =>
-      close()
-      b
-    }.runWith(Sink.head)
+    source
+      .fold(zero)(f)
+      .map { b =>
+        close()
+        b
+      }
+      .runWith(Sink.head)
 }

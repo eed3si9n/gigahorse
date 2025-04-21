@@ -21,6 +21,7 @@ import org.reactivestreams.Publisher
 import scala.concurrent.Future
 
 abstract class Stream[A] {
+
   /**
    * @return The underlying Stream object.
    */

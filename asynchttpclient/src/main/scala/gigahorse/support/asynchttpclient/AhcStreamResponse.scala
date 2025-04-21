@@ -18,17 +18,20 @@
 package gigahorse
 package support.asynchttpclient
 
-import scala.collection.JavaConverters._
+import scala.collection.JavaConverters.*
 import org.reactivestreams.{ Publisher, Subscription, Subscriber }
-import shaded.ahc.org.asynchttpclient.{ Response => XResponse }
+import shaded.ahc.org.asynchttpclient.{ Response as XResponse }
 import scala.collection.immutable.TreeMap
 import shaded.ahc.org.asynchttpclient.HttpResponseBodyPart
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
 
-/** Represents a stream response.
+/**
+ * Represents a stream response.
  */
-class AhcStreamResponse(ahcResponse: XResponse, publisher: Publisher[HttpResponseBodyPart]) extends StreamResponse {
+class AhcStreamResponse(ahcResponse: XResponse, publisher: Publisher[HttpResponseBodyPart])
+    extends StreamResponse {
+
   /**
    * @return The underlying response object.
    */
@@ -69,12 +72,12 @@ class AhcStreamResponse(ahcResponse: XResponse, publisher: Publisher[HttpRespons
   override def header(key: String): Option[String] = Option(ahcResponse.getHeader(key))
 }
 
-class ByteBufferPublisher(xpublisher: Publisher[HttpResponseBodyPart]) extends Publisher[ByteBuffer] {
-  def subscribe(s: Subscriber[_ >: ByteBuffer]): Unit =
-    {
-      xpublisher.subscribe(new SubscriberAdapter(s))
-    }
-  class SubscriberAdapter(s: Subscriber[_ >: ByteBuffer]) extends Subscriber[HttpResponseBodyPart] {
+class ByteBufferPublisher(xpublisher: Publisher[HttpResponseBodyPart])
+    extends Publisher[ByteBuffer] {
+  def subscribe(s: Subscriber[? >: ByteBuffer]): Unit = {
+    xpublisher.subscribe(new SubscriberAdapter(s))
+  }
+  class SubscriberAdapter(s: Subscriber[? >: ByteBuffer]) extends Subscriber[HttpResponseBodyPart] {
     def onComplete(): Unit = s.onComplete()
     def onError(e: Throwable) = s.onError(e)
     def onNext(p: HttpResponseBodyPart): Unit = s.onNext(p.getBodyByteBuffer)
@@ -82,24 +85,24 @@ class ByteBufferPublisher(xpublisher: Publisher[HttpResponseBodyPart]) extends P
   }
 }
 
-class DelimitedPublisher(xpublisher: Publisher[HttpResponseBodyPart],
-  val delimiter: Byte,
-  val charset: Charset) extends Publisher[String] {
-  def subscribe(s: Subscriber[_ >: String]): Unit =
-    {
-      xpublisher.subscribe(new SubscriberAdapter(s))
-    }
-  class SubscriberAdapter(s: Subscriber[_ >: String]) extends Subscriber[HttpResponseBodyPart] {
+class DelimitedPublisher(
+    xpublisher: Publisher[HttpResponseBodyPart],
+    val delimiter: Byte,
+    val charset: Charset
+) extends Publisher[String] {
+  def subscribe(s: Subscriber[? >: String]): Unit = {
+    xpublisher.subscribe(new SubscriberAdapter(s))
+  }
+  class SubscriberAdapter(s: Subscriber[? >: String]) extends Subscriber[HttpResponseBodyPart] {
     var subscription: Subscription = null
     var buffer: Vector[Byte] = Vector()
-    def onComplete(): Unit =
-      {
-        if (buffer.nonEmpty) {
-          val chunk = buffer
-          s.onNext(new String(chunk.toArray, charset))
-        }
-        s.onComplete()
+    def onComplete(): Unit = {
+      if (buffer.nonEmpty) {
+        val chunk = buffer
+        s.onNext(new String(chunk.toArray, charset))
       }
+      s.onComplete()
+    }
     def onError(e: Throwable) = s.onError(e)
     def onNext(p: HttpResponseBodyPart): Unit = {
       buffer = buffer ++ p.getBodyPartBytes.toVector

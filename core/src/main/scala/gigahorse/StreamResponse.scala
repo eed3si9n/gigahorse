@@ -18,9 +18,11 @@ package gigahorse
 
 import java.nio.ByteBuffer
 
-/** Represents a stream response.
+/**
+ * Represents a stream response.
  */
 abstract class StreamResponse {
+
   /**
    * Return the current headers of the request being constructed
    */

@@ -26,6 +26,9 @@ import scala.concurrent.Future
 abstract class PekkoHttpStreamHandler[A] extends PekkoHttpCompletionHandler[A] {
   override def onCompleted(response: FullResponse): A = ???
   def onStream(response: StreamResponse): Future[A]
-  override def onPartialResponse(httpResponse: HttpResponse, config: Config)(implicit fm: Materializer, ec: ExecutionContext): Future[A] =
+  override def onPartialResponse(httpResponse: HttpResponse, config: Config)(implicit
+      fm: Materializer,
+      ec: ExecutionContext
+  ): Future[A] =
     onStream(new PekkoHttpStreamResponse(httpResponse, config))
 }

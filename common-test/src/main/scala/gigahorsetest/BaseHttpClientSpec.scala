@@ -34,7 +34,7 @@ import java.io.File
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.charset.Charset
-import scala.concurrent._
+import scala.concurrent.*
 import scala.util.Success
 
 abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers with TestHttpServer {
@@ -52,13 +52,15 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers with TestH
 
   "http.run(r)" should "retrieve a resource from Wikipedia" in {
     withHttp { http =>
-      val r = Gigahorse.url("https://en.wikipedia.org/w/api.php").
-        addQueryString(
+      val r = Gigahorse
+        .url("https://en.wikipedia.org/w/api.php")
+        .addQueryString(
           "action" -> "query",
           "format" -> "json",
           "titles" -> "Mad_Max"
-        ).get.
-        addHeaders(
+        )
+        .get
+        .addHeaders(
           HeaderNames.ACCEPT -> "application/json"
         )
       val f = http.run(r)
@@ -81,16 +83,18 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers with TestH
         assert(res.bodyAsString contains "2 (number)")
       }
     }
-  */
+   */
 
   "http.run(r, Gigahorse.asString)" should "retrieve a resource as String" in
     withHttp { http =>
-      val r = Gigahorse.url("https://en.wikipedia.org/w/api.php").
-        addQueryString(
+      val r = Gigahorse
+        .url("https://en.wikipedia.org/w/api.php")
+        .addQueryString(
           "action" -> "query",
           "format" -> "json",
           "titles" -> "Mad_Max"
-        ).get
+        )
+        .get
       val f = http.run(r, Gigahorse.asString)
       f map { s =>
         assert(s contains "Mad Max")
@@ -118,7 +122,11 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers with TestH
   "http.run(r.withContentType(MimeTypes.Text, ISO-8859-1), f)" should "parse and post with correct content type" in
     withHttp { http =>
       val r = Gigahorse.url(s"${testUrl}charset")
-      val f = http.run(r.withContentType(MimeTypes.TEXT, Charset.forName("ISO-8859-1")).post("hello world", Charset.forName( "ISO-8859-1")), Gigahorse.asString)
+      val f = http.run(
+        r.withContentType(MimeTypes.TEXT, Charset.forName("ISO-8859-1"))
+          .post("hello world", Charset.forName("ISO-8859-1")),
+        Gigahorse.asString
+      )
       f map { s =>
         assert(s === "text/plain;charset=ISO-8859-1")
       }
@@ -126,10 +134,13 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers with TestH
 
   "http.run(r.get.withSignatureOpt(...), Gigahorse.asString)" should "add a signature header" in
     withHttp { http =>
-      val r = Gigahorse.url(s"${testUrl}sign").
-        addQueryString("query" -> "param1")
+      val r = Gigahorse.url(s"${testUrl}sign").addQueryString("query" -> "param1")
       val sc = new SignatureCalculator {
-        override def sign(url: String, contentType: Option[String], content: Array[Byte]): (String, String) =
+        override def sign(
+            url: String,
+            contentType: Option[String],
+            content: Array[Byte]
+        ): (String, String) =
           ("X-Signature", s"$url:${new String(content, "UTF-8")}:${contentType.getOrElse("")}")
       }
       val f = http.run(r.withSignatureOpt(sc).get, Gigahorse.asString)
@@ -140,39 +151,44 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers with TestH
 
   "http.run(r.post.withSignatureOpt(...), Gigahorse.asString)" should "add a signature header and keep content" in
     withHttp { http =>
-      val r = Gigahorse.url(s"${testUrl}sign").
-        addQueryString("query" -> "param1")
+      val r = Gigahorse.url(s"${testUrl}sign").addQueryString("query" -> "param1")
       val sc = new SignatureCalculator {
-        override def sign(url: String, contentType: Option[String], content: Array[Byte]): (String, String) =
+        override def sign(
+            url: String,
+            contentType: Option[String],
+            content: Array[Byte]
+        ): (String, String) =
           ("X-Signature", s"$url:${new String(content, "UTF-8")}:${contentType.getOrElse("")}")
       }
-      val f = http.run(r.withSignatureOpt(sc).post(Map("content" -> List("param2"))), Gigahorse.asString)
+      val f =
+        http.run(r.withSignatureOpt(sc).post(Map("content" -> List("param2"))), Gigahorse.asString)
       f map { s =>
-        assert(s == s"${testUrl}sign?query=param1:content=param2:application/x-www-form-urlencoded:param1:param2")
+        assert(
+          s == s"${testUrl}sign?query=param1:content=param2:application/x-www-form-urlencoded:param1:param2"
+        )
       }
     }
 
   "http.websocket(r)" should "open a websocket connection and exchange messages" in
     (if (isWebSocketSupported)
-      withHttp { http =>
-        import WebSocketEvent._
-        val r = Gigahorse.url(wsTestUrl).get
-        val p = Promise[String]()
-        val m = "Hello World!"
-        val h: PartialFunction[WebSocketEvent, Unit] = {
-          case TextMessage(ws, message) =>
-            p.complete(Success(message))
-            ws.close()
-        }
-        val f = http.websocket(r)(h) flatMap { ws =>
-          ws.sendMessage(m)
-          p.future
-        }
-        f map { s =>
-          assert(s === m)
-        }
-      }
-    else cancel())
+       withHttp { http =>
+         import WebSocketEvent.*
+         val r = Gigahorse.url(wsTestUrl).get
+         val p = Promise[String]()
+         val m = "Hello World!"
+         val h: PartialFunction[WebSocketEvent, Unit] = { case TextMessage(ws, message) =>
+           p.complete(Success(message))
+           ws.close()
+         }
+         val f = http.websocket(r)(h) flatMap { ws =>
+           ws.sendMessage(m)
+           p.future
+         }
+         f map { s =>
+           assert(s === m)
+         }
+       }
+     else cancel())
 
   /*
   "http.run(r, Gigahorse.asEither)" should "retrieve a resource and convert to Right" in
@@ -187,7 +203,7 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers with TestH
         assert(either.right.get.toString contains "2 (number)")
       }
     }
-  */
+   */
 
   it should "retrieve a resource and convert to Left given 500" in
     withHttp { http =>
@@ -217,7 +233,7 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers with TestH
     withHttp { http =>
       val r = Gigahorse.url(s"${testUrl}500")
       for {
-        res  <- http.processFull(r)
+        res <- http.processFull(r)
       } yield assert(res.bodyAsString contains "500 HTTP Status Code")
     }
 
@@ -238,62 +254,63 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers with TestH
     "b": null
   }"""
         FileUtil.write(file, content)
-        val r = Gigahorse.url(s"${testUrl}upload")
+        val r = Gigahorse
+          .url(s"${testUrl}upload")
           .post(file)
           .withContentType("application/json")
         for {
-          res  <- http.processFull(r)
+          res <- http.processFull(r)
         } yield assert(res.bodyAsString == content)
       }
     }
 
   "http.processFull(r)" should "upload multipart form" in
     withHttp { http =>
-        withTemporaryDirectory { dir =>
-          val file = new File(dir, "a.json")
-          val content = """{
+      withTemporaryDirectory { dir =>
+        val file = new File(dir, "a.json")
+        val content = """{
     "a": 1
   }"""
-          FileUtil.write(file, content)
-          val content2 = "bbb"
-          val r = Gigahorse.url(s"${testUrl}multipart")
-            .post(MultipartFormBody(
+        FileUtil.write(file, content)
+        val content2 = "bbb"
+        val r = Gigahorse
+          .url(s"${testUrl}multipart")
+          .post(
+            MultipartFormBody(
               FormPart("a", content2, "text/plain"),
               FormPart("a.json", file, "application/json")
-            ))
-          for {
-            res  <- http.processFull(r)
-          } yield assert(res.bodyAsString == content + "\n" + content2)
-        }
+            )
+          )
+        for {
+          res <- http.processFull(r)
+        } yield assert(res.bodyAsString == content + "\n" + content2)
+      }
     }
 
-  /** The maximum number of times a unique temporary filename is attempted to be created.*/
+  /** The maximum number of times a unique temporary filename is attempted to be created. */
   private[this] val MaximumTries = 10
   private[this] val random = new java.util.Random
   private[this] val temporaryDirectory = new File(System.getProperty("java.io.tmpdir"))
-  def withTemporaryDirectory(testCode: File => Future[Assertion]): Future[Assertion] =
-    {
-      val dir = createUniqueDirectory(temporaryDirectory)
-      complete {
-        testCode(dir)
-      } lastly {
-        dir.delete()
+  def withTemporaryDirectory(testCode: File => Future[Assertion]): Future[Assertion] = {
+    val dir = createUniqueDirectory(temporaryDirectory)
+    complete {
+      testCode(dir)
+    } lastly {
+      dir.delete()
+    }
+  }
+  private[this] def createUniqueDirectory(baseDirectory: File): File = {
+    def create(tries: Int): File = {
+      if (tries > MaximumTries)
+        sys.error("Could not create temporary directory.")
+      else {
+        val randomName = "sbt_" + java.lang.Integer.toHexString(random.nextInt)
+        val f = new File(baseDirectory, randomName)
+
+        try { f.mkdirs; f }
+        catch { case e: Exception => create(tries + 1) }
       }
     }
-  private[this] def createUniqueDirectory(baseDirectory: File): File =
-    {
-      def create(tries: Int): File =
-        {
-          if (tries > MaximumTries)
-            sys.error("Could not create temporary directory.")
-          else {
-            val randomName = "sbt_" + java.lang.Integer.toHexString(random.nextInt)
-            val f = new File(baseDirectory, randomName)
-
-            try { f.mkdirs; f }
-            catch { case e: Exception => create(tries + 1) }
-          }
-        }
-      create(0)
-    }
+    create(0)
+  }
 }

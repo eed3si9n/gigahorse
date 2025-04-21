@@ -17,18 +17,20 @@
 package gigahorse
 package support.okhttp
 
-import okhttp3.{ Response => XResponse }
-import okhttp3.{WebSocket => XWebSocket}
-import okhttp3.{WebSocketListener => XWebSocketListener}
+import okhttp3.{ Response as XResponse }
+import okhttp3.{ WebSocket as XWebSocket }
+import okhttp3.{ WebSocketListener as XWebSocketListener }
 import okio.ByteString
 
 import scala.concurrent.Promise
 import scala.util.Failure
 import scala.util.Success
 
-class OkhWebSocketListener(handler: PartialFunction[WebSocketEvent, Unit],
-                           result: Promise[WebSocket]) extends XWebSocketListener {
-  import WebSocketEvent._
+class OkhWebSocketListener(
+    handler: PartialFunction[WebSocketEvent, Unit],
+    result: Promise[WebSocket]
+) extends XWebSocketListener {
+  import WebSocketEvent.*
   protected var ws: Option[WebSocket] = None
 
   private def broadcast(event: WebSocketEvent): Unit =
@@ -86,8 +88,7 @@ class OkhWebSocketListener(handler: PartialFunction[WebSocketEvent, Unit],
     broadcast(BinaryMessage(ws.get, bytes.toByteArray))
 
   /** Invoked when the peer has indicated that no more incoming messages will be transmitted. */
-  override def onClosing(websocket: XWebSocket, code: Int, reason: String): Unit = {
-  }
+  override def onClosing(websocket: XWebSocket, code: Int, reason: String): Unit = {}
 
   /**
    * Invoked when both peers have indicated that no more messages will be transmitted and the

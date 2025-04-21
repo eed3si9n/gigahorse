@@ -19,6 +19,7 @@ package gigahorse
 import scala.concurrent.Future
 
 abstract class ReactiveHttpClient extends HttpClient {
+
   /** Runs the request and return a Future of FullResponse. */
   def runStream(request: Request): Future[StreamResponse]
 

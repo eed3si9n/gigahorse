@@ -23,9 +23,12 @@ import scala.concurrent.Future
  * Lifts Future[A] into Future[Either[Throwable, A]]
  */
 final class FutureLifter[A](f: FullResponse => A) {
-  def run(value: Future[FullResponse])(implicit ec: ExecutionContext): Future[Either[Throwable, A]] =
+  def run(value: Future[FullResponse])(implicit
+      ec: ExecutionContext
+  ): Future[Either[Throwable, A]] =
     value map { r => Right[Throwable, A](f(r)) } recoverWith { case e =>
-      Future.successful(Left[Throwable, A](e)) }
+      Future.successful(Left[Throwable, A](e))
+    }
 
   def map[B](g: A => B): FutureLifter[B] = new FutureLifter[B](x => g(f(x)))
   override def toString: String = "FutureLifter(function)"

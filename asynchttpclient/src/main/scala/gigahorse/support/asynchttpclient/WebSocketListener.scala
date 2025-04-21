@@ -17,13 +17,17 @@
 package gigahorse
 package support.asynchttpclient
 
-import shaded.ahc.org.asynchttpclient.ws.{ WebSocket => XWebSocket, WebSocketListener => XWebSocketListener }
+import shaded.ahc.org.asynchttpclient.ws.{
+  WebSocket as XWebSocket,
+  WebSocketListener as XWebSocketListener
+}
 
 import scala.concurrent.Promise
 import scala.util.{ Failure, Success }
 
-class WebSocketListener(handler: PartialFunction[WebSocketEvent, Unit], result: Promise[WebSocket]) extends XWebSocketListener {
-  import WebSocketEvent._
+class WebSocketListener(handler: PartialFunction[WebSocketEvent, Unit], result: Promise[WebSocket])
+    extends XWebSocketListener {
+  import WebSocketEvent.*
 
   protected var ws: WebSocket = null
 

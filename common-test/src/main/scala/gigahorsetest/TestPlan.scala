@@ -22,9 +22,9 @@ import java.nio.ByteBuffer
 import java.nio.channels.Channels
 import java.nio.file.{ Files, Paths }
 import unfiltered.netty.cycle
-import unfiltered.request._
-import unfiltered.response._
-import unfiltered.netty.request._
+import unfiltered.request.*
+import unfiltered.response.*
+import unfiltered.netty.request.*
 
 object TestPlan {
   val Fail = Unauthorized ~> WWWAuthenticate("""Basic realm="/"""")
@@ -37,7 +37,7 @@ object TestPlan {
     // test basic auth
     case r @ GET(Path(Seg("auth" :: Nil))) =>
       r match {
-        case BasicAuth(u, p) if(verify(u, p)) =>
+        case BasicAuth(u, p) if (verify(u, p)) =>
           Ok ~> ResponseString("auth ok")
         case _ => Fail
       }
@@ -63,7 +63,9 @@ object TestPlan {
     case r @ POST(Path("/sign")) =>
       val h = r.headers("X-Signature")
       if (h.hasNext)
-        Ok ~> ResponseString(s"${h.next()}:${r.parameterValues("query").mkString}:${r.parameterValues("content").mkString}")
+        Ok ~> ResponseString(
+          s"${h.next()}:${r.parameterValues("query").mkString}:${r.parameterValues("content").mkString}"
+        )
       else
         BadRequest ~> ResponseString("X-Signature header is not found!")
     // download

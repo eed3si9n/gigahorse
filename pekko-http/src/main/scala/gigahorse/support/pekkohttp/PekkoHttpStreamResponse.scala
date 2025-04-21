@@ -27,9 +27,14 @@ import pekko.http.scaladsl.model.*
 import pekko.stream.Materializer
 import pekko.stream.scaladsl.{ Source, Framing }
 
-/** Represents a stream response.
+/**
+ * Represents a stream response.
  */
-class PekkoHttpStreamResponse(pekkoHttpResponse: HttpResponse, config: Config)(implicit fm: Materializer, ec: ExecutionContext) extends StreamResponse {
+class PekkoHttpStreamResponse(pekkoHttpResponse: HttpResponse, config: Config)(implicit
+    fm: Materializer,
+    ec: ExecutionContext
+) extends StreamResponse {
+
   /**
    * @return The underlying entity object.
    */
@@ -54,8 +59,13 @@ class PekkoHttpStreamResponse(pekkoHttpResponse: HttpResponse, config: Config)(i
 
   def newLineDelimitedSource: Source[String, Any] =
     asSource
-      .via(Framing.delimiter(ByteString("\n"),
-        maximumFrameLength = config.maxFrameSize.bytes.toInt, allowTruncation = false))
+      .via(
+        Framing.delimiter(
+          ByteString("\n"),
+          maximumFrameLength = config.maxFrameSize.bytes.toInt,
+          allowTruncation = false
+        )
+      )
       .map(_.utf8String)
 
   /**
@@ -63,7 +73,7 @@ class PekkoHttpStreamResponse(pekkoHttpResponse: HttpResponse, config: Config)(i
    */
   lazy val allHeaders: Map[String, List[String]] =
     TreeMap[String, List[String]]() ++
-    pekkoHttpResponse.headers.groupBy(_.name).mapValues(vs => vs.toList map { _.value })
+      pekkoHttpResponse.headers.groupBy(_.name).mapValues(vs => vs.toList map { _.value })
 
   /**
    * The response status code.

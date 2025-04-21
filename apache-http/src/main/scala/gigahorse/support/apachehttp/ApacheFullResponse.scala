@@ -19,10 +19,11 @@ package support.apachehttp
 
 import java.nio.ByteBuffer
 import shaded.apache.org.apache.hc.client5.http.async.methods.SimpleHttpResponse
-import shaded.apache.org.apache.hc.core5.http.{ Header => XHeader }
+import shaded.apache.org.apache.hc.core5.http.{ Header as XHeader }
 
 // https://hc.apache.org/httpcomponents-client-5.4.x/current/httpclient5/apidocs/org/apache/hc/client5/http/async/methods/SimpleHttpResponse.html
 class ApacheFullResponse(apacheResponse: SimpleHttpResponse) extends FullResponse {
+
   /**
    * @return The underlying response object.
    */
@@ -46,7 +47,9 @@ class ApacheFullResponse(apacheResponse: SimpleHttpResponse) extends FullRespons
    * Return the headers of the response as a case-insensitive map
    */
   override lazy val allHeaders: Map[String, List[String]] =
-    apacheResponse.getHeaders().toList
+    apacheResponse
+      .getHeaders()
+      .toList
       .groupBy(_.getName)
       .map { case (k, vs) =>
         (k, vs.map(_.getValue))

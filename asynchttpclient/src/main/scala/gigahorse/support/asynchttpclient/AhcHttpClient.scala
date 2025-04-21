@@ -18,22 +18,29 @@
 package gigahorse
 package support.asynchttpclient
 
-import scala.collection.JavaConverters._
+import scala.collection.JavaConverters.*
 import java.io.File
 import scala.concurrent.{ Future, Promise, ExecutionContext }
 import shaded.ahc.io.netty.handler.codec.http.HttpHeaders
-import shaded.ahc.org.asynchttpclient.{ Response => XResponse, Request => XRequest, Realm => XRealm, SignatureCalculator => XSignatureCalculator, AsyncHandler => _, * }
-import shaded.ahc.org.asynchttpclient.AsyncHandler.{ State => XState }
+import shaded.ahc.org.asynchttpclient.{
+  Response as XResponse,
+  Request as XRequest,
+  Realm as XRealm,
+  SignatureCalculator as XSignatureCalculator,
+  AsyncHandler as _,
+  *
+}
+import shaded.ahc.org.asynchttpclient.AsyncHandler.{ State as XState }
 import shaded.ahc.org.asynchttpclient.handler.StreamedAsyncHandler
 import shaded.ahc.org.asynchttpclient.request.body.multipart.{ ByteArrayPart, FilePart }
 import shaded.ahc.org.asynchttpclient.proxy.{ ProxyServer as XProxyServer, ProxyType as XProxyType }
-import shaded.ahc.org.asynchttpclient.Realm.{ AuthScheme => XAuthScheme }
+import shaded.ahc.org.asynchttpclient.Realm.{ AuthScheme as XAuthScheme }
 import shaded.ahc.org.asynchttpclient.ws.WebSocketUpgradeHandler
 import org.reactivestreams.Publisher
 import DownloadHandler.asFile
 
 class AhcHttpClient(config: AsyncHttpClientConfig) extends ReactiveHttpClient {
-  import AhcHttpClient._
+  import AhcHttpClient.*
   private val asyncHttpClient = new DefaultAsyncHttpClient(config)
   def underlying[A]: A = asyncHttpClient.asInstanceOf[A]
   def close(): Unit = asyncHttpClient.close()
@@ -52,7 +59,9 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends ReactiveHttpClient {
     processFull(request, OkHandler[A](f))
 
   /** Runs the request and return a Future of Either a FullResponse or a Throwable. */
-  def run[A](request: Request, lifter: FutureLifter[A])(implicit ec: ExecutionContext): Future[Either[Throwable, A]] =
+  def run[A](request: Request, lifter: FutureLifter[A])(implicit
+      ec: ExecutionContext
+  ): Future[Either[Throwable, A]] =
     lifter.run(run(request))
 
   /** Executes the request and return a Future of FullResponse. Does not error on non-OK response. */
@@ -64,15 +73,18 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends ReactiveHttpClient {
     processFull(request, FunctionHandler[A](f))
 
   /** Executes the request and return a Future of Either a Response or a Throwable. Does not error on non-OK response. */
-  def processFull[A](request: Request, lifter: FutureLifter[A])(implicit ec: ExecutionContext): Future[Either[Throwable, A]] =
+  def processFull[A](request: Request, lifter: FutureLifter[A])(implicit
+      ec: ExecutionContext
+  ): Future[Either[Throwable, A]] =
     lifter.run(processFull(request))
 
   /** Executes the request. Does not error on non-OK response. */
-  def processFull[A](request: Request, handler: AhcCompletionHandler[A]): Future[A] =
-    {
-      val result = Promise[A]()
-      val xrequest = buildRequest(request)
-      asyncHttpClient.executeRequest(xrequest, new AsyncHandler[XResponse]() {
+  def processFull[A](request: Request, handler: AhcCompletionHandler[A]): Future[A] = {
+    val result = Promise[A]()
+    val xrequest = buildRequest(request)
+    asyncHttpClient.executeRequest(
+      xrequest,
+      new AsyncHandler[XResponse]() {
         override def onStatusReceived(status: HttpResponseStatus): XState = {
           fromState(handler.onStatusReceived(status))
         }
@@ -92,9 +104,10 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends ReactiveHttpClient {
         override def onThrowable(t: Throwable): Unit = {
           result.failure(t)
         }
-      })
-      result.future
-    }
+      }
+    )
+    result.future
+  }
 
   /** Runs the request and return a Future of StreamResponse. */
   def runStream(request: Request): Future[StreamResponse] =
@@ -116,11 +129,12 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends ReactiveHttpClient {
     processStream(request, FunctionHandler.stream[A](f))
 
   /** Executes the request and return a Future of A. Does not error on non-OK response. */
-  def processStream[A](request: Request, handler: AhcStreamHandler[A]): Future[A] =
-    {
-      val result = Promise[A]()
-      val xrequest = buildRequest(request)
-      asyncHttpClient.executeRequest(xrequest, new StreamedAsyncHandler[XResponse]() {
+  def processStream[A](request: Request, handler: AhcStreamHandler[A]): Future[A] = {
+    val result = Promise[A]()
+    val xrequest = buildRequest(request)
+    asyncHttpClient.executeRequest(
+      xrequest,
+      new StreamedAsyncHandler[XResponse]() {
         override def onStatusReceived(status: HttpResponseStatus): XState = {
           fromState(handler.onStatusReceived(status))
         }
@@ -135,35 +149,41 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends ReactiveHttpClient {
         override def onBodyPartReceived(bodyPart: HttpResponseBodyPart): XState = XState.CONTINUE
         override def onCompleted(): XResponse = ???
         override def onThrowable(e: Throwable): Unit = ()
-      })
-      result.future
-    }
+      }
+    )
+    result.future
+  }
 
   /** Open a websocket connection. */
-  def websocket(request: Request)(handler: PartialFunction[WebSocketEvent, Unit]): Future[WebSocket] =
-    {
-      val result = Promise[WebSocket]()
-      val xrequest = buildRequest(request)
-      val upgradeHandler = new WebSocketUpgradeHandler.Builder()
-      asyncHttpClient.executeRequest(xrequest, upgradeHandler.addWebSocketListener(
-        new WebSocketListener(handler, result)).build())
-      result.future
-    }
+  def websocket(
+      request: Request
+  )(handler: PartialFunction[WebSocketEvent, Unit]): Future[WebSocket] = {
+    val result = Promise[WebSocket]()
+    val xrequest = buildRequest(request)
+    val upgradeHandler = new WebSocketUpgradeHandler.Builder()
+    asyncHttpClient.executeRequest(
+      xrequest,
+      upgradeHandler.addWebSocketListener(new WebSocketListener(handler, result)).build()
+    )
+    result.future
+  }
 
   /**
    * Creates and returns an AHC request, running all operations on it.
    */
   def buildRequest(request: Request): XRequest = {
-    import request._
+    import request.*
     // The builder has a bunch of mutable state and is VERY fiddly, so
     // should not be exposed to the outside world.
 
     val disableUrlEncoding: Option[Boolean] = None
-    val builder = disableUrlEncoding.map { disableEncodingFlag =>
-      new RequestBuilder(method, disableEncodingFlag)
-    }.getOrElse {
-      new RequestBuilder(method)
-    }
+    val builder = disableUrlEncoding
+      .map { disableEncodingFlag =>
+        new RequestBuilder(method, disableEncodingFlag)
+      }
+      .getOrElse {
+        new RequestBuilder(method)
+      }
 
     // Set the URL.
     builder.setUrl(url)
@@ -223,8 +243,15 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends ReactiveHttpClient {
     // Set the signature calculator.
     signatureOpt.foreach { signatureCalculator =>
       builderWithBody.setSignatureCalculator(new XSignatureCalculator {
-        override def calculateAndAddSignature(request: XRequest, requestBuilder: RequestBuilderBase[_]): Unit = {
-          val (name, value) = signatureCalculator.sign(request.getUrl, Option(request.getHeaders.get(HeaderNames.CONTENT_TYPE)), Option(request.getByteData).getOrElse(Array.emptyByteArray))
+        override def calculateAndAddSignature(
+            request: XRequest,
+            requestBuilder: RequestBuilderBase[?]
+        ): Unit = {
+          val (name, value) = signatureCalculator.sign(
+            request.getUrl,
+            Option(request.getHeaders.get(HeaderNames.CONTENT_TYPE)),
+            Option(request.getByteData).getOrElse(Array.emptyByteArray)
+          )
           requestBuilder.addHeader(name, value)
         }
       })
@@ -247,45 +274,43 @@ object AhcHttpClient {
       case State.Upgrade  => sys.error(s"unexpected state: $state")
     }
 
-  def buildRealm(auth: Realm): XRealm =
-    {
-      import shaded.ahc.org.asynchttpclient.uri.Uri
-      val builder = new XRealm.Builder(auth.username, auth.password)
-      builder.setScheme(auth.scheme match {
-        case AuthScheme.Digest   => XAuthScheme.DIGEST
-        case AuthScheme.Basic    => XAuthScheme.BASIC
-        case AuthScheme.NTLM     => XAuthScheme.NTLM
-        case AuthScheme.SPNEGO   => XAuthScheme.SPNEGO
-        case AuthScheme.Kerberos => XAuthScheme.KERBEROS
-        case _ => throw new RuntimeException("Unknown scheme " + auth.scheme)
-      })
-      builder.setUsePreemptiveAuth(auth.usePreemptiveAuth)
-      auth.realmNameOpt  foreach { builder.setRealmName }
-      auth.nonceOpt      foreach { builder.setNonce }
-      auth.algorithmOpt  foreach { builder.setAlgorithm }
-      auth.responseOpt   foreach { builder.setResponse }
-      auth.opaqueOpt     foreach { builder.setOpaque }
-      auth.qopOpt        foreach { builder.setQop }
-      auth.ncOpt         foreach { builder.setNc }
-      auth.uriOpt        foreach { x => builder.setUri(Uri.create(x.toString)) }
-      auth.methodNameOpt foreach { builder.setMethodName }
-      auth.charsetOpt    foreach { x => builder.setCharset(x) }
-      auth.ntlmDomainOpt foreach { builder.setNtlmDomain }
-      auth.ntlmHostOpt   foreach { builder.setNtlmHost }
-      builder.setUseAbsoluteURI(auth.useAbsoluteURI)
-      builder.setOmitQuery(auth.omitQuery)
-      builder.build()
-    }
+  def buildRealm(auth: Realm): XRealm = {
+    import shaded.ahc.org.asynchttpclient.uri.Uri
+    val builder = new XRealm.Builder(auth.username, auth.password)
+    builder.setScheme(auth.scheme match {
+      case AuthScheme.Digest   => XAuthScheme.DIGEST
+      case AuthScheme.Basic    => XAuthScheme.BASIC
+      case AuthScheme.NTLM     => XAuthScheme.NTLM
+      case AuthScheme.SPNEGO   => XAuthScheme.SPNEGO
+      case AuthScheme.Kerberos => XAuthScheme.KERBEROS
+      case _                   => throw new RuntimeException("Unknown scheme " + auth.scheme)
+    })
+    builder.setUsePreemptiveAuth(auth.usePreemptiveAuth)
+    auth.realmNameOpt foreach { builder.setRealmName }
+    auth.nonceOpt foreach { builder.setNonce }
+    auth.algorithmOpt foreach { builder.setAlgorithm }
+    auth.responseOpt foreach { builder.setResponse }
+    auth.opaqueOpt foreach { builder.setOpaque }
+    auth.qopOpt foreach { builder.setQop }
+    auth.ncOpt foreach { builder.setNc }
+    auth.uriOpt foreach { x => builder.setUri(Uri.create(x.toString)) }
+    auth.methodNameOpt foreach { builder.setMethodName }
+    auth.charsetOpt foreach { x => builder.setCharset(x) }
+    auth.ntlmDomainOpt foreach { builder.setNtlmDomain }
+    auth.ntlmHostOpt foreach { builder.setNtlmHost }
+    builder.setUseAbsoluteURI(auth.useAbsoluteURI)
+    builder.setOmitQuery(auth.omitQuery)
+    builder.build()
+  }
 
-  def buildProxy(proxy: ProxyServer): XProxyServer =
-    {
-      new XProxyServer(
-        proxy.host,
-        proxy.port,
-        proxy.securedPort.getOrElse(proxy.port),
-        proxy.authOpt.map(buildRealm).getOrElse(null),
-        proxy.nonProxyHosts.asJava,
-        XProxyType.HTTP,
-      )
-    }
+  def buildProxy(proxy: ProxyServer): XProxyServer = {
+    new XProxyServer(
+      proxy.host,
+      proxy.port,
+      proxy.securedPort.getOrElse(proxy.port),
+      proxy.authOpt.map(buildRealm).getOrElse(null),
+      proxy.nonProxyHosts.asJava,
+      XProxyType.HTTP,
+    )
+  }
 }

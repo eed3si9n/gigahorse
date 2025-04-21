@@ -16,29 +16,28 @@
 
 package gigahorsetest
 
-import org.scalatest._
+import org.scalatest.*
 import scala.concurrent.Future
 
 class ApacheHttpClientSpec extends BaseHttpClientSpec {
   import gigahorse.support.apachehttp.Gigahorse
   // custom loan pattern
-  override def withHttp(testCode: gigahorse.HttpClient => Future[Assertion]): Future[Assertion] =
-    {
-      val server = getServer
-      server.start()
-      val wsServer = getWsServer
-      wsServer.start()
-      val http = Gigahorse.http(Gigahorse.config)
-      complete {
-        testCode(http)
-      } lastly {
-        http.close()
-        wsServer.stop()
-        wsServer.destroy()
-        server.stop()
-        server.destroy()
-      }
+  override def withHttp(testCode: gigahorse.HttpClient => Future[Assertion]): Future[Assertion] = {
+    val server = getServer
+    server.start()
+    val wsServer = getWsServer
+    wsServer.start()
+    val http = Gigahorse.http(Gigahorse.config)
+    complete {
+      testCode(http)
+    } lastly {
+      http.close()
+      wsServer.stop()
+      wsServer.destroy()
+      server.stop()
+      server.destroy()
     }
+  }
 
   override def isWebSocketSupported: Boolean = false
 }

@@ -19,7 +19,7 @@ package support.asynchttpclient
 
 import shaded.ahc.io.netty.handler.codec.http.HttpHeaders
 import shaded.ahc.org.asynchttpclient
-import asynchttpclient._
+import asynchttpclient.*
 
 trait AhcHandler {
   def onStatusReceived(status: HttpResponseStatus): State

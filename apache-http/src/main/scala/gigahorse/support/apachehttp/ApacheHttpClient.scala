@@ -19,10 +19,7 @@ package support.apachehttp
 
 import java.io.File
 import java.net.URI
-import java.nio.{
-  ByteBuffer,
-  CharBuffer,
-}
+import java.nio.{ ByteBuffer, CharBuffer }
 import java.nio.channels.{ FileChannel, Channels }
 import java.nio.file.{ Files, StandardOpenOption }
 import shaded.apache.org.apache.hc.client5
@@ -35,11 +32,7 @@ import client5.http.async.methods.{
   SimpleRequestProducer,
   SimpleResponseConsumer,
 }
-import client5.http.auth.{
-  AuthScope,
-  CredentialsProvider,
-  UsernamePasswordCredentials,
-}
+import client5.http.auth.{ AuthScope, CredentialsProvider, UsernamePasswordCredentials }
 import client5.http.impl.async.{
   CloseableHttpAsyncClient as XClient,
   HttpAsyncClientBuilder,
@@ -57,11 +50,7 @@ import core5.http.{
   HttpRequestInterceptor,
   HttpResponse as XResponse,
 }
-import core5.http.nio.{
-  AsyncEntityProducer,
-  AsyncRequestProducer,
-  DataStreamChannel,
-}
+import core5.http.nio.{ AsyncEntityProducer, AsyncRequestProducer, DataStreamChannel }
 import core5.http.nio.support.BasicRequestProducer
 import core5.http.protocol.HttpContext
 import core5.reactor.IOReactorConfig
@@ -73,12 +62,14 @@ import scala.util.control.NonFatal
 
 class ApacheHttpClient(config: Config) extends HttpClient {
 
-  private val clients: TrieMap[(Option[Realm], Option[SignatureCalculator], Option[String]), XClient] =
+  private val clients
+      : TrieMap[(Option[Realm], Option[SignatureCalculator], Option[String]), XClient] =
     TrieMap()
 
   private type CB = HttpAsyncClientBuilder
 
-  val ioReactorConfig = IOReactorConfig.custom()
+  val ioReactorConfig = IOReactorConfig
+    .custom()
     .setSoTimeout(Timeout.ofSeconds(5))
     .build()
 
@@ -97,7 +88,9 @@ class ApacheHttpClient(config: Config) extends HttpClient {
     processFull(request, OkHandler[A](f))
 
   /** Runs the request and return a Future of Either a FullResponse or a Throwable. */
-  override def run[A](request: Request, lifter: FutureLifter[A])(implicit ec: ExecutionContext): Future[Either[Throwable,A]] =
+  override def run[A](request: Request, lifter: FutureLifter[A])(implicit
+      ec: ExecutionContext
+  ): Future[Either[Throwable, A]] =
     lifter.run(run(request))
 
   // Returns a AsyncRequestProducer.
@@ -108,8 +101,9 @@ class ApacheHttpClient(config: Config) extends HttpClient {
     val builder = buildRequestBuilder(request)
     def ct: ContentType =
       body match {
-        case _: FileBody => buildContentType(contentType, ContentType.parse("application/octet-stream"))
-        case _           => buildContentType(contentType, ContentType.create("text/plain", "utf-8"))
+        case _: FileBody =>
+          buildContentType(contentType, ContentType.parse("application/octet-stream"))
+        case _ => buildContentType(contentType, ContentType.create("text/plain", "utf-8"))
       }
     body match {
       case _: EmptyBody =>
@@ -125,7 +119,9 @@ class ApacheHttpClient(config: Config) extends HttpClient {
         new BasicRequestProducer(r, entity)
       case b: FileBody =>
         val r = builder.build()
-        val multi = MultipartFormBody(FormPart(b.file.getName(), b.file).withContentType(ct.toString()))
+        val multi = MultipartFormBody(
+          FormPart(b.file.getName(), b.file).withContentType(ct.toString())
+        )
         val entity = MultipartAsyncEntityProducer(multi)
         new BasicRequestProducer(r, entity)
     }
@@ -155,19 +151,22 @@ class ApacheHttpClient(config: Config) extends HttpClient {
   }
 
   def download(request: Request, file: File): Future[File] =
-    processByteStream(request, new ApacheByteStreamHandler[File] {
-      val temp = Files.createTempFile("temp", ".tmp")
-      val c = FileChannel.open(temp, StandardOpenOption.WRITE)
-      override def onByteReceived(buf: ByteBuffer): Unit = {
-        c.write(buf)
-        ()
+    processByteStream(
+      request,
+      new ApacheByteStreamHandler[File] {
+        val temp = Files.createTempFile("temp", ".tmp")
+        val c = FileChannel.open(temp, StandardOpenOption.WRITE)
+        override def onByteReceived(buf: ByteBuffer): Unit = {
+          c.write(buf)
+          ()
+        }
+        override def onCompleted(): File = {
+          c.force(true)
+          c.close()
+          Files.move(temp, file.toPath()).toFile()
+        }
       }
-      override def onCompleted(): File = {
-        c.force(true)
-        c.close()
-        Files.move(temp, file.toPath()).toFile()
-      }
-    })
+    )
 
   /** Executes the request and return a Future of FullResponse. Does not error on non-OK response. */
   override def processFull(request: Request): Future[FullResponse] =
@@ -178,7 +177,9 @@ class ApacheHttpClient(config: Config) extends HttpClient {
     processFull(request, FunctionHandler[A](f))
 
   /** Executes the request and return a Future of Either a Response or a Throwable. Does not error on non-OK response. */
-  def processFull[A](request: Request, lifter: FutureLifter[A])(implicit ec: ExecutionContext): Future[Either[Throwable,A]] =
+  def processFull[A](request: Request, lifter: FutureLifter[A])(implicit
+      ec: ExecutionContext
+  ): Future[Either[Throwable, A]] =
     lifter.run(processFull(request))
 
   /** Executes the request. Does not error on non-OK response. */
@@ -292,9 +293,9 @@ class ApacheHttpClient(config: Config) extends HttpClient {
   }
 
   def buildClient(
-    authOpt: Option[Realm],
-    signatureOpt: Option[SignatureCalculator],
-    targetOpt: Option[String],
+      authOpt: Option[Realm],
+      signatureOpt: Option[SignatureCalculator],
+      targetOpt: Option[String],
   ): XClient =
     clients.getOrElseUpdate(
       (authOpt, signatureOpt, targetOpt),
@@ -303,13 +304,13 @@ class ApacheHttpClient(config: Config) extends HttpClient {
 
   // https://hc.apache.org/httpcomponents-client-5.4.x/current/httpclient5/apidocs/org/apache/hc/client5/http/impl/async/HttpAsyncClientBuilder.html
   private def buildClient0(
-    b0: CB,
-    authOpt: Option[Realm],
-    signatureOpt: Option[SignatureCalculator],
-    targetOpt: Option[String],
+      b0: CB,
+      authOpt: Option[Realm],
+      signatureOpt: Option[SignatureCalculator],
+      targetOpt: Option[String],
   ): XClient = {
-    val clientfs: List[CB => CB] = List[CB => CB](
-      (b: CB) => if (config.maxConnections > 0 || config.maxConnectionsPerHost > 0) {
+    val clientfs: List[CB => CB] = List[CB => CB]((b: CB) =>
+      if (config.maxConnections > 0 || config.maxConnectionsPerHost > 0) {
         val manager = new PoolingAsyncClientConnectionManager()
         if (config.maxConnections > 0) {
           manager.setMaxTotal(config.maxConnections)
@@ -320,21 +321,21 @@ class ApacheHttpClient(config: Config) extends HttpClient {
         b.setConnectionManager(manager)
       } else b
     ) :::
-    (authOpt match {
-      case Some(auth) =>
-        List[CB => CB]({ case b: CB =>
-          b.setDefaultCredentialsProvider(buildCredentialProvider(auth))
-        })
-      case None => Nil
-    }) :::
-    ((signatureOpt, targetOpt) match {
-      case (Some(signatureCalculator), Some(target)) =>
-        List[CB => CB]({ case b: CB =>
-          b.addRequestInterceptorLast(buildInterceptor(signatureCalculator, target))
-        })
-      case _ => Nil
-    })
-    val b1 = clientfs.foldLeft(b0){ (b, f) => f(b) }
+      (authOpt match {
+        case Some(auth) =>
+          List[CB => CB]({ case b: CB =>
+            b.setDefaultCredentialsProvider(buildCredentialProvider(auth))
+          })
+        case None => Nil
+      }) :::
+      ((signatureOpt, targetOpt) match {
+        case (Some(signatureCalculator), Some(target)) =>
+          List[CB => CB]({ case b: CB =>
+            b.addRequestInterceptorLast(buildInterceptor(signatureCalculator, target))
+          })
+        case _ => Nil
+      })
+    val b1 = clientfs.foldLeft(b0) { (b, f) => f(b) }
     val result = b1.build()
     result
   }
@@ -347,7 +348,8 @@ class ApacheHttpClient(config: Config) extends HttpClient {
           case Some(realm) => new AuthScope(null, null, -1, realm, null)
           case _           => new AuthScope(null, null, -1, null, null)
         }
-        val credentials = new UsernamePasswordCredentials(auth.username, auth.password.toCharArray())
+        val credentials =
+          new UsernamePasswordCredentials(auth.username, auth.password.toCharArray())
         val p = CredentialsProviderBuilder.create()
         p.add(scope, credentials)
         p.build()
@@ -355,7 +357,10 @@ class ApacheHttpClient(config: Config) extends HttpClient {
         sys.error(s"unsupported scheme: ${auth.scheme}")
     }
 
-  def buildInterceptor(signatureCalculator: SignatureCalculator, target: String): HttpRequestInterceptor =
+  def buildInterceptor(
+      signatureCalculator: SignatureCalculator,
+      target: String
+  ): HttpRequestInterceptor =
     (request: XRequest, entity: EntityDetails, context: HttpContext) => {
       val uri = request.getUri().toString
       val contentType = Option(entity).map(_.getContentType())
@@ -371,7 +376,7 @@ class ApacheHttpClient(config: Config) extends HttpClient {
         case Some(p: AsyncEntityProducer) =>
           p.produce(new DataStreamChannel {
             def endStream(): Unit = ()
-            def endStream(headers: java.util.List[_ <: XHeader]): Unit = ()
+            def endStream(headers: java.util.List[? <: XHeader]): Unit = ()
             def requestOutput(): Unit = ()
             def write(bf: ByteBuffer): Int = {
               b.put(bf.array())
@@ -379,13 +384,15 @@ class ApacheHttpClient(config: Config) extends HttpClient {
             }
           })
         case Some(entity) => sys.error(s"unsupported entity: $entity")
-        case None => ()
+        case None         => ()
       }
       val contents = b.array()
       val (name, value) = signatureCalculator.sign(uri, contentType, contents)
       request.setHeader(name, value)
     }
 
-  def websocket(request: Request)(handler: PartialFunction[WebSocketEvent, Unit]): Future[WebSocket] =
+  def websocket(request: Request)(
+      handler: PartialFunction[WebSocketEvent, Unit]
+  ): Future[WebSocket] =
     ???
 }

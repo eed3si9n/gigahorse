@@ -22,14 +22,17 @@ import scala.concurrent.Future
 import scala.util.Try
 
 object DownloadHandler {
+
   /** Function from `StreamResponse` to `Future[File]` */
-  def asFile(file: File): StreamResponse => Future[File] = (response: StreamResponse) =>
-    {
-      val stream = response.byteBuffers
-      val out = new FileOutputStream(file).getChannel
-      stream.foldResource(file)((acc, bb) => {
+  def asFile(file: File): StreamResponse => Future[File] = (response: StreamResponse) => {
+    val stream = response.byteBuffers
+    val out = new FileOutputStream(file).getChannel
+    stream.foldResource(file)(
+      (acc, bb) => {
         out.write(bb)
         acc
-      }, () => Try(out.close()))
-    }
+      },
+      () => Try(out.close())
+    )
+  }
 }

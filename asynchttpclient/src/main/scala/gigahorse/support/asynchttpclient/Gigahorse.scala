@@ -18,16 +18,14 @@ package gigahorse
 package support.asynchttpclient
 
 abstract class Gigahorse extends GigahorseSupport {
-  def withHttp[A](config: Config)(f: ReactiveHttpClient => A): A =
-    {
-      val client: ReactiveHttpClient = http(config)
-      try {
-        f(client)
-      }
-      finally {
-        client.close()
-      }
+  def withHttp[A](config: Config)(f: ReactiveHttpClient => A): A = {
+    val client: ReactiveHttpClient = http(config)
+    try {
+      f(client)
+    } finally {
+      client.close()
     }
+  }
 
   def withHttp[A](f: ReactiveHttpClient => A): A =
     withHttp(config)(f)

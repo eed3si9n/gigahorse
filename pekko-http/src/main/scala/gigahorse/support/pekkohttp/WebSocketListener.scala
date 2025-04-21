@@ -23,7 +23,11 @@ import pekko.util.ByteString
 import pekko.stream.scaladsl.*
 import pekko.actor.{ ActorSystem, Props, PoisonPill }
 import pekko.stream.{ Materializer, OverflowStrategy }
-import pekko.http.scaladsl.model.ws.{ Message, TextMessage => XTextMessage, BinaryMessage => XBinaryMessage }
+import pekko.http.scaladsl.model.ws.{
+  Message,
+  TextMessage as XTextMessage,
+  BinaryMessage as XBinaryMessage
+}
 import WebSocketEvent.*
 import scala.annotation.nowarn
 import scala.util.Success
@@ -32,17 +36,19 @@ import scala.concurrent.{ Future, Promise }
 // http://doc.akka.io/api/akka-http/current/akka/index.html
 // http://doc.akka.io/api/akka/2.4.16/
 
-class WebSocketListener(
-  handler: PartialFunction[WebSocketEvent, Unit],
-  system: ActorSystem)(implicit fm: Materializer) { self =>
+class WebSocketListener(handler: PartialFunction[WebSocketEvent, Unit], system: ActorSystem)(
+    implicit fm: Materializer
+) { self =>
   protected var ws: WebSocket = null
   protected var open: Boolean = true
   val result = Promise[WebSocket]()
 
-  lazy val (streamRef, source) = (Source.actorRef[Message](
-    bufferSize = 100,
-    overflowStrategy = OverflowStrategy.dropHead,
-  ).preMaterialize(): @nowarn("cat=deprecation"))
+  lazy val (streamRef, source) = (Source
+    .actorRef[Message](
+      bufferSize = 100,
+      overflowStrategy = OverflowStrategy.dropHead,
+    )
+    .preMaterialize(): @nowarn("cat=deprecation"))
 
   val forwarder = system.actorOf(Props(new MessageForwarder(streamRef)))
   val sink: Sink[Message, Future[Done]] =
@@ -55,24 +61,23 @@ class WebSocketListener(
     }
   ws = new WebSocket {
     def underlying[A]: A = self.asInstanceOf[A]
-      override def isOpen: Boolean = open
-      override def sendMessage(message: Array[Byte]): WebSocket = {
-        forwarder ! XBinaryMessage(ByteString(message))
-        this
-      }
-      override def sendMessage(message: String): WebSocket = {
-        forwarder ! XTextMessage(message)
-        this
-      }
-      override def close(): Unit =
-        {
-          forwarder ! PoisonPill
-          open = false
-        }
-      override def sendPing(payload: Array[Byte]): WebSocket = ???
-      override def sendPong(payload: Array[Byte]): WebSocket = ???
-      override def sendFragment(fragment: Array[Byte], last: Boolean): WebSocket = ???
-      override def sendFragment(fragment: String, last: Boolean): WebSocket = ???
+    override def isOpen: Boolean = open
+    override def sendMessage(message: Array[Byte]): WebSocket = {
+      forwarder ! XBinaryMessage(ByteString(message))
+      this
+    }
+    override def sendMessage(message: String): WebSocket = {
+      forwarder ! XTextMessage(message)
+      this
+    }
+    override def close(): Unit = {
+      forwarder ! PoisonPill
+      open = false
+    }
+    override def sendPing(payload: Array[Byte]): WebSocket = ???
+    override def sendPong(payload: Array[Byte]): WebSocket = ???
+    override def sendFragment(fragment: Array[Byte], last: Boolean): WebSocket = ???
+    override def sendFragment(fragment: String, last: Boolean): WebSocket = ???
   }
   result.tryComplete(Success(ws))
   private def broadcast(event: WebSocketEvent): Unit =

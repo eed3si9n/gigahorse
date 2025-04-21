@@ -23,7 +23,8 @@ abstract class FunctionHandler[A](f: FullResponse => A) extends PekkoHttpComplet
   override def onCompleted(response: FullResponse): A = f(response)
 }
 
-abstract class StreamFunctionHandler[A](f: StreamResponse => Future[A]) extends PekkoHttpStreamHandler[A] {
+abstract class StreamFunctionHandler[A](f: StreamResponse => Future[A])
+    extends PekkoHttpStreamHandler[A] {
   override def onStream(response: StreamResponse): Future[A] = f(response)
 }
 

@@ -16,10 +16,11 @@
 
 package gigahorse
 
-final class StatusError(val status: Int) extends RuntimeException("Unexpected status: " + status.toString) {
+final class StatusError(val status: Int)
+    extends RuntimeException("Unexpected status: " + status.toString) {
   override def equals(o: Any): Boolean = o match {
     case x: StatusError => (this.status == x.status)
-    case _ => false
+    case _              => false
   }
   override def hashCode: Int = {
     (17 + status.##)

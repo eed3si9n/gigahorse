@@ -18,15 +18,16 @@ package gigahorse
 package support.apachehttp
 
 trait OkHandler extends ApacheHandler {
-  abstract override def onStatusReceived(code: Int): Unit =
-    {
-      if (code / 100 == 2) super.onStatusReceived(code)
-      else throw StatusError(code)
-    }
+  abstract override def onStatusReceived(code: Int): Unit = {
+    if (code / 100 == 2) super.onStatusReceived(code)
+    else throw StatusError(code)
+  }
 }
 
 object OkHandler {
-  abstract class FullOkHandler[A](f: FullResponse => A) extends FunctionHandler[A](f) with OkHandler {}
+  abstract class FullOkHandler[A](f: FullResponse => A)
+      extends FunctionHandler[A](f)
+      with OkHandler {}
   // abstract class ZeroCopyOkHandler(f: (File, ContentType) => Unit) extends ApacheZeroCopyHandler with OkHandler {
   //   override def onFileReceived(file: File, contentType: ContentType): Unit = f(file, contentType)
   // }

@@ -33,7 +33,9 @@ abstract class HttpClient extends AutoCloseable {
   def run[A](request: Request, f: FullResponse => A): Future[A]
 
   /** Runs the request and return a Future of Either a FullResponse or a Throwable. Errors on non-OK response. */
-  def run[A](request: Request, lifter: FutureLifter[A])(implicit ec: ExecutionContext): Future[Either[Throwable, A]]
+  def run[A](request: Request, lifter: FutureLifter[A])(implicit
+      ec: ExecutionContext
+  ): Future[Either[Throwable, A]]
 
   /** Downloads the request to the file. Errors on non-OK response. */
   def download(request: Request, file: File): Future[File]
@@ -45,7 +47,9 @@ abstract class HttpClient extends AutoCloseable {
   def processFull[A](request: Request, f: FullResponse => A): Future[A]
 
   /** Executes the request and return a Future of Either a FullResponse or a Throwable. Does not error on non-OK response. */
-  def processFull[A](request: Request, lifter: FutureLifter[A])(implicit ec: ExecutionContext): Future[Either[Throwable, A]]
+  def processFull[A](request: Request, lifter: FutureLifter[A])(implicit
+      ec: ExecutionContext
+  ): Future[Either[Throwable, A]]
 
   /** Open a websocket connection. */
   def websocket(request: Request)(handler: PartialFunction[WebSocketEvent, Unit]): Future[WebSocket]
