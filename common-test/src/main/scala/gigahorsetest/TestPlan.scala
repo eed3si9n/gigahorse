@@ -72,7 +72,10 @@ object TestPlan {
       FileUtil.transfer(r, baos)
       Ok ~> ResponseBytes(baos.toByteArray())
     // upload
-    case POST(Path("/upload") & MultiPart(r)) =>
+    case r @ POST(Path("/upload")) =>
+      val body = FileUtil.read(r.inputStream)
+      Ok ~> ResponseString(body)
+    case POST(Path("/upload-as-multipart") & MultiPart(r)) =>
       val mem = MultiPartParams.Memory(r)
       val f = mem.files("a.json").head
       val body = f.stream(FileUtil.read)

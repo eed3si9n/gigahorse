@@ -24,6 +24,8 @@ import scala.annotation.nowarn
 import scala.concurrent.Future
 
 class PekkoHttpClientSpec extends BaseHttpClientSpec {
+  override def uploadEndpoint: String = "upload-as-multipart"
+
   // custom loan pattern
   override def withHttp(testCode: gigahorse.HttpClient => Future[Assertion]): Future[Assertion] = {
     import gigahorse.support.pekkohttp.Gigahorse

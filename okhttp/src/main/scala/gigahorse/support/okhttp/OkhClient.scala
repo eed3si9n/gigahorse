@@ -106,13 +106,10 @@ class OkhClient(config: Config) extends HttpClient {
           b.bytes
         )
       case b: FileBody =>
-        var builder = new MultipartBody.Builder().setType(MultipartBody.FORM)
-        val body = RequestBody.create(
+        RequestBody.create(
           MediaType.parse(contentType.getOrElse("application/octet-stream")),
           b.file
         )
-        builder = builder.addFormDataPart(b.file.getName(), b.file.getName(), body)
-        builder.build()
       case b: MultipartFormBody =>
         var builder = new MultipartBody.Builder().setType(MultipartBody.FORM)
         for { p <- b.parts } {
