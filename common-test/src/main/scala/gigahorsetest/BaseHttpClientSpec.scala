@@ -43,6 +43,7 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers with TestH
     _.handler(WsTestPlan.testPlan)
   }
   def isWebSocketSupported: Boolean = true
+  def uploadEndpoint = "upload"
 
   // custom loan pattern
   def withHttp(testCode: gigahorse.HttpClient => Future[Assertion]): Future[Assertion]
@@ -253,7 +254,7 @@ abstract class BaseHttpClientSpec extends AsyncFlatSpec with Matchers with TestH
   }"""
         FileUtil.write(file, content)
         val r = Gigahorse
-          .url(s"${testUrl}upload")
+          .url(s"${testUrl}${uploadEndpoint}")
           .post(file)
           .withContentType("application/json")
         for {

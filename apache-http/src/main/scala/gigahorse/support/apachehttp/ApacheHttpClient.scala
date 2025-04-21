@@ -41,6 +41,7 @@ import client5.http.impl.async.{
 import client5.http.impl.auth.CredentialsProviderBuilder
 import client5.http.impl.nio.PoolingAsyncClientConnectionManager
 import core5.concurrent.FutureCallback
+
 import core5.http.{
   ContentType,
   EntityDetails,
@@ -51,6 +52,7 @@ import core5.http.{
   HttpResponse as XResponse,
 }
 import core5.http.nio.{ AsyncEntityProducer, AsyncRequestProducer, DataStreamChannel }
+import core5.http.nio.entity.FileEntityProducer
 import core5.http.nio.support.BasicRequestProducer
 import core5.http.protocol.HttpContext
 import core5.reactor.IOReactorConfig
@@ -119,10 +121,7 @@ class ApacheHttpClient(config: Config) extends HttpClient {
         new BasicRequestProducer(r, entity)
       case b: FileBody =>
         val r = builder.build()
-        val multi = MultipartFormBody(
-          FormPart(b.file.getName(), b.file).withContentType(ct.toString())
-        )
-        val entity = MultipartAsyncEntityProducer(multi)
+        val entity = new FileEntityProducer(b.file, ct)
         new BasicRequestProducer(r, entity)
     }
   }

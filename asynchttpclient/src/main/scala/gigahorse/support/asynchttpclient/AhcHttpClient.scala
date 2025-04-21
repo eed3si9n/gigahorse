@@ -32,6 +32,7 @@ import shaded.ahc.org.asynchttpclient.{
 }
 import shaded.ahc.org.asynchttpclient.AsyncHandler.{ State as XState }
 import shaded.ahc.org.asynchttpclient.handler.StreamedAsyncHandler
+import shaded.ahc.org.asynchttpclient.request.body.generator.FileBodyGenerator
 import shaded.ahc.org.asynchttpclient.request.body.multipart.{ ByteArrayPart, FilePart }
 import shaded.ahc.org.asynchttpclient.proxy.{ ProxyServer as XProxyServer, ProxyType as XProxyType }
 import shaded.ahc.org.asynchttpclient.Realm.{ AuthScheme as XAuthScheme }
@@ -216,9 +217,9 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends ReactiveHttpClient {
         builder.setBody(b.bytes)
         (builder, request.headers)
       case b: FileBody =>
-        val ct = contentType.getOrElse("application/octet-stream")
-        builder.addBodyPart(new FilePart(b.file.getName(), b.file, ct, null))
-        (builder, request.headers.updated(HeaderNames.CONTENT_TYPE, List("multipart/form-data")))
+        val bodyGenerator = new FileBodyGenerator(b.file)
+        builder.setBody(bodyGenerator)
+        (builder, request.headers)
       case b: MultipartFormBody =>
         for { p <- b.parts } {
           p.body match {
