@@ -9,7 +9,7 @@ object Dependencies {
   val slf4jApi = "org.slf4j" % "slf4j-api" % slf4jV
   val jclOverSlf4j = "org.slf4j" % "jcl-over-slf4j" % slf4jV
   val ahc = "org.asynchttpclient" % "async-http-client" % "2.12.4"
-  val scalatest = "org.scalatest" %% "scalatest" % "3.2.10"
+  val scalatest = "org.scalatest" %% "scalatest-funsuite" % "3.2.19"
   val sslConfig = "com.typesafe" %% "ssl-config-core" % "0.6.1"
   val reactiveStreams = "org.reactivestreams" % "reactive-streams" % "1.0.3"
   val pekkoVersion = "1.1.2"
