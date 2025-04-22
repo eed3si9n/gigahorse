@@ -44,6 +44,13 @@ object TestPlan {
         case Some(Seq(x)) => Ok ~> ResponseString(x)
         case _            => BadRequest ~> ResponseString("args1 is not found!")
       }
+    case r @ POST(Path("/bearer")) =>
+      val authz = r.headers("Authorization")
+      r match {
+        case r if authz.nonEmpty && authz.next == "Bearer token123" =>
+          Ok ~> ResponseString(r.headers("Authorization").next())
+        case _ => Fail
+      }
     case r @ POST(Path("/charset")) =>
       val h = r.headers("Content-Type").filter(_.contains("text/plain"))
       if (h.hasNext)
