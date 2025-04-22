@@ -51,7 +51,7 @@ object TestPlan {
           Ok ~> ResponseString(r.headers("Authorization").next())
         case _ => Fail
       }
-   case r @ POST(Path("/charset")) =>
+    case r @ POST(Path("/charset")) =>
       val h = r.headers("Content-Type").filter(_.contains("text/plain"))
       if (h.hasNext)
         Ok ~> ResponseString(h.next().replaceAll("\\s", ""))

@@ -101,7 +101,9 @@ abstract class BaseHttpClientSpec extends AsyncFunSuite with TestHttpServer {
     }
   }
 
-  test("http.run(r.withAuth(\"***\", \"***\"), Gigahorse.asString) should retrieve a resource as String") {
+  test(
+    "http.run(r.withAuth(\"***\", \"***\"), Gigahorse.asString) should retrieve a resource as String"
+  ) {
     withHttp { http =>
       val r = Gigahorse.url(s"${testUrl}auth")
       val f = http.run(r.withAuth("admin", "***"), Gigahorse.asString)
@@ -113,7 +115,8 @@ abstract class BaseHttpClientSpec extends AsyncFunSuite with TestHttpServer {
 
   test("http.run(r.withHeaders(...), f) should post with headers") {
     withHttp { http =>
-      val r = Gigahorse.url(s"${testUrl}bearer")
+      val r = Gigahorse
+        .url(s"${testUrl}bearer")
         .withHeaders("Authorization" -> "Bearer token123")
       val f = http.run(
         r.post("hello world"),
@@ -125,7 +128,9 @@ abstract class BaseHttpClientSpec extends AsyncFunSuite with TestHttpServer {
     }
   }
 
-  test("http.run(r.post(Map(\"inputString\" -> List(\"{}\"))), f) should post url-form-encoded data") {
+  test(
+    "http.run(r.post(Map(\"inputString\" -> List(\"{}\"))), f) should post url-form-encoded data"
+  ) {
     withHttp { http =>
       val r = Gigahorse.url(s"${testUrl}form")
       val f = http.run(r.post(Map("arg1" -> List("{}"))), Gigahorse.asString)
@@ -135,7 +140,9 @@ abstract class BaseHttpClientSpec extends AsyncFunSuite with TestHttpServer {
     }
   }
 
-  test("http.run(r.withContentType(MimeTypes.Text, ISO-8859-1), f) should parse and post with correct content type") {
+  test(
+    "http.run(r.withContentType(MimeTypes.Text, ISO-8859-1), f) should parse and post with correct content type"
+  ) {
     withHttp { http =>
       val r = Gigahorse.url(s"${testUrl}charset")
       val f = http.run(
@@ -167,7 +174,9 @@ abstract class BaseHttpClientSpec extends AsyncFunSuite with TestHttpServer {
     }
   }
 
-  test("http.run(r.post.withSignatureOpt(...), Gigahorse.asString) should add a signature header and keep content") {
+  test(
+    "http.run(r.post.withSignatureOpt(...), Gigahorse.asString) should add a signature header and keep content"
+  ) {
     withHttp { http =>
       val r = Gigahorse.url(s"${testUrl}sign").addQueryString("query" -> "param1")
       val sc = new SignatureCalculator {
@@ -261,7 +270,9 @@ abstract class BaseHttpClientSpec extends AsyncFunSuite with TestHttpServer {
     }
   }
 
-  test("http.processFull(r, Gigahorse.asEither) should preserve an error response and convert to Right given 404") {
+  test(
+    "http.processFull(r, Gigahorse.asEither) should preserve an error response and convert to Right given 404"
+  ) {
     withHttp { http =>
       val r = Gigahorse.url(s"${testUrl}404")
       val f = http.processFull(r, Gigahorse.asEither)
