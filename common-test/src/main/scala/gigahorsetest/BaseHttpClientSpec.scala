@@ -111,6 +111,20 @@ abstract class BaseHttpClientSpec extends AsyncFunSuite with TestHttpServer {
     }
   }
 
+  test("http.run(r.withHeaders(...), f) should post with headers") {
+    withHttp { http =>
+      val r = Gigahorse.url(s"${testUrl}bearer")
+        .withHeaders("Authorization" -> "Bearer token123")
+      val f = http.run(
+        r.post("hello world"),
+        Gigahorse.asString
+      )
+      f map { s =>
+        assert(s === "Bearer token123")
+      }
+    }
+  }
+
   test("http.run(r.post(Map(\"inputString\" -> List(\"{}\"))), f) should post url-form-encoded data") {
     withHttp { http =>
       val r = Gigahorse.url(s"${testUrl}form")

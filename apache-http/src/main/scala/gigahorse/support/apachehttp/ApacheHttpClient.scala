@@ -146,6 +146,13 @@ class ApacheHttpClient(config: Config) extends HttpClient {
         builder.addParameter(k, v)
       }
     }
+    if (headers.nonEmpty) {
+      headers.foreach { case (k, vs) =>
+        vs.foreach { v =>
+          builder.setHeader(k, v)
+        }
+      }
+    }
     builder
   }
 
