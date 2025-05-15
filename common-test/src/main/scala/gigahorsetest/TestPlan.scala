@@ -91,9 +91,9 @@ object TestPlan {
     case POST(Path("/multipart") & MultiPart(r)) =>
       val mem = MultiPartParams.Memory(r)
       val f = mem.files("a.json").head
-      val body = f.stream(FileUtil.read)
-      val p = mem.params("a").head
-      Ok ~> ResponseString(body + "\n" + p)
+      val baos = new ByteArrayOutputStream()
+      f.stream(FileUtil.transfer(_, baos))
+      Ok ~> ResponseBytes(baos.toByteArray())
     case GET(Path(p)) =>
       println(p)
       Ok ~> ResponseString("fallthrough")
