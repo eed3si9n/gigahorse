@@ -14,12 +14,20 @@ ThisBuild / scmInfo := Some(
 ThisBuild / developers := List(
   Developer("eed3si9n", "Eugene Yokota", "@eed3si9n", url("https://github.com/eed3si9n"))
 )
-ThisBuild / version := "0.9.2-SNAPSHOT"
+ThisBuild / version := "0.9.3-SNAPSHOT"
 ThisBuild / description := "Gigahorse is an HTTP client for Scala with multiple backend support."
 ThisBuild / licenses := Seq("Apache 2" -> new URL("http://www.apache.org/licenses/LICENSE-2.0.txt"))
 
 lazy val root = (project in file("."))
-  .aggregate(core, apacheHttp, asynchttpclient, shadedAsyncHttpClient, okhttp, pekkoHttp)
+  .aggregate(
+    core,
+    apacheHttp,
+    asynchttpclient,
+    shadedAsyncHttpClient,
+    shadedApacheHttpClient5,
+    okhttp,
+    pekkoHttp
+  )
   .dependsOn(core)
   .settings(
     name := "gigahorse",

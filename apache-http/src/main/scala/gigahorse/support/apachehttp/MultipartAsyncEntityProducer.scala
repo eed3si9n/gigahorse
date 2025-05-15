@@ -32,6 +32,8 @@ class MultipartAsyncEntityProducer(body: MultipartFormBody) extends AsyncEntityP
   private val partIterator = parts.iterator
   private val pending = new mutable.Queue[ByteBuffer]()
   private var finished = false
+  // save the inputstream across produce runs
+  private var currentStream: Option[InputStream] = None
 
   def getBoundary: String = boundary
 
@@ -46,41 +48,54 @@ class MultipartAsyncEntityProducer(body: MultipartFormBody) extends AsyncEntityP
     else 0
 
   override def isRepeatable(): Boolean = false
+
+  /**
+   * Called when the underlying data channel is ready to accept more data.
+   * When channel.write(...) writes less bytes than the byteBuffer,
+   * get out, since the data channel is likely no longer able to accept
+   * the bytes.
+   */
   override def produce(channel: DataStreamChannel): Unit = {
-    produce0(channel, None)
+    produce0(channel)
   }
-  private def produce0(channel: DataStreamChannel, currentStream: Option[InputStream]): Unit = {
-    while (pending.nonEmpty) {
-      val buffer = pending.front
-      channel.write(buffer)
-      if (!buffer.hasRemaining) pending.dequeue()
-      else return
+  private def produce0(channel: DataStreamChannel): Unit = {
+    var incompleteWrite = false
+    while (pending.nonEmpty && !incompleteWrite) {
+      val buf: ByteBuffer = pending.front
+      channel.write(buf)
+      if (buf.hasRemaining) incompleteWrite = true
+      else pending.dequeue()
     }
-    currentStream match {
-      case Some(stream) =>
-        val buf = new Array[Byte](1024 * 1024)
-        val read = stream.read(buf)
-        if (read == -1) {
-          stream.close()
-          pending.enqueue(encode("\r\n"))
-          produce0(channel, None)
-        } else {
-          pending.enqueue(ByteBuffer.wrap(buf, 0, read))
-          produce0(channel, currentStream)
-        }
-      case None =>
-        if (partIterator.hasNext) {
-          val part = partIterator.next()
-          writePartHeaders(part)
-          val stream = partToStream(part)
-          produce0(channel, Some(stream))
-        } else if (!finished) {
-          pending.enqueue(encode(s"--$boundary--\r\n"))
-          finished = true
-          produce0(channel, None)
-        } else
-          channel.endStream()
-    }
+    // exit early on incomplete write
+    if (incompleteWrite) ()
+    else
+      currentStream match {
+        case Some(stream) =>
+          val buf = new Array[Byte](1024 * 1024)
+          val read = stream.read(buf)
+          if (read == -1) {
+            stream.close()
+            pending.enqueue(encode("\r\n"))
+            currentStream = None
+            produce0(channel)
+          } else {
+            pending.enqueue(ByteBuffer.wrap(buf, 0, read))
+            produce0(channel)
+          }
+        case None =>
+          if (partIterator.hasNext) {
+            val part = partIterator.next()
+            writePartHeaders(part)
+            val stream = partToStream(part)
+            currentStream = Some(stream)
+            produce0(channel)
+          } else if (!finished) {
+            pending.enqueue(encode(s"--$boundary--\r\n"))
+            finished = true
+            produce0(channel)
+          } else
+            channel.endStream()
+      }
   }
   private def partToStream(part: FormPart): InputStream =
     part.body match {

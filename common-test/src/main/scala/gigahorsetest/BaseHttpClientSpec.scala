@@ -305,8 +305,8 @@ abstract class BaseHttpClientSpec extends AsyncFunSuite with TestHttpServer {
     withHttp { http =>
       withTemporaryDirectory { dir =>
         val file = new File(dir, "a.json")
-        def longString = "a" * 1024 * 1024
-        def content = s"""{
+        val longString = "a" * 1024 * 1024 * 2
+        val content = s"""{
   "a": "$longString"
 }"""
         FileUtil.write(file, content)
