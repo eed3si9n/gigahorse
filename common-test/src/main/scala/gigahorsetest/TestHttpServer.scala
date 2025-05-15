@@ -25,7 +25,7 @@ trait TestHttpServer {
   def testUrl: String = s"http://localhost:$port/"
   def getServer = setup(Server.http(port))
   def setup: Server => Server = {
-    _.chunked(1024 * 1024).handler(TestPlan.testPlan)
+    _.chunked(1024 * 1024 * 10).handler(TestPlan.testPlan)
   }
 }
 

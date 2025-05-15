@@ -305,22 +305,29 @@ abstract class BaseHttpClientSpec extends AsyncFunSuite with TestHttpServer {
     withHttp { http =>
       withTemporaryDirectory { dir =>
         val file = new File(dir, "a.json")
-        val content = """{
-    "a": 1
-  }"""
+        val longString = "a" * 1024 * 1024 * 2
+        val content = s"""{
+  "a": "$longString"
+}"""
         FileUtil.write(file, content)
+        val original = FileUtil.sha1(file)
         val content2 = "bbb"
         val r = Gigahorse
           .url(s"${testUrl}multipart")
           .post(
             MultipartFormBody(
               FormPart("a", content2, "text/plain"),
-              FormPart("a.json", file, "application/json")
+              FormPart("a.json", file)
             )
           )
         for {
           res <- http.processFull(r)
-        } yield assert(res.bodyAsString == content + "\n" + content2)
+        } yield {
+          val out = new File(dir, "b.json")
+          FileUtil.write(out, res.bodyAsByteBuffer)
+          val actual = FileUtil.sha1(out)
+          assert(original == actual)
+        }
       }
     }
   }
