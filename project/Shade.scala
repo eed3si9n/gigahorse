@@ -13,26 +13,26 @@ object Shade {
     inConfig(ShadeSandbox)(
       Defaults.configSettings ++
         baseAssemblySettings ++ Seq(
-          logLevel in assembly := Level.Error,
-          // logLevel in assembly := Level.Debug,
-          assemblyShadeRules in assembly := Seq(
+          assembly / logLevel := Level.Error,
+          // assembly / logLevel := Level.Debug,
+          assembly / assemblyShadeRules := Seq(
             ShadeRule.rename("org.apache.**" -> s"$shadePrefix2.@0").inAll,
             ShadeRule.zap("org.reactivestreams.**").inAll,
             ShadeRule.zap("org.slf4j.**").inAll
           ),
-          assemblyOption in assembly := (assemblyOption in assembly).value
+          assembly / assemblyOption := (assembly / assemblyOption).value
             .copy(includeBin = false, includeScala = false),
           // cut ties with Runtime
-          fullClasspath in assembly := fullClasspath.value,
+          assembly / fullClasspath := fullClasspath.value,
           // cut ties with Runtime
-          externalDependencyClasspath in assembly := externalDependencyClasspath.value,
+          assembly / externalDependencyClasspath := externalDependencyClasspath.value,
           // cut ties with Runtime
-          mainClass in assembly := mainClass.value,
+          assembly / mainClass := mainClass.value,
           // cut ties with Runtime
-          test in assembly := {}
+          assembly / test := {}
         )
     ) ++ Seq(
-      packageBin in Compile := (assembly in ShadeSandbox).value,
+      Compile / packageBin := (ShadeSandbox / assembly).value,
       exportJars := true
     )
 
@@ -40,18 +40,18 @@ object Shade {
     inConfig(ShadeSandbox)(
       Defaults.configSettings ++
         baseAssemblySettings ++ Seq(
-          logLevel in assembly := Level.Error,
-          assemblyMergeStrategy in assembly := {
+          assembly / logLevel := Level.Error,
+          assembly / assemblyMergeStrategy := {
             case "META-INF/io.netty.versions.properties" =>
               MergeStrategy.first
             case "gigahorse/shaded/ahc/org/asynchttpclient/config/ahc-default.properties" =>
               ahcMerge
             case x =>
-              val oldStrategy = (assemblyMergeStrategy in assembly).value
+              val oldStrategy = (assembly / assemblyMergeStrategy).value
               oldStrategy(x)
           },
-          // logLevel in assembly := Level.Debug,
-          assemblyShadeRules in assembly := Seq(
+          // assembly / logLevel  := Level.Debug,
+          assembly / assemblyShadeRules := Seq(
             ShadeRule.rename("org.asynchttpclient.**" -> s"$shadePrefix.@0").inAll,
             ShadeRule.rename("io.netty.**" -> s"$shadePrefix.@0").inAll,
             ShadeRule.rename("javassist.**" -> s"$shadePrefix.@0").inAll,
@@ -59,19 +59,19 @@ object Shade {
             ShadeRule.zap("org.reactivestreams.**").inAll,
             ShadeRule.zap("org.slf4j.**").inAll
           ),
-          assemblyOption in assembly := (assemblyOption in assembly).value
+          assembly / assemblyOption := (assembly / assemblyOption).value
             .copy(includeBin = false, includeScala = false),
           // cut ties with Runtime
-          fullClasspath in assembly := fullClasspath.value,
+          assembly / fullClasspath := fullClasspath.value,
           // cut ties with Runtime
-          externalDependencyClasspath in assembly := externalDependencyClasspath.value,
+          assembly / externalDependencyClasspath := externalDependencyClasspath.value,
           // cut ties with Runtime
-          mainClass in assembly := mainClass.value,
+          assembly / mainClass := mainClass.value,
           // cut ties with Runtime
-          test in assembly := {}
+          assembly / test := {}
         )
     ) ++ Seq(
-      packageBin in Compile := (assembly in ShadeSandbox).value,
+      Compile / packageBin := (ShadeSandbox / assembly).value,
       exportJars := true
     )
 
