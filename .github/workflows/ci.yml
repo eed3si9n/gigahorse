@@ -53,7 +53,9 @@ jobs:
       if: ${{ matrix.jobtype == 1 }}
       shell: bash
       run: |
-        sbt -v +test
+        find **/src/main/contraband-scala -name "*.scala" -delete
+        sbt -v generateContrabands +test
+        git diff --exit-code # check contrabands diff
     - name: Build and test (2)
       if: ${{ matrix.jobtype == 2 }}
       shell: bash

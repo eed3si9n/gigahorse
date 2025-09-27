@@ -1,5 +1,5 @@
 /**
- * This code is generated using [[https://www.scala-sbt.org/contraband/ sbt-contraband]].
+ * This code is generated using [[https://www.scala-sbt.org/contraband]].
  */
 
 // DO NOT EDIT MANUALLY
@@ -21,17 +21,17 @@ final class DefaultProxyServer private (
   def withAuth(username: String, password: String, scheme: AuthScheme): DefaultProxyServer = copy(authOpt = Some(Realm(username = username, password = password, scheme = scheme)))
   private def this(host: String, port: Int, securedPort: Option[Int]) = this(host, port, securedPort, None, List())
   
-  override def equals(o: Any): Boolean = o match {
+  override def equals(o: Any): Boolean = this.eq(o.asInstanceOf[AnyRef]) || (o match {
     case x: DefaultProxyServer => (this.host == x.host) && (this.port == x.port) && (this.securedPort == x.securedPort) && (this.authOpt == x.authOpt) && (this.nonProxyHosts == x.nonProxyHosts)
     case _ => false
-  }
+  })
   override def hashCode: Int = {
     37 * (37 * (37 * (37 * (37 * (37 * (17 + "gigahorse.DefaultProxyServer".##) + host.##) + port.##) + securedPort.##) + authOpt.##) + nonProxyHosts.##)
   }
   override def toString: String = {
     "DefaultProxyServer(" + host + ", " + port + ", " + securedPort + ", " + authOpt + ", " + nonProxyHosts + ")"
   }
-  private[this] def copy(host: String = host, port: Int = port, securedPort: Option[Int] = securedPort, authOpt: Option[Realm] = authOpt, nonProxyHosts: List[String] = nonProxyHosts): DefaultProxyServer = {
+  private def copy(host: String = host, port: Int = port, securedPort: Option[Int] = securedPort, authOpt: Option[Realm] = authOpt, nonProxyHosts: List[String] = nonProxyHosts): DefaultProxyServer = {
     new DefaultProxyServer(host, port, securedPort, authOpt, nonProxyHosts)
   }
   def withHost(host: String): DefaultProxyServer = {

@@ -1,5 +1,5 @@
 /**
- * This code is generated using [[https://www.scala-sbt.org/contraband/ sbt-contraband]].
+ * This code is generated using [[https://www.scala-sbt.org/contraband]].
  */
 
 // DO NOT EDIT MANUALLY
@@ -44,17 +44,17 @@ final class Realm private (
   private def this(username: String, password: String) = this(username, password, AuthScheme.Basic, true, None, None, None, None, None, None, None, None, None, None, None, None, false, false)
   private def this(username: String, password: String, scheme: AuthScheme) = this(username, password, scheme, true, None, None, None, None, None, None, None, None, None, None, None, None, false, false)
   
-  override def equals(o: Any): Boolean = o match {
+  override def equals(o: Any): Boolean = this.eq(o.asInstanceOf[AnyRef]) || (o match {
     case x: Realm => (this.username == x.username) && (this.password == x.password) && (this.scheme == x.scheme) && (this.usePreemptiveAuth == x.usePreemptiveAuth) && (this.realmNameOpt == x.realmNameOpt) && (this.nonceOpt == x.nonceOpt) && (this.algorithmOpt == x.algorithmOpt) && (this.responseOpt == x.responseOpt) && (this.opaqueOpt == x.opaqueOpt) && (this.qopOpt == x.qopOpt) && (this.ncOpt == x.ncOpt) && (this.uriOpt == x.uriOpt) && (this.methodNameOpt == x.methodNameOpt) && (this.charsetOpt == x.charsetOpt) && (this.ntlmDomainOpt == x.ntlmDomainOpt) && (this.ntlmHostOpt == x.ntlmHostOpt) && (this.useAbsoluteURI == x.useAbsoluteURI) && (this.omitQuery == x.omitQuery)
     case _ => false
-  }
+  })
   override def hashCode: Int = {
     37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + "gigahorse.Realm".##) + username.##) + password.##) + scheme.##) + usePreemptiveAuth.##) + realmNameOpt.##) + nonceOpt.##) + algorithmOpt.##) + responseOpt.##) + opaqueOpt.##) + qopOpt.##) + ncOpt.##) + uriOpt.##) + methodNameOpt.##) + charsetOpt.##) + ntlmDomainOpt.##) + ntlmHostOpt.##) + useAbsoluteURI.##) + omitQuery.##)
   }
   override def toString: String = {
     "Realm(" + username + ", " + password + ", " + scheme + ", " + usePreemptiveAuth + ", " + realmNameOpt + ", " + nonceOpt + ", " + algorithmOpt + ", " + responseOpt + ", " + opaqueOpt + ", " + qopOpt + ", " + ncOpt + ", " + uriOpt + ", " + methodNameOpt + ", " + charsetOpt + ", " + ntlmDomainOpt + ", " + ntlmHostOpt + ", " + useAbsoluteURI + ", " + omitQuery + ")"
   }
-  private[this] def copy(username: String = username, password: String = password, scheme: AuthScheme = scheme, usePreemptiveAuth: Boolean = usePreemptiveAuth, realmNameOpt: Option[String] = realmNameOpt, nonceOpt: Option[String] = nonceOpt, algorithmOpt: Option[String] = algorithmOpt, responseOpt: Option[String] = responseOpt, opaqueOpt: Option[String] = opaqueOpt, qopOpt: Option[String] = qopOpt, ncOpt: Option[String] = ncOpt, uriOpt: Option[java.net.URI] = uriOpt, methodNameOpt: Option[String] = methodNameOpt, charsetOpt: Option[java.nio.charset.Charset] = charsetOpt, ntlmDomainOpt: Option[String] = ntlmDomainOpt, ntlmHostOpt: Option[String] = ntlmHostOpt, useAbsoluteURI: Boolean = useAbsoluteURI, omitQuery: Boolean = omitQuery): Realm = {
+  private def copy(username: String = username, password: String = password, scheme: AuthScheme = scheme, usePreemptiveAuth: Boolean = usePreemptiveAuth, realmNameOpt: Option[String] = realmNameOpt, nonceOpt: Option[String] = nonceOpt, algorithmOpt: Option[String] = algorithmOpt, responseOpt: Option[String] = responseOpt, opaqueOpt: Option[String] = opaqueOpt, qopOpt: Option[String] = qopOpt, ncOpt: Option[String] = ncOpt, uriOpt: Option[java.net.URI] = uriOpt, methodNameOpt: Option[String] = methodNameOpt, charsetOpt: Option[java.nio.charset.Charset] = charsetOpt, ntlmDomainOpt: Option[String] = ntlmDomainOpt, ntlmHostOpt: Option[String] = ntlmHostOpt, useAbsoluteURI: Boolean = useAbsoluteURI, omitQuery: Boolean = omitQuery): Realm = {
     new Realm(username, password, scheme, usePreemptiveAuth, realmNameOpt, nonceOpt, algorithmOpt, responseOpt, opaqueOpt, qopOpt, ncOpt, uriOpt, methodNameOpt, charsetOpt, ntlmDomainOpt, ntlmHostOpt, useAbsoluteURI, omitQuery)
   }
   def withUsername(username: String): Realm = {
