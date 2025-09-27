@@ -1,5 +1,5 @@
 /**
- * This code is generated using [[https://www.scala-sbt.org/contraband/ sbt-contraband]].
+ * This code is generated using [[https://www.scala-sbt.org/contraband]].
  */
 
 // DO NOT EDIT MANUALLY
@@ -28,17 +28,17 @@ final class FormPart private (
   private def this(name: String) = this(name, EmptyBody(), Map())
   private def this(name: String, body: Body) = this(name, body, Map())
   
-  override def equals(o: Any): Boolean = o match {
+  override def equals(o: Any): Boolean = this.eq(o.asInstanceOf[AnyRef]) || (o match {
     case x: FormPart => (this.name == x.name) && (this.body == x.body) && (this.headers == x.headers)
     case _ => false
-  }
+  })
   override def hashCode: Int = {
     37 * (37 * (37 * (37 * (17 + "gigahorse.FormPart".##) + name.##) + body.##) + headers.##)
   }
   override def toString: String = {
     "FormPart(" + name + ", " + body + ", " + headers + ")"
   }
-  private[this] def copy(name: String = name, body: Body = body, headers: Map[String, List[String]] = headers): FormPart = {
+  private def copy(name: String = name, body: Body = body, headers: Map[String, List[String]] = headers): FormPart = {
     new FormPart(name, body, headers)
   }
   def withName(name: String): FormPart = {

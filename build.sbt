@@ -105,6 +105,7 @@ lazy val core = (project in file("core"))
     Compile / managedSourceDirectories += (Compile / sourceDirectory).value / "contraband-scala",
     Compile / unmanagedSourceDirectories += (Compile / sourceDirectory).value / "contraband-scala",
     Compile / generateContrabands / sourceManaged := (Compile / sourceDirectory).value / "contraband-scala",
+    Compile / generateContrabands / contrabandScala3enum := false,
     // You need this otherwise you get X is already defined as class.
     Compile / sources := (Compile / sources).value.toList.distinct,
   )

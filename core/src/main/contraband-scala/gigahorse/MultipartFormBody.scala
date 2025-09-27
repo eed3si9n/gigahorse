@@ -1,5 +1,5 @@
 /**
- * This code is generated using [[https://www.scala-sbt.org/contraband/ sbt-contraband]].
+ * This code is generated using [[https://www.scala-sbt.org/contraband]].
  */
 
 // DO NOT EDIT MANUALLY
@@ -9,17 +9,17 @@ final class MultipartFormBody private (
   
   private def this() = this(Vector())
   
-  override def equals(o: Any): Boolean = o match {
+  override def equals(o: Any): Boolean = this.eq(o.asInstanceOf[AnyRef]) || (o match {
     case x: MultipartFormBody => (this.parts == x.parts)
     case _ => false
-  }
+  })
   override def hashCode: Int = {
     37 * (37 * (17 + "gigahorse.MultipartFormBody".##) + parts.##)
   }
   override def toString: String = {
     "MultipartFormBody(" + parts + ")"
   }
-  private[this] def copy(parts: Vector[FormPart] = parts): MultipartFormBody = {
+  private def copy(parts: Vector[FormPart]): MultipartFormBody = {
     new MultipartFormBody(parts)
   }
   def withParts(parts: Vector[FormPart]): MultipartFormBody = {

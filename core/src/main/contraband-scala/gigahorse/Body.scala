@@ -1,5 +1,5 @@
 /**
- * This code is generated using [[https://www.scala-sbt.org/contraband/ sbt-contraband]].
+ * This code is generated using [[https://www.scala-sbt.org/contraband]].
  */
 
 // DO NOT EDIT MANUALLY
@@ -9,10 +9,10 @@ abstract class Body() extends Serializable {
 
 
 
-override def equals(o: Any): Boolean = o match {
+override def equals(o: Any): Boolean = this.eq(o.asInstanceOf[AnyRef]) || (o match {
   case _: Body => true
   case _ => false
-}
+})
 override def hashCode: Int = {
   37 * (17 + "gigahorse.Body".##)
 }

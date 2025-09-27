@@ -1,5 +1,5 @@
 /**
- * This code is generated using [[https://www.scala-sbt.org/contraband/ sbt-contraband]].
+ * This code is generated using [[https://www.scala-sbt.org/contraband]].
  */
 
 // DO NOT EDIT MANUALLY
@@ -9,17 +9,17 @@ final class InMemoryBody private (
   
   
   
-  override def equals(o: Any): Boolean = o match {
+  override def equals(o: Any): Boolean = this.eq(o.asInstanceOf[AnyRef]) || (o match {
     case x: InMemoryBody => (this.bytes == x.bytes)
     case _ => false
-  }
+  })
   override def hashCode: Int = {
     37 * (37 * (17 + "gigahorse.InMemoryBody".##) + bytes.##)
   }
   override def toString: String = {
     "InMemoryBody(" + bytes + ")"
   }
-  private[this] def copy(bytes: Array[Byte] = bytes): InMemoryBody = {
+  private def copy(bytes: Array[Byte]): InMemoryBody = {
     new InMemoryBody(bytes)
   }
   def withBytes(bytes: Array[Byte]): InMemoryBody = {

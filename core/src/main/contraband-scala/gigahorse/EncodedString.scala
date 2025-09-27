@@ -1,5 +1,5 @@
 /**
- * This code is generated using [[https://www.scala-sbt.org/contraband/ sbt-contraband]].
+ * This code is generated using [[https://www.scala-sbt.org/contraband]].
  */
 
 // DO NOT EDIT MANUALLY
@@ -10,17 +10,17 @@ final class EncodedString private (
   
   
   
-  override def equals(o: Any): Boolean = o match {
+  override def equals(o: Any): Boolean = this.eq(o.asInstanceOf[AnyRef]) || (o match {
     case x: EncodedString => (this.string == x.string) && (this.charset == x.charset)
     case _ => false
-  }
+  })
   override def hashCode: Int = {
     37 * (37 * (37 * (17 + "gigahorse.EncodedString".##) + string.##) + charset.##)
   }
   override def toString: String = {
     "EncodedString(" + string + ", " + charset + ")"
   }
-  private[this] def copy(string: String = string, charset: java.nio.charset.Charset = charset): EncodedString = {
+  private def copy(string: String = string, charset: java.nio.charset.Charset = charset): EncodedString = {
     new EncodedString(string, charset)
   }
   def withString(string: String): EncodedString = {
