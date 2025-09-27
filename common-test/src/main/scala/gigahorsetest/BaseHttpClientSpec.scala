@@ -59,6 +59,7 @@ abstract class BaseHttpClientSpec extends AsyncFunSuite with TestHttpServer {
         )
         .get
         .addHeaders(
+          HeaderNames.USER_AGENT -> "gigahorse",
           HeaderNames.ACCEPT -> "application/json"
         )
       val f = http.run(r)
@@ -92,6 +93,9 @@ abstract class BaseHttpClientSpec extends AsyncFunSuite with TestHttpServer {
           "action" -> "query",
           "format" -> "json",
           "titles" -> "Mad_Max"
+        )
+        .addHeaders(
+          HeaderNames.USER_AGENT -> "gigahorse"
         )
         .get
       val f = http.run(r, Gigahorse.asString)
