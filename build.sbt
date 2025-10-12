@@ -16,7 +16,7 @@ ThisBuild / developers := List(
 )
 ThisBuild / version := "0.9.3-SNAPSHOT"
 ThisBuild / description := "Gigahorse is an HTTP client for Scala with multiple backend support."
-ThisBuild / licenses := Seq("Apache 2" -> new URL("http://www.apache.org/licenses/LICENSE-2.0.txt"))
+ThisBuild / licenses := Seq(License.Apache2)
 
 lazy val root = (project in file("."))
   .aggregate(
