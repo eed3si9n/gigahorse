@@ -2,8 +2,8 @@ import sbt.*
 
 object Dependencies {
   val scala212 = "2.12.20"
-  val scala213 = "2.13.16"
-  val scala3 = "3.3.5"
+  val scala213 = "2.13.17"
+  val scala3 = "3.3.7"
   val slf4jV = "1.7.28"
   val slf4jApi = "org.slf4j" % "slf4j-api" % slf4jV
   val jclOverSlf4j = "org.slf4j" % "jcl-over-slf4j" % slf4jV
