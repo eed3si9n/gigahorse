@@ -1,16 +1,15 @@
 import sbt.*
 
 object Dependencies {
-  val scala211 = "2.11.12"
   val scala212 = "2.12.20"
-  val scala213 = "2.13.16"
-  val scala3 = "3.3.5"
+  val scala213 = "2.13.17"
+  val scala3 = "3.3.7"
   val slf4jV = "1.7.28"
   val slf4jApi = "org.slf4j" % "slf4j-api" % slf4jV
   val jclOverSlf4j = "org.slf4j" % "jcl-over-slf4j" % slf4jV
   val ahc = "org.asynchttpclient" % "async-http-client" % "2.12.4"
   val scalatest = "org.scalatest" %% "scalatest-funsuite" % "3.2.19"
-  val sslConfig = "com.typesafe" %% "ssl-config-core" % "0.6.1"
+  val sslConfig = "com.typesafe" %% "ssl-config-core" % "0.7.0"
   val reactiveStreams = "org.reactivestreams" % "reactive-streams" % "1.0.3"
   val pekkoVersion = "1.1.2"
   val pekkoHttpVersion = "1.1.0"
