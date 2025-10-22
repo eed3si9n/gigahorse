@@ -19,6 +19,6 @@ Apache 2.0
   [netty]: http://netty.io
   [okhttp]: http://square.github.io/okhttp/
   [pekkohttp]: https://pekko.apache.org/docs/pekko-http/current/index.html
-  [sslconfig]: https://github.com/typesafehub/ssl-config
+  [sslconfig]: https://github.com/lightbend/ssl-config
   [config]: https://github.com/typesafehub/config
   [docs]: https://eed3si9n.com/gigahorse/

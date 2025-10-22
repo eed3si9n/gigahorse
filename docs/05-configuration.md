@@ -2,7 +2,7 @@
 out: configuration.html
 ---
 
-  [WsSSL]: https://www.playframework.com/documentation/2.4.x/WsSSL
+  [WsSSL]: https://www.playframework.com/documentation/latest/WsSSL
   [request]: request.html
 
 Configuring Gigahorse
