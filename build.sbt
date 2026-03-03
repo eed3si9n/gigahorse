@@ -161,6 +161,8 @@ lazy val apacheHttp = (project in file("apache-http"))
     commonSettings,
     fatalWarnings,
     name := "gigahorse-apache-http",
+    Compile / internalDependencyClasspath += (shadedApacheHttpClient5 / Compile / packageBin).value,
+    Test / internalDependencyClasspath += (shadedApacheHttpClient5 / Compile / packageBin).value,
     crossScalaVersions := Vector(scala212, scala213, scala3),
     libraryDependencies ++= testDeps.map(_ % Test),
   )
@@ -182,6 +184,8 @@ lazy val asynchttpclient = (project in file("asynchttpclient"))
     commonSettings,
     fatalWarnings,
     name := "gigahorse-asynchttpclient",
+    Compile / externalDependencyClasspath += (shadedAsyncHttpClient / ShadeSandbox / assembly).value,
+    Test / externalDependencyClasspath += (shadedAsyncHttpClient / ShadeSandbox / assembly).value,
     crossScalaVersions := Vector(scala212, scala213, scala3),
     libraryDependencies ++= testDeps.map(_ % Test),
   )
