@@ -44,8 +44,8 @@ def scala_library(
         tags = tags,
     )
     scalacopts_mod = scalacopts
-    if scalacopts_mod and ("-Xfatal-warnings" in scalacopts_mod):
-        scalacopts_mod.remove("-Xfatal-warnings")
+    if scalacopts_mod and ("-Werror" in scalacopts_mod):
+        scalacopts_mod.remove("-Werror")
 
     scala_semanticdb(
         name = "{}__semanticdb".format(name),

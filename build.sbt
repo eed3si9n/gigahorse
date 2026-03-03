@@ -77,7 +77,7 @@ lazy val commonSettings = List(
     "-language:higherKinds",
     "-language:implicitConversions",
   ),
-  Compile / console / scalacOptions --= Seq("-deprecation", "-Xfatal-warnings", "-Xlint"),
+  Compile / console / scalacOptions --= Seq("-deprecation", "-Werror", "-Xlint"),
   Test / fork := true,
   Compile / javaOptions += "-Xmx2G",
 )
@@ -85,7 +85,7 @@ lazy val commonSettings = List(
 lazy val fatalWarnings: Seq[Setting[?]] = List(
   scalacOptions ++= (scalaVersion.value match {
     case VersionNumber(Seq(2, 12, _*), _, _) =>
-      List("-Xfatal-warnings")
+      List("-Werror")
     case _ => Nil
   }),
 )
