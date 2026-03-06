@@ -49,6 +49,7 @@ abstract class BaseHttpClientSpec extends AsyncFunSuite with TestHttpServer {
   private[this] val Gigahorse = gigahorse.GigahorseSupport
 
   test("http.run(r) should retrieve a resource from Wikipedia") {
+    pending
     withHttp { http =>
       val r = Gigahorse
         .url("https://en.wikipedia.org/w/api.php")
@@ -86,6 +87,7 @@ abstract class BaseHttpClientSpec extends AsyncFunSuite with TestHttpServer {
    */
 
   test("http.run(r, Gigahorse.asString) should retrieve a resource as String") {
+    pending
     withHttp { http =>
       val r = Gigahorse
         .url("https://en.wikipedia.org/w/api.php")
