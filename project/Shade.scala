@@ -1,6 +1,8 @@
 import sbt.*
 import Keys.*
 import sbtassembly.AssemblyPlugin.autoImport.*
+import java.io.ByteArrayInputStream
+import java.nio.charset.StandardCharsets
 import xml.{ NodeSeq, Node as XNode, Elem }
 import xml.transform.{ RuleTransformer, RewriteRule }
 
@@ -21,7 +23,8 @@ object Shade {
             ShadeRule.zap("org.slf4j.**").inAll
           ),
           assembly / assemblyOption := (assembly / assemblyOption).value
-            .copy(includeBin = false, includeScala = false),
+            .withIncludeBin(false)
+            .withIncludeScala(false),
           // cut ties with Runtime
           assembly / fullClasspath := fullClasspath.value,
           // cut ties with Runtime
@@ -33,7 +36,6 @@ object Shade {
         )
     ) ++ Seq(
       Compile / packageBin := (ShadeSandbox / assembly).value,
-      exportJars := true
     )
 
   def ahcShadeSettings: Seq[Setting[_]] =
@@ -60,7 +62,8 @@ object Shade {
             ShadeRule.zap("org.slf4j.**").inAll
           ),
           assembly / assemblyOption := (assembly / assemblyOption).value
-            .copy(includeBin = false, includeScala = false),
+            .withIncludeBin(false)
+            .withIncludeScala(false),
           // cut ties with Runtime
           assembly / fullClasspath := fullClasspath.value,
           // cut ties with Runtime
@@ -72,32 +75,32 @@ object Shade {
         )
     ) ++ Seq(
       Compile / packageBin := (ShadeSandbox / assembly).value,
-      exportJars := true
     )
 
-  val ahcMerge: sbtassembly.MergeStrategy = new sbtassembly.MergeStrategy {
-    def apply(
-        tempDir: File,
-        path: String,
-        files: Seq[File]
-    ): Either[String, Seq[(File, String)]] = {
-      import scala.collection.JavaConverters.*
-      val file = MergeStrategy.createMergeTarget(tempDir, path)
-      val lines = IO.readLines(files.head)
-      lines.foreach { line =>
-        // In AsyncHttpClientConfigDefaults.java, the shading renames the resource keys
-        // so we have to manually tweak the resource file to match.
-        val shadedline =
-          line.replaceAllLiterally("org.asynchttpclient", s"$shadePrefix.org.asynchttpclient")
-        IO.append(file, line)
-        IO.append(file, IO.Newline.getBytes(IO.defaultCharset))
-        IO.append(file, shadedline)
-        IO.append(file, IO.Newline.getBytes(IO.defaultCharset))
-      }
-      Right(Seq(file -> path))
-    }
+  val ahcMerge: sbtassembly.MergeStrategy = sbtassembly.CustomMergeStrategy("ahcMerge") {
+    dependencies =>
+      val Seq(resourceFile) = dependencies
+      val result = () => {
+        val newLines = IO
+          .readStream(resourceFile.stream.apply())
+          .linesIterator
+          .flatMap { line =>
+            // In AsyncHttpClientConfigDefaults.java, the shading renames the resource keys
+            // so we have to manually tweak the resource file to match.
+            val shadedline =
+              line.replaceAllLiterally("org.asynchttpclient", s"$shadePrefix.org.asynchttpclient")
 
-    override val name: String = "ahcMerge"
+            Seq(
+              line,
+              IO.Newline,
+              shadedline,
+              IO.Newline
+            )
+          }
+          .mkString
+        new ByteArrayInputStream(newLines.getBytes(StandardCharsets.UTF_8))
+      }
+      Right(Vector(JarEntry(resourceFile.target, result)))
   }
 
   def dependenciesFilter(n: XNode) = new RuleTransformer(new RewriteRule {
