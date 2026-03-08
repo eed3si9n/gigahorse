@@ -29,9 +29,9 @@ import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.Route
-import okhttp3.{ OkHttpClient as XOkHttpClient }
-import okhttp3.{ Request as XRequest }
-import okhttp3.{ Response as XResponse }
+import okhttp3.OkHttpClient as XOkHttpClient
+import okhttp3.Request as XRequest
+import okhttp3.Response as XResponse
 import okio.Okio
 
 import java.io.ByteArrayOutputStream
@@ -85,7 +85,7 @@ class OkhClient(config: Config) extends HttpClient {
     val u: HttpUrl =
       queryString match {
         case qs if qs.isEmpty => u0
-        case _ =>
+        case _                =>
           val b0 = u0.newBuilder
           val urlfs: List[HB => HB] =
             for {

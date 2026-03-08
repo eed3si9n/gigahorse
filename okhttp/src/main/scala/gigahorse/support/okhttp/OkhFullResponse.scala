@@ -17,7 +17,7 @@
 package gigahorse
 package support.okhttp
 
-import okhttp3.{ Response as XResponse }
+import okhttp3.Response as XResponse
 
 import java.nio.ByteBuffer
 import scala.collection.JavaConverters.*

@@ -17,9 +17,9 @@
 package gigahorse
 package support.okhttp
 
-import okhttp3.{ Response as XResponse }
-import okhttp3.{ WebSocket as XWebSocket }
-import okhttp3.{ WebSocketListener as XWebSocketListener }
+import okhttp3.Response as XResponse
+import okhttp3.WebSocket as XWebSocket
+import okhttp3.WebSocketListener as XWebSocketListener
 import okio.ByteString
 
 import scala.concurrent.Promise

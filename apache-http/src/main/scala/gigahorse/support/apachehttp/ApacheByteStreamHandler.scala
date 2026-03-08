@@ -18,7 +18,7 @@ package gigahorse
 package support.apachehttp
 
 import java.nio.ByteBuffer
-import shaded.apache.org.apache.hc.core5.http.{ Header as XHeader }
+import shaded.apache.org.apache.hc.core5.http.Header as XHeader
 
 /**
  * Wrapper around org.apache.hc.client5.http.async.methods.AbstractBinResponseConsumer.
