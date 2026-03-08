@@ -18,7 +18,7 @@ package gigahorse
 package support.apachehttp
 
 import java.io.{ ByteArrayInputStream, FileInputStream, InputStream }
-import java.{ util as ju }
+import java.util as ju
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import shaded.apache.org.apache.hc.core5

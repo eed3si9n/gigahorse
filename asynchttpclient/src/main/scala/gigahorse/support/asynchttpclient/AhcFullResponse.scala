@@ -19,7 +19,7 @@ package gigahorse
 package support.asynchttpclient
 
 import scala.collection.JavaConverters.*
-import shaded.ahc.org.asynchttpclient.{ Response as XResponse }
+import shaded.ahc.org.asynchttpclient.Response as XResponse
 import shaded.ahc.org.asynchttpclient.util.HttpUtils
 import java.nio.charset.Charset
 import java.nio.ByteBuffer

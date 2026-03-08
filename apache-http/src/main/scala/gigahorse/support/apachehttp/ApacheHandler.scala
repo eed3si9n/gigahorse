@@ -17,7 +17,7 @@
 package gigahorse
 package support.apachehttp
 
-import shaded.apache.org.apache.hc.core5.http.{ Header as XHeader }
+import shaded.apache.org.apache.hc.core5.http.Header as XHeader
 
 trait ApacheHandler {
   def onStatusReceived(code: Int): Unit

@@ -30,12 +30,12 @@ import shaded.ahc.org.asynchttpclient.{
   AsyncHandler as _,
   *
 }
-import shaded.ahc.org.asynchttpclient.AsyncHandler.{ State as XState }
+import shaded.ahc.org.asynchttpclient.AsyncHandler.State as XState
 import shaded.ahc.org.asynchttpclient.handler.StreamedAsyncHandler
 import shaded.ahc.org.asynchttpclient.request.body.generator.FileBodyGenerator
 import shaded.ahc.org.asynchttpclient.request.body.multipart.{ ByteArrayPart, FilePart }
 import shaded.ahc.org.asynchttpclient.proxy.{ ProxyServer as XProxyServer, ProxyType as XProxyType }
-import shaded.ahc.org.asynchttpclient.Realm.{ AuthScheme as XAuthScheme }
+import shaded.ahc.org.asynchttpclient.Realm.AuthScheme as XAuthScheme
 import shaded.ahc.org.asynchttpclient.ws.WebSocketUpgradeHandler
 import org.reactivestreams.Publisher
 import DownloadHandler.asFile
@@ -212,7 +212,7 @@ class AhcHttpClient(config: AsyncHttpClientConfig) extends ReactiveHttpClient {
     }
 
     val (builderWithBody, updatedHeaders) = body match {
-      case b: EmptyBody => (builder, request.headers)
+      case b: EmptyBody    => (builder, request.headers)
       case b: InMemoryBody =>
         builder.setBody(b.bytes)
         (builder, request.headers)

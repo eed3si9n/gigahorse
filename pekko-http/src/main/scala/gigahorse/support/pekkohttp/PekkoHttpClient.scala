@@ -205,7 +205,7 @@ class PekkoHttpClient(config: Config, system: ActorSystem)(implicit fm: Material
   private def buildEntity(request: Request): Future[RequestEntity] = {
     implicit val ec = system.dispatcher
     request.body match {
-      case _: EmptyBody => Future(HttpEntity.Empty)
+      case _: EmptyBody    => Future(HttpEntity.Empty)
       case b: InMemoryBody =>
         val ct =
           ContentType.parse(request.contentType.getOrElse("text/plain; charset=utf-8")) match {

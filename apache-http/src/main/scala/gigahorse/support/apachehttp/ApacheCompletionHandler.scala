@@ -17,7 +17,7 @@
 package gigahorse
 package support.apachehttp
 
-import shaded.apache.org.apache.hc.core5.http.{ Header as XHeader }
+import shaded.apache.org.apache.hc.core5.http.Header as XHeader
 
 abstract class ApacheCompletionHandler[A] extends CompletionHandler[A] with ApacheHandler {
   override def onStatusReceived(status: Int): Unit = ()

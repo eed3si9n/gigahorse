@@ -17,7 +17,7 @@
 
 package gigahorse
 
-import com.typesafe.config.{ Config as XConfig }
+import com.typesafe.config.Config as XConfig
 import com.typesafe.sslconfig.ssl.SSLConfigFactory
 
 import java.io.File
