@@ -72,4 +72,4 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v6
-    - uses: jrouly/scalafmt-native-action@v4
+    - uses: jrouly/scalafmt-native-action@v5
