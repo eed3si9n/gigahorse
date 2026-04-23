@@ -17,7 +17,7 @@ object Dependencies {
   val pekkoStream = "org.apache.pekko" %% "pekko-stream" % pekkoVersion
   val pekkoHttp = "org.apache.pekko" %% "pekko-http" % pekkoHttpVersion
   val okHttp = "com.squareup.okhttp3" % "okhttp" % "3.14.2"
-  val httpClient5 = "org.apache.httpcomponents.client5" % "httpclient5" % "5.4.3"
+  val httpClient5 = "org.apache.httpcomponents.client5" % "httpclient5" % "5.6.1"
   val unfilteredVersion = "0.12.1"
   val ufDirectives = "ws.unfiltered" %% "unfiltered-directives" % unfilteredVersion
   val ufFilter = "ws.unfiltered" %% "unfiltered-filter" % unfilteredVersion
