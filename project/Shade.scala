@@ -11,7 +11,7 @@ object Shade {
   val shadePrefix2 = "gigahorse.shaded.apache"
   val ShadeSandbox = config("shade").hide
 
-  def apacheShadeSettings: Seq[Setting[_]] =
+  def apacheShadeSettings: Seq[Setting[?]] =
     inConfig(ShadeSandbox)(
       Defaults.configSettings ++
         baseAssemblySettings ++ Seq(
@@ -38,7 +38,7 @@ object Shade {
       Compile / packageBin := (ShadeSandbox / assembly).value,
     )
 
-  def ahcShadeSettings: Seq[Setting[_]] =
+  def ahcShadeSettings: Seq[Setting[?]] =
     inConfig(ShadeSandbox)(
       Defaults.configSettings ++
         baseAssemblySettings ++ Seq(
