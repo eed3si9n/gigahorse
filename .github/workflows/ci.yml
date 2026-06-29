@@ -45,7 +45,7 @@ jobs:
         cache: sbt
     - uses: sbt/setup-sbt@v1
     - name: Bazel cache
-      uses: actions/cache@v5
+      uses: actions/cache@v6
       with:
         path: "/home/runner/.cache/bazel"
         key: bazel-${{ hashFiles('.bazelrc', '.bazeliskrc', 'WORKSPACE', 'WORKSPACE.bazel', 'MODULE.bazel') }}
