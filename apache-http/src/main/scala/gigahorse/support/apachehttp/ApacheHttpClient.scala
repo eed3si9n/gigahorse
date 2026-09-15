@@ -32,16 +32,17 @@ import client5.http.async.methods.{
   SimpleRequestProducer,
   SimpleResponseConsumer,
 }
-import client5.http.auth.{ AuthScope, CredentialsProvider, UsernamePasswordCredentials }
+import client5.http.auth.{ AuthCache, AuthScope, CredentialsProvider, UsernamePasswordCredentials }
 import client5.http.config.RequestConfig
 import client5.http.impl.async.{
   CloseableHttpAsyncClient as XClient,
   HttpAsyncClientBuilder,
   HttpAsyncClients,
 }
-import client5.http.impl.auth.CredentialsProviderBuilder
+import client5.http.impl.auth.{ BasicAuthCache, BasicScheme, CredentialsProviderBuilder }
 import client5.http.impl.nio.PoolingAsyncClientConnectionManager
 import client5.http.protocol.HttpClientContext
+import client5.http.utils.URIUtils
 import core5.concurrent.FutureCallback
 
 import core5.http.{
@@ -165,8 +166,33 @@ class ApacheHttpClient(config: Config) extends HttpClient {
       .setRedirectsEnabled(request.followRedirectsOpt.getOrElse(config.followRedirects))
       .build()
     context.setRequestConfig(requestConfig)
+    request.authOpt.flatMap(buildAuthCache(_, request.url)).foreach(context.setAuthCache)
     context
   }
+
+  /**
+   * Returns an `AuthCache` pre-seeded with the credentials for the request's target host, so that
+   * they are sent on the first request rather than after a 401 challenge. This is what
+   * `Realm.usePreemptiveAuth` asks for, and it matches the AsyncHttpClient backend, which passes
+   * the same flag to `Realm.Builder#setUsePreemptiveAuth`.
+   *
+   * Returns None when the realm opts out, or when the scheme cannot be pre-seeded, in which case
+   * the request falls back to challenge/response via the credentials provider. Only Basic can be
+   * pre-seeded: Digest needs a nonce that only the server's challenge can supply.
+   */
+  private def buildAuthCache(auth: Realm, url: String): Option[AuthCache] =
+    auth.scheme match {
+      case AuthScheme.Basic if auth.usePreemptiveAuth =>
+        val scheme = new BasicScheme()
+        scheme.initPreemptive(
+          new UsernamePasswordCredentials(auth.username, auth.password.toCharArray())
+        )
+        val cache = new BasicAuthCache()
+        // Seeded for the target host only, so a redirect elsewhere gets no preemptive credentials.
+        cache.put(URIUtils.extractHost(new URI(url)), scheme)
+        Some(cache)
+      case _ => None
+    }
 
   def download(request: Request, file: File): Future[File] =
     processByteStream(

@@ -43,6 +43,14 @@ object TestPlan {
           Ok ~> ResponseString("auth ok")
         case _ => Fail
       }
+    // requires credentials on the very first request and never issues a challenge, the way a
+    // repository that rejects anonymous uploads outright does
+    case r @ GET(Path(Seg("preemptive-auth" :: Nil))) =>
+      r match {
+        case BasicAuth(u, p) if (verify(u, p)) =>
+          Ok ~> ResponseString("auth ok")
+        case _ => Forbidden ~> ResponseString("anonymous request rejected")
+      }
     // redirects back to this same server under a different host name, so that a client which
     // scopes credentials by host will not send them to the target
     case r @ GET(Path(Seg("redirect-cross-host" :: Nil))) =>
