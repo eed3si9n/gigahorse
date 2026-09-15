@@ -21,13 +21,46 @@ import scala.concurrent.Future
 
 class ApacheHttpClientSpec extends BaseHttpClientSpec {
   import gigahorse.support.apachehttp.Gigahorse
+
+  test("withFollowRedirects(false) should disable redirects") {
+    withHttp { http =>
+      val request = Gigahorse.url(s"${testUrl}redirect").withFollowRedirects(false)
+      http.processFull(request).map { response =>
+        assert(response.status == 307)
+      }
+    }
+  }
+
+  test("client configuration should disable redirects") {
+    withHttpConfig(Gigahorse.config.withFollowRedirects(false)) { http =>
+      val request = Gigahorse.url(s"${testUrl}redirect")
+      http.processFull(request).map { response =>
+        assert(response.status == 307)
+      }
+    }
+  }
+
+  test("request configuration should override client redirect configuration") {
+    withHttpConfig(Gigahorse.config.withFollowRedirects(false)) { http =>
+      val request = Gigahorse.url(s"${testUrl}redirect").withFollowRedirects(true)
+      http.processFull(request).map { response =>
+        assert(response.bodyAsString == "redirect ok")
+      }
+    }
+  }
+
   // custom loan pattern
-  override def withHttp(testCode: gigahorse.HttpClient => Future[Assertion]): Future[Assertion] = {
+  override def withHttp(testCode: gigahorse.HttpClient => Future[Assertion]): Future[Assertion] =
+    withHttpConfig(Gigahorse.config)(testCode)
+
+  private def withHttpConfig(config: gigahorse.Config)(
+      testCode: gigahorse.HttpClient => Future[Assertion]
+  ): Future[Assertion] = {
     val server = getServer
     server.start()
     val wsServer = getWsServer
     wsServer.start()
-    val http = Gigahorse.http(Gigahorse.config)
+    val http = Gigahorse.http(config)
     complete {
       testCode(http)
     } lastly {

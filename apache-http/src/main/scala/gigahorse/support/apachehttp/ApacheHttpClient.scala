@@ -33,6 +33,7 @@ import client5.http.async.methods.{
   SimpleResponseConsumer,
 }
 import client5.http.auth.{ AuthScope, CredentialsProvider, UsernamePasswordCredentials }
+import client5.http.config.RequestConfig
 import client5.http.impl.async.{
   CloseableHttpAsyncClient as XClient,
   HttpAsyncClientBuilder,
@@ -40,6 +41,7 @@ import client5.http.impl.async.{
 }
 import client5.http.impl.auth.CredentialsProviderBuilder
 import client5.http.impl.nio.PoolingAsyncClientConnectionManager
+import client5.http.protocol.HttpClientContext
 import core5.concurrent.FutureCallback
 
 import core5.http.{
@@ -156,6 +158,16 @@ class ApacheHttpClient(config: Config) extends HttpClient {
     builder
   }
 
+  private def buildContext(request: Request): HttpClientContext = {
+    val context = HttpClientContext.create()
+    val requestConfig = RequestConfig
+      .custom()
+      .setRedirectsEnabled(request.followRedirectsOpt.getOrElse(config.followRedirects))
+      .build()
+    context.setRequestConfig(requestConfig)
+    context
+  }
+
   def download(request: Request, file: File): Future[File] =
     processByteStream(
       request,
@@ -197,6 +209,7 @@ class ApacheHttpClient(config: Config) extends HttpClient {
     client.execute(
       buildRequestProducer(request),
       SimpleResponseConsumer.create(),
+      buildContext(request),
       new FutureCallback[SimpleHttpResponse] {
         def completed(response: SimpleHttpResponse): Unit =
           attempt(result) {
@@ -243,6 +256,7 @@ class ApacheHttpClient(config: Config) extends HttpClient {
         override def buildResult(): Unit = ()
         override def releaseResources(): Unit = ()
       },
+      buildContext(request),
       new FutureCallback[Unit] {
         def completed(u: Unit): Unit =
           attempt(result) {
@@ -279,6 +293,7 @@ class ApacheHttpClient(config: Config) extends HttpClient {
         override def buildResult(): Unit = ()
         override def releaseResources(): Unit = ()
       },
+      buildContext(request),
       new FutureCallback[Unit] {
         def completed(u: Unit): Unit =
           attempt(result) {
