@@ -49,6 +49,29 @@ class ApacheHttpClientSpec extends BaseHttpClientSpec {
     }
   }
 
+  test("credentials configured for one realm should not answer another realm's challenge") {
+    withHttp { http =>
+      // the /auth-realm-mismatch route challenges with `Basic realm="some-other-realm"`
+      val r = Gigahorse.url(s"${testUrl}auth-realm-mismatch")
+      val auth = gigahorse
+        .Realm(username = "admin", password = "***")
+        .withRealmName("configured-realm")
+        .withUsePreemptiveAuth(false)
+      http.processFull(r.withAuth(auth)).map { response =>
+        assert(response.status == 401)
+      }
+    }
+  }
+
+  test("credentials should not be sent to a redirect target on a different host") {
+    withHttp { http =>
+      val r = Gigahorse.url(s"${testUrl}redirect-cross-host")
+      http.processFull(r.withAuth("admin", "***")).map { response =>
+        assert(response.status == 401)
+      }
+    }
+  }
+
   // custom loan pattern
   override def withHttp(testCode: gigahorse.HttpClient => Future[Assertion]): Future[Assertion] =
     withHttpConfig(Gigahorse.config)(testCode)

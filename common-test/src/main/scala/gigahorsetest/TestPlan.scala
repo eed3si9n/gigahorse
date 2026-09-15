@@ -25,6 +25,7 @@ import unfiltered.netty.request.*
 
 object TestPlan {
   val Fail = Unauthorized ~> WWWAuthenticate("""Basic realm="/"""")
+  val FailOtherRealm = Unauthorized ~> WWWAuthenticate("""Basic realm="some-other-realm"""")
 
   def testPlan = cycle.Planify {
     case GET(Path(Seg("500" :: Nil))) =>
@@ -41,6 +42,19 @@ object TestPlan {
         case BasicAuth(u, p) if (verify(u, p)) =>
           Ok ~> ResponseString("auth ok")
         case _ => Fail
+      }
+    // redirects back to this same server under a different host name, so that a client which
+    // scopes credentials by host will not send them to the target
+    case r @ GET(Path(Seg("redirect-cross-host" :: Nil))) =>
+      val hostHeader = r.headers("Host").toList.headOption.getOrElse("localhost")
+      TemporaryRedirect ~> Location(s"http://${hostHeader.replace("localhost", "127.0.0.1")}/auth")
+    // test basic auth where the realm the server challenges with differs from the realm name
+    // configured on the client
+    case r @ GET(Path(Seg("auth-realm-mismatch" :: Nil))) =>
+      r match {
+        case BasicAuth(u, p) if (verify(u, p)) =>
+          Ok ~> ResponseString("auth ok")
+        case _ => FailOtherRealm
       }
     // form
     case POST(Path("/form")) & Params(params) =>
