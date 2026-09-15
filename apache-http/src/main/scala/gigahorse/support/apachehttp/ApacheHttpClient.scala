@@ -78,7 +78,7 @@ class ApacheHttpClient(config: Config) extends HttpClient {
     .setSoTimeout(Timeout.ofSeconds(5))
     .build()
 
-  override def underlying[A]: A = buildClient(None, None, None).asInstanceOf[A]
+  override def underlying[A]: A = buildClient(config.authOpt, None, None).asInstanceOf[A]
 
   override def close(): Unit = {
     clients.values.foreach(_.close())
@@ -166,7 +166,7 @@ class ApacheHttpClient(config: Config) extends HttpClient {
       .setRedirectsEnabled(request.followRedirectsOpt.getOrElse(config.followRedirects))
       .build()
     context.setRequestConfig(requestConfig)
-    request.authOpt.flatMap(buildAuthCache(_, request.url)).foreach(context.setAuthCache)
+    effectiveAuth(request).flatMap(buildAuthCache(_, request.url)).foreach(context.setAuthCache)
     context
   }
 
@@ -334,10 +334,15 @@ class ApacheHttpClient(config: Config) extends HttpClient {
 
   def buildClient(request: Request): XClient = {
     val u = new URI(request.url)
-    if (request.authOpt.isDefined || request.signatureOpt.isDefined)
-      buildClient(request.authOpt, request.signatureOpt, Option(u.getHost()))
-    else buildClient(request.authOpt, request.signatureOpt, Option(u.getHost()))
+    buildClient(effectiveAuth(request), request.signatureOpt, Option(u.getHost()))
   }
+
+  /**
+   * The realm in effect for a request. A request-level realm wins over the client-level one, so
+   * that `Config.authOpt` acts as the default for every request, as it does on the other backends.
+   */
+  private def effectiveAuth(request: Request): Option[Realm] =
+    request.authOpt.orElse(config.authOpt)
 
   def buildClient(
       authOpt: Option[Realm],

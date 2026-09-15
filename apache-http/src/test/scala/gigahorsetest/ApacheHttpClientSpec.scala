@@ -49,6 +49,36 @@ class ApacheHttpClientSpec extends BaseHttpClientSpec {
     }
   }
 
+  test("client configuration should supply credentials preemptively") {
+    withHttpConfig(Gigahorse.config.withAuth("admin", "***")) { http =>
+      val r = Gigahorse.url(s"${testUrl}preemptive-auth")
+      http.run(r, Gigahorse.asString).map { s =>
+        assert(s contains "auth ok")
+      }
+    }
+  }
+
+  test("client configuration should supply credentials to answer a challenge") {
+    val auth = gigahorse
+      .Realm(username = "admin", password = "***")
+      .withUsePreemptiveAuth(false)
+    withHttpConfig(Gigahorse.config.withAuth(auth)) { http =>
+      val r = Gigahorse.url(s"${testUrl}auth")
+      http.run(r, Gigahorse.asString).map { s =>
+        assert(s contains "auth ok")
+      }
+    }
+  }
+
+  test("request credentials should override client configuration") {
+    withHttpConfig(Gigahorse.config.withAuth("wrong-user", "***")) { http =>
+      val r = Gigahorse.url(s"${testUrl}preemptive-auth").withAuth("admin", "***")
+      http.run(r, Gigahorse.asString).map { s =>
+        assert(s contains "auth ok")
+      }
+    }
+  }
+
   test("credentials configured for one realm should not answer another realm's challenge") {
     withHttp { http =>
       // the /auth-realm-mismatch route challenges with `Basic realm="some-other-realm"`
