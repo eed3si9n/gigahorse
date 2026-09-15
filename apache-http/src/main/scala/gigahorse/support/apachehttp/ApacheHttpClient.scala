@@ -345,7 +345,7 @@ class ApacheHttpClient(config: Config) extends HttpClient {
       (authOpt match {
         case Some(auth) =>
           List[CB => CB]({ case b: CB =>
-            b.setDefaultCredentialsProvider(buildCredentialProvider(auth))
+            b.setDefaultCredentialsProvider(buildCredentialProvider(auth, targetOpt))
           })
         case None => Nil
       }) :::
@@ -363,17 +363,16 @@ class ApacheHttpClient(config: Config) extends HttpClient {
 
   // https://hc.apache.org/httpcomponents-client-5.4.x/current/httpclient5/apidocs/org/apache/hc/client5/http/auth/AuthScope.html
   def buildCredentialProvider(auth: Realm): CredentialsProvider =
+    buildCredentialProvider(auth, None)
+
+  def buildCredentialProvider(auth: Realm, targetOpt: Option[String]): CredentialsProvider =
     auth.scheme match {
       case AuthScheme.Basic =>
-        val scope = auth.realmNameOpt match {
-          case Some(realm) => new AuthScope(null, null, -1, realm, null)
-          case _           => new AuthScope(null, null, -1, null, null)
-        }
         val credentials =
           new UsernamePasswordCredentials(auth.username, auth.password.toCharArray())
-        val p = CredentialsProviderBuilder.create()
-        p.add(scope, credentials)
-        p.build()
+        val host = targetOpt.orNull
+        val scope = new AuthScope(null, host, -1, auth.realmNameOpt.orNull, null)
+        CredentialsProviderBuilder.create().add(scope, credentials).build()
       case _ =>
         sys.error(s"unsupported scheme: ${auth.scheme}")
     }

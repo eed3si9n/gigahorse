@@ -22,6 +22,7 @@ import gigahorse.{
   HeaderNames,
   MimeTypes,
   MultipartFormBody,
+  Realm,
   SignatureCalculator,
   WebSocketEvent,
 }
@@ -113,6 +114,18 @@ abstract class BaseHttpClientSpec extends AsyncFunSuite with TestHttpServer {
     withHttp { http =>
       val r = Gigahorse.url(s"${testUrl}auth")
       val f = http.run(r.withAuth("admin", "***"), Gigahorse.asString)
+      f map { s =>
+        assert(s contains "auth ok")
+      }
+    }
+  }
+
+  test("http.run(r.withAuth(realm matching the server challenge), f) should authenticate") {
+    withHttp { http =>
+      // the /auth route challenges with `Basic realm="/"`
+      val r = Gigahorse.url(s"${testUrl}auth")
+      val auth = Realm(username = "admin", password = "***").withRealmName("/")
+      val f = http.run(r.withAuth(auth), Gigahorse.asString)
       f map { s =>
         assert(s contains "auth ok")
       }
