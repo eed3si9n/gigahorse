@@ -40,7 +40,8 @@ import client5.http.impl.async.{
   HttpAsyncClients,
 }
 import client5.http.impl.auth.{ BasicAuthCache, BasicScheme, CredentialsProviderBuilder }
-import client5.http.impl.nio.PoolingAsyncClientConnectionManager
+import client5.http.config.TlsConfig
+import client5.http.impl.nio.PoolingAsyncClientConnectionManagerBuilder
 import client5.http.protocol.HttpClientContext
 import client5.http.utils.URIUtils
 import core5.concurrent.FutureCallback
@@ -58,6 +59,7 @@ import core5.http.nio.{ AsyncEntityProducer, AsyncRequestProducer, DataStreamCha
 import core5.http.nio.entity.FileEntityProducer
 import core5.http.nio.support.BasicRequestProducer
 import core5.http.protocol.HttpContext
+import core5.http2.HttpVersionPolicy as XHttpVersionPolicy
 import core5.reactor.IOReactorConfig
 import core5.util.Timeout
 
@@ -361,18 +363,21 @@ class ApacheHttpClient(config: Config) extends HttpClient {
       signatureOpt: Option[SignatureCalculator],
       targetOpt: Option[String],
   ): XClient = {
-    val clientfs: List[CB => CB] = List[CB => CB]((b: CB) =>
-      if (config.maxConnections > 0 || config.maxConnectionsPerHost > 0) {
-        val manager = new PoolingAsyncClientConnectionManager()
-        if (config.maxConnections > 0) {
-          manager.setMaxTotal(config.maxConnections)
-        }
-        if (config.maxConnectionsPerHost > 0) {
-          manager.setDefaultMaxPerRoute(config.maxConnectionsPerHost)
-        }
-        b.setConnectionManager(manager)
-      } else b
-    ) :::
+    // The connection manager is always installed, because the TLS configuration that carries the
+    // protocol version policy lives on it. Without one, HttpClient defaults the policy to
+    // NEGOTIATE, which upgrades to HTTP/2 over TLS whenever the server offers it.
+    val clientfs: List[CB => CB] = List[CB => CB]((b: CB) => {
+      val managerBuilder = PoolingAsyncClientConnectionManagerBuilder
+        .create()
+        .setDefaultTlsConfig(buildTlsConfig)
+      if (config.maxConnections > 0) {
+        managerBuilder.setMaxConnTotal(config.maxConnections)
+      }
+      if (config.maxConnectionsPerHost > 0) {
+        managerBuilder.setMaxConnPerRoute(config.maxConnectionsPerHost)
+      }
+      b.setConnectionManager(managerBuilder.build())
+    }) :::
       (authOpt match {
         case Some(auth) =>
           List[CB => CB]({ case b: CB =>
@@ -391,6 +396,16 @@ class ApacheHttpClient(config: Config) extends HttpClient {
     val result = b1.build()
     result
   }
+
+  private def buildTlsConfig: TlsConfig =
+    TlsConfig
+      .custom()
+      .setVersionPolicy(config.httpVersionPolicy match {
+        case HttpVersionPolicy.Http1_1   => XHttpVersionPolicy.FORCE_HTTP_1
+        case HttpVersionPolicy.Http2     => XHttpVersionPolicy.FORCE_HTTP_2
+        case HttpVersionPolicy.Negotiate => XHttpVersionPolicy.NEGOTIATE
+      })
+      .build()
 
   // https://hc.apache.org/httpcomponents-client-5.4.x/current/httpclient5/apidocs/org/apache/hc/client5/http/auth/AuthScope.html
   def buildCredentialProvider(auth: Realm): CredentialsProvider =
