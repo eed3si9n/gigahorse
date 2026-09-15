@@ -43,6 +43,9 @@ abstract class BaseHttpClientSpec extends AsyncFunSuite with TestHttpServer {
     _.handler(WsTestPlan.testPlan)
   }
   def isWebSocketSupported: Boolean = true
+
+  /** Whether the backend honors `Realm.usePreemptiveAuth` by sending credentials unchallenged. */
+  def isPreemptiveAuthSupported: Boolean = true
   def uploadEndpoint = "upload"
 
   // custom loan pattern
@@ -118,6 +121,18 @@ abstract class BaseHttpClientSpec extends AsyncFunSuite with TestHttpServer {
         assert(s contains "auth ok")
       }
     }
+  }
+
+  test("http.run(r.withAuth(...), f) should send credentials without waiting for a challenge") {
+    (if (isPreemptiveAuthSupported)
+       withHttp { http =>
+         val r = Gigahorse.url(s"${testUrl}preemptive-auth")
+         val f = http.run(r.withAuth("admin", "***"), Gigahorse.asString)
+         f map { s =>
+           assert(s contains "auth ok")
+         }
+       }
+     else cancel())
   }
 
   test("http.run(r.withAuth(realm matching the server challenge), f) should authenticate") {

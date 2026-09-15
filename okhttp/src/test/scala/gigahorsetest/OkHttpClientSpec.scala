@@ -22,6 +22,11 @@ import scala.concurrent.Future
 class OkHttpClientSpec extends BaseHttpClientSpec {
   import gigahorse.support.okhttp.Gigahorse
   // custom loan pattern
+  // OkHttp drives auth through Authenticator, which is only invoked in response to a 401/407
+  // challenge, so Realm.usePreemptiveAuth cannot be honored without rebuilding auth as an
+  // interceptor. See PLAN.md.
+  override def isPreemptiveAuthSupported: Boolean = false
+
   override def withHttp(testCode: gigahorse.HttpClient => Future[Assertion]): Future[Assertion] = {
     val server = getServer
     server.start()
