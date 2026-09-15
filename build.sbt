@@ -14,7 +14,7 @@ ThisBuild / scmInfo := Some(
 ThisBuild / developers := List(
   Developer("eed3si9n", "Eugene Yokota", "@eed3si9n", url("https://github.com/eed3si9n"))
 )
-ThisBuild / version := "0.9.3-SNAPSHOT"
+ThisBuild / version := "0.9.6-SNAPSHOT"
 ThisBuild / description := "Gigahorse is an HTTP client for Scala with multiple backend support."
 ThisBuild / licenses := Seq(License.Apache2)
 
@@ -60,9 +60,9 @@ lazy val root = (project in file("."))
 
 lazy val commonSettings = List(
   publishTo := {
-    val nexus = "https://oss.sonatype.org/"
-    if (isSnapshot.value) Some("snapshots" at nexus + "content/repositories/snapshots")
-    else Some("releases" at nexus + "service/local/staging/deploy/maven2")
+    val centralSnapshots = "https://central.sonatype.com/repository/maven-snapshots/"
+    if (version.value.endsWith("-SNAPSHOT")) Some("central-snapshots" at centralSnapshots)
+    else localStaging.value
   },
   scalacOptions ++= Seq(
     "-encoding",
