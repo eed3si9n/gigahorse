@@ -49,6 +49,28 @@ class ApacheHttpClientSpec extends BaseHttpClientSpec {
     }
   }
 
+  test("httpVersionPolicy of Http1_1 should still complete a request") {
+    withHttpConfig(Gigahorse.config.withHttpVersionPolicy(gigahorse.HttpVersionPolicy.Http1_1)) {
+      http =>
+        val r = Gigahorse.url(s"${testUrl}auth")
+        http.processFull(r).map { response =>
+          assert(response.status == 401)
+        }
+    }
+  }
+
+  // The test server speaks HTTP/1.1 only, so forcing HTTP/2 must fail. If the policy were being
+  // dropped on the floor the request would quietly succeed over HTTP/1.1 instead.
+  test("httpVersionPolicy of Http2 should be applied to the connection") {
+    withHttpConfig(Gigahorse.config.withHttpVersionPolicy(gigahorse.HttpVersionPolicy.Http2)) {
+      http =>
+        val r = Gigahorse.url(s"${testUrl}auth")
+        http.processFull(r).failed.map { e =>
+          assert(e ne null)
+        }
+    }
+  }
+
   test("client configuration should supply credentials preemptively") {
     withHttpConfig(Gigahorse.config.withAuth("admin", "***")) { http =>
       val r = Gigahorse.url(s"${testUrl}preemptive-auth")

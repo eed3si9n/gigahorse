@@ -101,8 +101,16 @@ type Config {
   maxCacheSize: gigahorse.ConfigMemorySize! =
     raw"ConfigDefaults.defaultMaxCacheSize" @since("0.1.0")
 
+  ## Which HTTP protocol version to use. (Default: negotiate)
+  httpVersionPolicy: gigahorse.HttpVersionPolicy! =
+    raw"ConfigDefaults.defaultHttpVersionPolicy" @since("0.9.6")
+
   #x def withUserAgent(userAgent: String): Config = copy(userAgentOpt = Some(userAgent))
   #x def withAuth(auth: Realm): Config = copy(authOpt = Some(auth))
   #x def withAuth(username: String, password: String): Config = copy(authOpt = Some(Realm(username = username, password = password)))
   #x def withAuth(username: String, password: String, scheme: AuthScheme): Config = copy(authOpt = Some(Realm(username = username, password = password, scheme = scheme)))
+}
+
+enum HttpVersionPolicy {
+  Http1_1, Http2, Negotiate
 }

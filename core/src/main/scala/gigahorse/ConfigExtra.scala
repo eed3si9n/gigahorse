@@ -67,7 +67,11 @@ object ConfigParser {
       webSocketMaxFrameSize =
         config.getMemorySize("webSocketMaxFrameSize", defaultWebSocketMaxFrameSize),
       cacheDirectory = cacheOpt,
-      maxCacheSize = config.getMemorySize("maxCacheSize", defaultMaxCacheSize)
+      maxCacheSize = config.getMemorySize("maxCacheSize", defaultMaxCacheSize),
+      httpVersionPolicy = config
+        .getStringOption("httpVersionPolicy", None)
+        .map(parseHttpVersionPolicy)
+        .getOrElse(defaultHttpVersionPolicy),
     )
   }
 
@@ -92,6 +96,14 @@ object ConfigParser {
       useAbsoluteURI = config.getBoolean("useAbsoluteURI", false),
       omitQuery = config.getBoolean("omitQuery", false)
     )
+
+  def parseHttpVersionPolicy(s: String): HttpVersionPolicy =
+    s.toLowerCase match {
+      case "http1_1" | "http1.1" | "http/1.1" => HttpVersionPolicy.Http1_1
+      case "http2" | "http/2"                 => HttpVersionPolicy.Http2
+      case "negotiate"                        => HttpVersionPolicy.Negotiate
+      case _                                  => sys.error("Invalid httpVersionPolicy: " + s)
+    }
 
   def parseScheme(s: String): AuthScheme =
     s.toLowerCase match {
@@ -126,6 +138,7 @@ object ConfigDefaults {
   val defaultMaxFrameSize = ConfigMemorySize(1024 * 1024)
   val defaultWebSocketMaxFrameSize = ConfigMemorySize(1024 * 1024)
   val defaultMaxCacheSize = ConfigMemorySize(100 * 1024 * 1024)
+  val defaultHttpVersionPolicy = HttpVersionPolicy.Negotiate
 }
 
 class RichXConfig(config: XConfig) {

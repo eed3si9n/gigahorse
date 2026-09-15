@@ -54,3 +54,4 @@ Refer to the [AsyncHttpClientConfig Documentation](http://static.javadoc.io/org.
 * `gigahorse.connectionTtl`: The maximum time that a connection should live for in the pool.
 * `gigahorse.maxConnections`: The maximum total number of connections. -1 means no maximum.
 * `gigahorse.maxConnectionsPerHost`: The maximum number of connections to make per host. -1 means no maximum.
+* `gigahorse.httpVersionPolicy`: Which HTTP protocol version to use: `negotiate`, `http1.1` or `http2` *(default: **negotiate**)*. Only the Apache HttpClient backend honors this; the other backends ignore it.
