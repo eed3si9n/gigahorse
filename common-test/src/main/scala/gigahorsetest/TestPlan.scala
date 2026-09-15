@@ -31,6 +31,10 @@ object TestPlan {
       InternalServerError ~> ResponseString("500 HTTP Status Code")
     case GET(Path(Seg("404" :: Nil))) =>
       NotFound ~> ResponseString("404 HTTP Status Code")
+    case GET(Path(Seg("redirect" :: Nil))) =>
+      TemporaryRedirect ~> Location("/redirect-target")
+    case GET(Path(Seg("redirect-target" :: Nil))) =>
+      Ok ~> ResponseString("redirect ok")
     // test basic auth
     case r @ GET(Path(Seg("auth" :: Nil))) =>
       r match {
