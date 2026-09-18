@@ -64,6 +64,20 @@ lazy val commonSettings = List(
     if (version.value.endsWith("-SNAPSHOT")) Some("central-snapshots" at centralSnapshots)
     else localStaging.value
   },
+  scalacOptions ++= {
+    if (scalaVersion.value.startsWith("3.3.")) {
+      Seq(
+        "-Yfuture-lazy-vals",
+        "-release:11",
+      )
+    } else if (scalaBinaryVersion.value == "3") {
+      Nil
+    } else {
+      Seq(
+        "-release:8",
+      )
+    }
+  },
   scalacOptions ++= Seq(
     "-encoding",
     "utf8",
