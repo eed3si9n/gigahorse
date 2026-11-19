@@ -51,6 +51,7 @@ import core5.http.{
   EntityDetails,
   Header as XHeader,
   HttpEntity,
+  HttpHeaders,
   HttpRequest as XRequest,
   HttpRequestInterceptor,
   HttpResponse as XResponse,
@@ -378,6 +379,9 @@ class ApacheHttpClient(config: Config) extends HttpClient {
       }
       b.setConnectionManager(managerBuilder.build())
     }) :::
+      List[CB => CB]((b: CB) =>
+        b.addRequestInterceptorLast(ApacheHttpClient.http2ContentLength)
+      ) :::
       (authOpt match {
         case Some(auth) =>
           List[CB => CB]({ case b: CB =>
@@ -461,4 +465,31 @@ class ApacheHttpClient(config: Config) extends HttpClient {
       handler: PartialFunction[WebSocketEvent, Unit]
   ): Future[WebSocket] =
     ???
+}
+
+object ApacheHttpClient {
+
+  /**
+   * Adds Content-Length to an HTTP/2 request whose body has a known length.
+   *
+   * HttpCore's H2RequestContent leaves the header out on HTTP/2, where each DATA frame carries
+   * its own length, but some servers still require it: AWS CodeArtifact answers such an upload
+   * with 411 Length Required. On HTTP/1.1, RequestContent adds the header itself and fails if it is
+   * already present, so this leaves HTTP/1.1 requests alone.
+   */
+  private[apachehttp] val http2ContentLength: HttpRequestInterceptor =
+    new HttpRequestInterceptor {
+      override def process(request: XRequest, entity: EntityDetails, context: HttpContext): Unit = {
+        val version = context.getProtocolVersion
+        if (
+          entity != null && entity.getContentLength >= 0 &&
+          version != null && version.getMajor >= 2 &&
+          !request.containsHeader(HttpHeaders.CONTENT_LENGTH)
+        )
+          request.addHeader(
+            HttpHeaders.CONTENT_LENGTH,
+            java.lang.Long.toString(entity.getContentLength)
+          )
+      }
+    }
 }
